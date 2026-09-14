@@ -4,8 +4,7 @@
 # Utilisation de pygame avec un préfixe plus simple
 import pygame as pg
 # Utilisation de la classe Pong du module pong, sans prefixe
-from pong import Pong
-from message import Message
+from eclipsoide import Eclilpsoide
 
 # Fonction principale
 def main():
@@ -24,11 +23,10 @@ def main():
     # Nombre de millisecondes entre deux images
     dt = 0
     # Création d'une instance du jeu, donne l'écran où il faut dessiner
-    pong = Pong(screen)
+    pong = Eclilpsoide(screen)
 
     # Boucle de jeu
     while pong.isRunning():
-
         # Limite la vitesse à 6O images max par secondes
         # Calcule le temps réel entre deux images en millisecondes
         dt = clock.tick(60)
