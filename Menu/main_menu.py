@@ -7,7 +7,6 @@ UI_BASE_PATH = "images/ui"
 
 class MainMenu:
     def __init__(self, screen_width, screen_height):
-        # --- IMAGE DE FOND ---
         self.bg_image = pg.image.load('images/backgroundWellcom.png').convert()
         self.bg_image = pg.transform.scale(self.bg_image, (screen_width, screen_height))
 
@@ -15,7 +14,6 @@ class MainMenu:
         self.titre_font = pg.font.Font(font_path, 60)
         self.font = pg.font.Font(font_path, 26)
 
-        # Tailles agrandies pour les boutons
         btn_width = 300
         btn_height = 75
 

@@ -46,7 +46,7 @@ class MenuOption:
         self.check_sfx = ui_element.Checkbox(140, 480, "Bruitages", self.font, check_off, check_on, start_sfx)
         self.check_fullscreen = ui_element.Checkbox(140, 540, "Plein ecran", self.font, check_off, check_on, start_fs)
 
-        # Touches du clavier visuelles
+        # Touches du clavier
         self.visual_keys = [
             ui_element.Button(770, 240, 50, 50, "Z", self.keys_font, key_square, text_color=(40, 40, 40)),
             ui_element.Button(715, 295, 50, 50, "Q", self.keys_font, key_square, text_color=(40, 40, 40)),
@@ -97,13 +97,12 @@ class MenuOption:
         self.check_music.handle_event(event)
         self.check_sfx.handle_event(event)
 
-        # Plein écran immédiat
+        # Plein écran
         if self.check_fullscreen.handle_event(event):
             settings.OPTIONS["fullscreen"] = self.check_fullscreen.is_checked
             settings.save_settings()
             return "toggle_fullscreen"
 
-            # Retour et sauvegarde
         if self.btn_back.handle_event(event):
             settings.OPTIONS["volume"] = self.slider_volume.val
             settings.OPTIONS["music"] = self.check_music.is_checked
