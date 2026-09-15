@@ -2,6 +2,7 @@
 import pygame as pg
 # Accès à la classe Enemy
 from enemy import Enemy
+from Menu import menu_pause
 
 # Définition du jeu Pong
 class Eclilpsoide:

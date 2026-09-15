@@ -11,15 +11,14 @@ from player import Player
 
 # Fonction principale
 def main():
+    # Initialisation du package pygame
     pg.init()
     screen = pg.display.set_mode((1024,768))
     menu = main_menu(1024, 768)
-
-    running = True
     # Initalisation du module de gestion des fonts
     pg.font.init()
     # Donne un nom à la fenêtre
-    pg.display.set_caption("PONG")
+    pg.display.set_caption("ECLIPSOIDE")
 
     # Ratio du moniteur (ex: 16/9)
     monitor = pg.display.Info()
