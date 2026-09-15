@@ -12,7 +12,7 @@ class Player(pg.sprite.Sprite):
 
         self.is_alive = True
 
-        self.fire_delay = 0.3
+        self.fire_delay = 300
         self.fire_timer = 0
 
         self.image = pg.Surface((30, 30))
@@ -42,7 +42,7 @@ class Player(pg.sprite.Sprite):
         self.rect.clamp_ip(self.screen.get_rect())
         self.position = pg.Vector2(self.rect.midbottom)
 
-        self.fire_timer -= (dt / 1000)
+        self.fire_timer -= dt
 
         if self.fire_timer <= 0 and keystate[pg.K_SPACE]:
             Projectile(self.projectiles, origin=self.rect.midtop, speed=0.4, direction=pg.Vector2(0, -1))

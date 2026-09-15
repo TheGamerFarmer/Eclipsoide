@@ -21,16 +21,11 @@ class Eclilpsoide:
         self.bg_image = pg.image.load('images/background1.png')
         self.bg_image = pg.transform.scale(self.bg_image, (screen.get_width(), screen.get_height()))
 
-        # Objet sous groupe pour avoir la liste des sprites et automatiser la mise à jour par update()
-        # Automatise aussi l'affichage : draw() par défaut affiche dans l'écran image à la position rect
-        self.all = pg.sprite.RenderUpdates()
-
         # Groupe dédié aux ennemis, pour les détections de collision (tirs, joueur, ...)
         self.enemies = pg.sprite.Group()
         self.player_group = pg.sprite.Group()
-        self.projeciles = pg.sprite.Group()
-        self.player = Player(self.player_group, screen=self.screen, speed=0.3, projectiles=self.projeciles)
-        self.player_group.add(self.player)
+        self.projectiles = pg.sprite.Group()
+        self.player = Player(self.player_group, screen=self.screen, speed=0.3, projectiles=self.projectiles)
 
         # Vrai si le jeu est fini
         self.isEnded = False
@@ -75,23 +70,26 @@ class Eclilpsoide:
 
         self.time += dt
 
+        # Collisions entre le joueur et les ennemies
         if pg.sprite.spritecollide(self.player, self.enemies, dokill=False):
             self.player.on_hit()
 
-        pg.sprite.groupcollide(self.projeciles, self.enemies, dokilla=True, dokillb=True)
+        # Collisions entre les projectiles du joueur et les ennemies
+        pg.sprite.groupcollide(self.projectiles, self.enemies, dokilla=True, dokillb=True)
+
+        if self.player.is_alive == False:
+            self.isEnded = True
 
         # Met à jours tous les sprites en fonction du temps qui a passé
-        self.all.update(dt)
         self.enemies.update(dt)
         self.player_group.update(dt)
-        self.projeciles.update(dt)
+        self.projectiles.update(dt)
 
     def draw(self):
         """ Dessine le nouvel état du jeu """
         # Redessine le fond entier
         self.screen.blit(self.bg_image, (0, 0))
         # Dessine tous les sprites dans la surface de l'écran
-        self.all.draw(self.screen)
         self.enemies.draw(self.screen)
         self.player_group.draw(self.screen)
-        self.projeciles.draw(self.screen)
+        self.projectiles.draw(self.screen)
