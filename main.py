@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 # Pour lancer directement l'exécution à partir du sell si le fichier a les droits d'exécution
 
+# Utilisation de pygame avec un préfixe plus simple
 import pygame as pg
 import sys
-
 import settings
 from Menu.menu_option import MenuOption
-
 from Menu.main_menu import MainMenu as main_menu
 from eclipsoide import Eclipsoide
-from player import Player
+
 
 # Fonction principale
 def main():
@@ -19,16 +18,17 @@ def main():
     # Initialisation du package pygame
     pg.init()
 
-    # mode pleine écran
+    # Mode plein écran initial au démarrage si sauvegardé
     if settings.OPTIONS["fullscreen"]:
         screen = pg.display.set_mode((1024, 768), pg.FULLSCREEN)
     else:
-        screen = pg.display.set_mode((1024, 768))
+        # On initialise en mode RESIZABLE pour éviter les micro-coupures de fenêtrage
+        screen = pg.display.set_mode((1024, 768), pg.RESIZABLE)
 
     menu = main_menu(1024, 768)
     options_menu = MenuOption(1024, 768)
 
-    # Initalisation du module de gestion des fonts
+    # Initialisation du module de gestion des fonts
     pg.font.init()
     # Donne un nom à la fenêtre
     pg.display.set_caption("Eclipsoïde")
@@ -61,32 +61,26 @@ def main():
                     print("Lancer le game")
                     start_menu = False
 
-                    # Application du plein écran au lancement du jeu
-                    if settings.OPTIONS["fullscreen"]:
-                        screen = pg.display.set_mode((GAME_W, GAME_H), pg.FULLSCREEN)
-                    else:
-                        screen = pg.display.set_mode((GAME_W, GAME_H), pg.RESIZABLE)
-
+                    # On ne recrée pas la fenêtre ici pour garder une transition ultra-fluide
                     clock = pg.time.Clock()
-
                     eclipsoide = Eclipsoide(game_surface)
 
                 elif action == "quit":
                     pg.quit()
                     sys.exit()
 
-                # menu option
+                # Menu options
                 elif action == "option":
                     active_menu = options_menu
                 elif action == "back":
                     active_menu = menu
 
-                # Bascule instantanée du plein écran
+                # pleine écran
                 elif action == "toggle_fullscreen":
                     if settings.OPTIONS["fullscreen"]:
                         screen = pg.display.set_mode((1024, 768), pg.FULLSCREEN)
                     else:
-                        screen = pg.display.set_mode((1024, 768))
+                        screen = pg.display.set_mode((1024, 768), pg.RESIZABLE)
 
             # On dessine le menu actif
             active_menu.draw(screen)
@@ -125,28 +119,17 @@ def main():
                 if event.type == pg.QUIT:
                     pg.quit()
                     sys.exit()
-
                 action = eclipsoide.menu_game_over.handle_event(event)
-
                 if action == "retry":
                     game_over_running = False
                     del eclipsoide
                     eclipsoide = Eclipsoide(game_surface)
-
                 elif action == "menu":
                     start_menu = True
                     game_over_running = False
-
-                    # --- RETOUR AU PLEIN ÉCRAN OU FENÊTRÉ (MENU) ---
-                    if settings.OPTIONS["fullscreen"]:
-                        screen = pg.display.set_mode((1024, 768), pg.FULLSCREEN)
-                    else:
-                        screen = pg.display.set_mode((1024, 768))
-
                 elif action == "quit":
                     pg.quit()
                     sys.exit()
-
             screen.fill((0, 0, 0))
             eclipsoide.menu_game_over.draw(screen)
             pg.display.flip()
