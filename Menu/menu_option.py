@@ -8,7 +8,7 @@ UI_BASE_PATH = "images/ui"
 
 class MenuOption:
     def __init__(self, screen_width, screen_height):
-        self.bg_image = pg.image.load('images/background1.png').convert()
+        self.bg_image = pg.image.load('images/backgroundWellcom.png').convert()
         self.bg_image = pg.transform.scale(self.bg_image, (screen_width, screen_height))
 
         font_path = os.path.join(UI_BASE_PATH, "Font", "Kenney Future.ttf")
