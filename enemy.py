@@ -65,3 +65,8 @@ class Enemy(pg.sprite.Sprite):
 
         self.rect.x = int(newPos.x)
         self.rect.y = int(newPos.y)
+
+    def hited(self, damage: int):
+        self.life -= damage
+        if self.life <= 0:
+            self.kill()
