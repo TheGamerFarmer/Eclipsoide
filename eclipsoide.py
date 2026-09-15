@@ -21,12 +21,8 @@ class Eclilpsoide:
         # Conserve le lien vers l'objet surface ecran du jeux
         self.screen = screen
 
-        # Crée une surface pour le fond du jeu de même taille que la fenêtre
-        self.background = pg.Surface(self.screen.get_size())
-        self.background.fill((0,50,0))
-
-        # Dessine le font d'écran une première fois
-        self.screen.blit(self.background,(0,0))
+        self.bg_image = pg.image.load('images/background1.png')
+        self.bg_image = pg.transform.scale(self.bg_image, (screen.get_width(), screen.get_height()))
 
         # Objet sous groupe pour avoir la liste des sprites et automatiser la mise à jour par update()
         # Automatise aussi l'affichage : draw() par défaut affiche dans l'écran image à la position rect
@@ -55,12 +51,10 @@ class Eclilpsoide:
                 # Un appui sur une touche
                 case pg.KEYDOWN:
                     match event.key:
-                        case pg.K_ESCAPE:
-                            return False
                         case pg.K_f:
                             # Touche 'f' passe en fullscreen ou revient en mode window
                             pg.display.toggle_fullscreen()
-                        case pg.K_SPACE:
+                        case pg.K_SPACE | pg.K_ESCAPE:
                             # alterne la pause
                             Eclilpsoide.pause = not Eclilpsoide.pause
         return True
@@ -89,7 +83,7 @@ class Eclilpsoide:
         if (self.time + dt) % self.TIME_BETWEEN_WAVE < dt:
             nbEnemies: int = int(self.time / self.TIME_BETWEEN_WAVE)
             for i in range(0, nbEnemies):
-                enemy = Enemy(self.screen, self.all)
+                Enemy(self.screen, self.all)
 
         self.time += dt
         # Met à jours tous les sprites en fonction du temps qui a passé
@@ -97,9 +91,7 @@ class Eclilpsoide:
 
     def draw(self):
         """ Dessine le nouvel état du jeu """
-        # Vide l'écran en replacant le background
-        self.all.clear(self.screen, self.background)
+        # Redessine le fond entier
+        self.screen.blit(self.bg_image, (0, 0))
         # Dessine tous les sprites dans la surface de l'écran
-        dirty = self.all.draw(self.screen)
-        # Remplace le background des zones modifiées par le mouvement des sprites
-        pg.display.update(dirty)
+        self.all.draw(self.screen)
