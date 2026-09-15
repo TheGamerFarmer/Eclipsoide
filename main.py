@@ -42,7 +42,7 @@ def main():
                     start_menu = False
                     screen = pg.display.set_mode((GAME_W, GAME_H), pg.RESIZABLE)
                     clock = pg.time.Clock()
-                    eclipsoide = Eclilpsoide(game_surface)
+                    eclipsoide = Eclipsoide(game_surface)
                 elif action == "quit":
                     pg.quit()
             screen.fill((0, 0, 0))
@@ -53,7 +53,7 @@ def main():
         projectiles_group = pg.sprite.Group()
 
         # Création d'une instance du joueur
-        player = Player(screen=screen, speed=0.3, projectiles=projectiles_group)
+        player = Player(screen=screen, speed=0.3, projectilsGroup= projectiles_group)
         # Création du groupe du joueur
         player_group = pg.sprite.Group()
         player_group.add(player)
@@ -106,7 +106,7 @@ def main():
                     eclipsoide.isEnded = False
                     player.is_alive = True
                     game_over_running = False
-                    eclipsoide = Eclilpsoide(game_surface)
+                    eclipsoide = Eclipsoide(game_surface)
                 elif action == "menu":
                     start_menu = True
                     game_over_running = False

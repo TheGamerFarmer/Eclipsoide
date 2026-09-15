@@ -108,7 +108,8 @@ class Eclipsoide:
                         enemy.hited(40)
 
         if self.player.is_alive == False:
-            Eclipsoide.pause = True
+            self.isEnded = True
+            #Eclipsoide.pause = True
 
         # Met à jours tous les sprites en fonction du temps qui a passé
         self.enemies_group.update(dt)
