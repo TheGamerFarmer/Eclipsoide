@@ -27,15 +27,13 @@ class Enemy(pg.sprite.Sprite):
         self.time = 0
 
         # La surface (image) à afficher de ce sprite
-        self.surface = pg.Surface(self.size)
         if Enemy.image is None:
             Enemy.image = pg.image.load('images/asteroide.png')
             Enemy.image = pg.transform.scale(Enemy.image, self.size)
         self.image = pg.transform.rotate(Enemy.image, random.randint(-180, 180))
-        self.surface.blit(self.image, (0,0))
         self.screen = screen
         # Recupère le rectangle de la surface du Sprite
-        self.rect = self.surface.get_rect()
+        self.rect = self.image.get_rect()
 
         screenWith = Enemy.ASTEROID_SIZE * self.SPAWN_EXTRA_PROPORTION
 
