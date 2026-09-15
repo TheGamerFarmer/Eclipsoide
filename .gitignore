@@ -1,4 +1,4 @@
 .venv/
 Eclipsoide.egg-info/
 .idea/
-__pycach__/
+__pycache__/
