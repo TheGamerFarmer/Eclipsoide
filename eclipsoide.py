@@ -1,4 +1,6 @@
 import os
+import sys
+
 # Utilisation de pygame avec un préfixe plus simple
 import pygame as pg
 
@@ -15,6 +17,7 @@ class Eclipsoide:
     TIME_BETWEEN_WAVE = 5000
     VITESSE_BOSS = 0.1  # pixels par milliseconde
     SUN_SIZE = 200
+    BOSS_SIZE = 70
 
     # Simulation de collision : une cible automatique qui patrouille en bas
     VITESSE_CIBLE = 0.25  # pixels par milliseconde
@@ -33,11 +36,14 @@ class Eclipsoide:
         # Conserve le lien vers l'objet surface ecran du jeux
         self.screen = screen
 
-        self.bg_image = pg.image.load('images/background1.png')
+        self.bg_image = pg.image.load('images/backgroundGame.png')
         self.bg_image = pg.transform.scale(self.bg_image, (screen.get_width(), screen.get_height()))
 
         self.sun_image = pg.image.load('images/sun.png')
         self.sun_image = pg.transform.scale(self.sun_image, (self.SUN_SIZE, self.SUN_SIZE))
+
+        self.boss_image = pg.image.load('images/boss1.png')
+        self.boss_image = pg.transform.scale(self.boss_image, (self.BOSS_SIZE, self.BOSS_SIZE))
 
         # Objet sous groupe pour avoir la liste des sprites et automatiser la mise à jour par update()
         # Automatise aussi l'affichage : draw() par défaut affiche dans l'écran image à la position rect
@@ -72,7 +78,9 @@ class Eclipsoide:
             match event.type:
                 case pg.QUIT:
                     # On ferme la fenêtre
-                    return False
+                    pg.quit()
+                    sys.exit(0)
+
                 # Un appui sur une touche
                 case pg.KEYDOWN:
                     match event.key:
@@ -93,9 +101,9 @@ class Eclipsoide:
         if Eclipsoide.pause:
             return
 
-        if (self.time + dt) % self.TIME_BETWEEN_WAVE < dt:
-            nbEnemies: int = int(self.time / self.TIME_BETWEEN_WAVE)
-            for i in range(0, nbEnemies):
+        if (self.time + dt) % self.TIME_BETWEEN_WAVE < dt and self.time < 300000:
+            nbEnemies: int = int(self.time / self.TIME_BETWEEN_WAVE / 2)
+            for i in range(-2, nbEnemies):
                 Enemy(self.screen, self.player, self.enemy_projectiles_group, self.enemies_group)
 
         self.time += dt
@@ -144,6 +152,13 @@ class Eclipsoide:
         # Redessine le fond entier
         self.screen.blit(self.bg_image, (0, 0))
         self.screen.blit(self.sun_image, (self.screen.get_width() / 2 - self.SUN_SIZE / 2, self.SUN_SIZE / 4))
+
+        initPos = self.screen.get_width() + self.BOSS_SIZE
+        finalPos = self.screen.get_width() / 2 - self.SUN_SIZE / 2
+
+        currentPos = initPos - ((initPos - finalPos) / 300000 * self.time)
+
+        self.screen.blit(self.boss_image, (max(self.screen.get_width() / 2 - self.BOSS_SIZE / 2, currentPos), (self.SUN_SIZE / 4) + (self.SUN_SIZE / 2) - (self.BOSS_SIZE / 2)))
         # Dessine tous les sprites dans la surface de l'écran
         self.enemies_group.draw(self.screen)
         self.particles_group.draw(self.screen)

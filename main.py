@@ -9,6 +9,7 @@ from Menu.menu_option import MenuOption
 
 from Menu.main_menu import MainMenu as main_menu
 from eclipsoide import Eclipsoide
+from player import Player
 
 # Fonction principale
 def main():
