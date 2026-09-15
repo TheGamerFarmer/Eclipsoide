@@ -31,8 +31,8 @@ class Box(pg.sprite.Sprite, ABC):
 
     def move(self, dx: float, dy: float) -> None:
         """Déplace la forme (utile pour le vaisseau ou les ennemis mobiles)."""
-        self.rect.x += dx
-        self.rect.y += dy
+        self.rect.x +=  int (dx)
+        self.rect.y += int(dy)
 
     def collides_with(self, other: "Box") -> bool:
         """Collision native pygame via les rect (rapide, suffisant en général)."""
