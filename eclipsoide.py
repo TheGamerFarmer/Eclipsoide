@@ -45,11 +45,12 @@ class Eclipsoide:
         self.enemy_projectiles_group = pg.sprite.Group()
         self.coins_group = pg.sprite.Group()
         self.popups_group = pg.sprite.Group()
+        self.particles_group = pg.sprite.Group()
 
         self.coin_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 24)
         self.coin_icon = pg.transform.scale(pg.image.load('images/ui/Coins/coin_0.png'), (24, 24))
         # Création d'une instance du joueur
-        self.player = Player(screen, 0.3, self.projectiles_group, self.player_group)
+        self.player = Player(screen, 0.3, self.projectiles_group, self.particles_group, self.player_group)
         # Création du groupe du joueur
 
         # Vrai si le jeu est fini
@@ -131,6 +132,7 @@ class Eclipsoide:
         self.enemy_projectiles_group.update(dt)
         self.coins_group.update(dt)
         self.popups_group.update(dt)
+        self.particles_group.update(dt)
 
     def draw(self):
         """ Dessine le nouvel état du jeu """
@@ -139,6 +141,7 @@ class Eclipsoide:
         self.screen.blit(self.sun_image, (self.screen.get_width() / 2 - self.SUN_SIZE / 2, self.SUN_SIZE / 4))
         # Dessine tous les sprites dans la surface de l'écran
         self.enemies_group.draw(self.screen)
+        self.particles_group.draw(self.screen)
         self.player_group.draw(self.screen)
         self.projectiles_group.draw(self.screen)
         self.enemy_projectiles_group.draw(self.screen)
