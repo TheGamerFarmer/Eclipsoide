@@ -1,6 +1,7 @@
 import os
 import sys
 
+import math
 # Utilisation de pygame avec un préfixe plus simple
 import pygame as pg
 
@@ -10,6 +11,12 @@ from enemy import Enemy
 from player import Player
 from coin import Coin
 from coin_popup import CoinPopup
+
+def collide_projectile(a: pg.sprite.Sprite, b: pg.sprite.Sprite) -> bool:
+    """ Collision utilisant la hitbox du projectile plutôt que son rect visuel (halo + traînée) """
+    rect_a = getattr(a, 'hitbox', a.rect)
+    rect_b = getattr(b, 'hitbox', b.rect)
+    return rect_a.colliderect(rect_b)
 
 # Définition du jeu Pong
 class Eclipsoide:
@@ -21,6 +28,17 @@ class Eclipsoide:
     BOSS_SIZE = 70
     GROW_DURATION = 2000
     BOSS_MAX_SIZE = 620
+
+    # Rotation lente + légère pulsation/glow du soleil
+    SUN_ROTATION_SPEED = 0.006  # degrés par milliseconde (~1 tour par minute)
+    SUN_PULSE_PERIOD = 3000     # ms pour un cycle complet de pulsation
+    SUN_PULSE_AMPLITUDE = 0.035 # variation de taille (+/- 3.5%)
+    SUN_GLOW_COLOR = (255, 170, 60)
+    SUN_GLOW_LAYERS = 3
+    SUN_GLOW_PADDING = 25
+    SUN_GLOW_MAX_ALPHA = 55
+    SUN_GLOW_PULSE_RADIUS = 10
+    SUN_GLOW_PULSE_ALPHA = 20
 
     # Simulation de collision : une cible automatique qui patrouille en bas
     VITESSE_CIBLE = 0.25  # pixels par milliseconde
@@ -46,6 +64,8 @@ class Eclipsoide:
 
         self.sun_image = pg.image.load('images/sun.png')
         self.sun_image = pg.transform.scale(self.sun_image, (self.SUN_SIZE, self.SUN_SIZE))
+        self.sun_angle = 0.0
+        self.sun_center = (screen.get_width() / 2, self.SUN_SIZE * 0.75)
 
         self.boss_image = pg.image.load('images/boss1.png')
         self.boss_image = pg.transform.scale(self.boss_image, (self.BOSS_SIZE, self.BOSS_SIZE))
@@ -111,6 +131,9 @@ class Eclipsoide:
             for i in range(-2, nbEnemies):
                 Enemy(self.screen, self.player, self.enemy_projectiles_group, self.enemies_group)
 
+        self.sun_angle = (self.sun_angle + self.SUN_ROTATION_SPEED * dt) % 360
+
+
         self.time += dt
 
         # Collisions entre le joueur et les ennemies
@@ -118,11 +141,13 @@ class Eclipsoide:
             self.player.on_hit()
 
         # Collisions entre le joueur et les projectiles ennemies
-        if pg.sprite.spritecollide(self.player, self.enemy_projectiles_group, dokill=True):
+        # (on collisionne sur la hitbox du tir, pas sur son rect visuel qui
+        # inclut le halo et la traînée)
+        if pg.sprite.spritecollide(self.player, self.enemy_projectiles_group, dokill=True, collided=collide_projectile):
             self.player.on_hit()
 
         # Collisions entre les projectiles du joueur et les ennemies
-        collisions = pg.sprite.groupcollide(self.projectiles_group, self.enemies_group, dokilla=True, dokillb=False)
+        collisions = pg.sprite.groupcollide(self.projectiles_group, self.enemies_group, dokilla=True, dokillb=False, collided=collide_projectile)
         if collisions:
             for enemies in collisions.values():
                 for enemy in enemies:
@@ -151,6 +176,33 @@ class Eclipsoide:
         self.coins_group.update(dt)
         self.popups_group.update(dt)
         self.particles_group.update(dt)
+
+    def _draw_sun(self):
+        """ Dessine le soleil avec une légère rotation continue et une pulsation de taille/glow """
+        pulse_wave = math.sin(self.time * (2 * math.pi / self.SUN_PULSE_PERIOD))
+        pulse_scale = 1 + self.SUN_PULSE_AMPLITUDE * pulse_wave
+
+        self._draw_sun_glow(pulse_wave)
+
+        rotated_sun = pg.transform.rotozoom(self.sun_image, self.sun_angle, pulse_scale)
+        self.screen.blit(rotated_sun, rotated_sun.get_rect(center=self.sun_center))
+
+    def _draw_sun_glow(self, pulse_wave: float):
+        base_radius = self.SUN_SIZE / 2
+        max_radius = base_radius + self.SUN_GLOW_PADDING + self.SUN_GLOW_PULSE_RADIUS * pulse_wave
+        size = int(max_radius * 2)
+        glow_surface = pg.Surface((size, size), pg.SRCALPHA)
+        glow_center = (size // 2, size // 2)
+
+        for layer in range(self.SUN_GLOW_LAYERS, 0, -1):
+            radius = int(max_radius * (layer / self.SUN_GLOW_LAYERS))
+            alpha = (self.SUN_GLOW_MAX_ALPHA + self.SUN_GLOW_PULSE_ALPHA * pulse_wave) * (1 - layer / (self.SUN_GLOW_LAYERS + 1))
+            alpha = max(0, min(255, int(alpha)))
+            layer_surface = pg.Surface((size, size), pg.SRCALPHA)
+            pg.draw.circle(layer_surface, (*self.SUN_GLOW_COLOR, alpha), glow_center, radius)
+            glow_surface.blit(layer_surface, (0, 0), special_flags=pg.BLEND_RGBA_ADD)
+
+        self.screen.blit(glow_surface, glow_surface.get_rect(center=self.sun_center))
 
     def draw(self):
         """ Dessine le nouvel état du jeu """
@@ -182,6 +234,7 @@ class Eclipsoide:
 
         self.screen.blit(scaled_boss, (bossX, (self.SUN_SIZE / 4) + (self.SUN_SIZE / 2) - (current_size / 2)))
 
+        self._draw_sun()
         # Dessine tous les sprites dans la surface de l'écran
         self.enemies_group.draw(self.screen)
         self.particles_group.draw(self.screen)
