@@ -1,12 +1,17 @@
 import pygame
 import constantes
+from projectile import Projectile
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, *groups, screen, speed):
+    def __init__(self, *groups, screen, speed, projectiles):
         super().__init__(*groups)
 
         self.speed = speed
         self.screen = screen
+        self.projectiles = projectiles
+
+        self.fire_delay = 0.3
+        self.fire_timer = 0
 
         self.image = pygame.Surface((30, 30))
         self.image.fill("white")
@@ -34,3 +39,9 @@ class Player(pygame.sprite.Sprite):
         self.rect.midbottom = self.position
         self.rect.clamp_ip(self.screen.get_rect())
         self.position = pygame.Vector2(self.rect.midbottom)
+
+        self.fire_timer -= dt
+
+        if self.fire_timer <= 0 and keystate[pygame.K_SPACE]:
+            Projectile(self.projectiles, speed=400, origin=self.rect.midtop)
+            self.fire_timer = self.fire_delay
