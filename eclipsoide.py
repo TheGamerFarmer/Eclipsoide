@@ -69,8 +69,7 @@ class Eclilpsoide:
         if (self.time + dt) % self.TIME_BETWEEN_WAVE < dt:
             nbEnemies: int = int(self.time / self.TIME_BETWEEN_WAVE)
             for i in range(0, nbEnemies):
-                enemy = Enemy(self.screen)
-                self.all.add(enemy)
+                enemy = Enemy(self.screen, self.all)
 
         self.time += dt
 
