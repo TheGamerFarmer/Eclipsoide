@@ -3,8 +3,9 @@ import constantes
 from projectile import Projectile
 
 class Player(pg.sprite.Sprite):
-    image_shoot = None
     size = (30, 26)
+    image_shoot_set: bool = False
+    image_shoot: list[pg.Surface]
 
     def __init__(self, screen: pg.Surface, speed: float, projectilsGroup: pg.sprite.AbstractGroup, *groups):
         super().__init__(*groups)
@@ -18,9 +19,10 @@ class Player(pg.sprite.Sprite):
         self.fire_delay = 300
         self.fire_timer = 0
 
-        if Player.image_shoot is None:
-            Player.image_shoot = pg.image.load('images/asteroide.png')
-            Player.image_shoot = pg.transform.scale(Player.image_shoot, (6, 16))
+        if not Player.image_shoot_set:
+            Player.image_shoot = [pg.image.load(f'images/laser/player/laser_player_{i}.png') for i in range(4)]
+            Player.image_shoot = [pg.transform.scale(image, (6, 16)) for image in Player.image_shoot]
+            Player.image_shoot_set = True
 
         self.surface = pg.Surface(self.size)
         self.image = pg.image.load('images/ship.png')
@@ -54,8 +56,8 @@ class Player(pg.sprite.Sprite):
 
         self.fire_timer -= dt
 
-        if self.fire_timer <= 0 and keystate[pg.K_SPACE]:
-            Projectile(pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), [Player.image_shoot], self.projectilsGroup)
+        if self.fire_timer <= 0:
+            Projectile(pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), Player.image_shoot, self.projectilsGroup)
             self.fire_timer = self.fire_delay
 
     def on_hit(self):
