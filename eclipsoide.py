@@ -3,7 +3,7 @@ import pygame as pg
 # Accès à la classe Enemy
 from enemy import Enemy
 
-from boxes import Rectangle, Triangle
+from boss import Rectangle, Triangle
 
 
 # Définition du jeu Pong
