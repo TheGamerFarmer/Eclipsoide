@@ -5,7 +5,7 @@
 import pygame as pg
 # Utilisation de la classe Pong du module pong, sans prefix
 from Menu.main_menu import MainMenu as main_menu
-from eclipsoide import Eclilpsoide
+from eclipsoide import Eclipsoide
 from player import Player
 
 
@@ -40,7 +40,7 @@ def main():
                 start_menu = False
                 screen = pg.display.set_mode((GAME_W, GAME_H), pg.RESIZABLE)
                 clock = pg.time.Clock()
-                eclipsoide = Eclilpsoide(game_surface)
+                eclipsoide = Eclipsoide(game_surface)
             elif action == "quit":
                 pg.quit()
         screen.fill((0, 0, 0))

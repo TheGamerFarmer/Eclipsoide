@@ -5,7 +5,7 @@ from enemy import Enemy
 from player import Player
 
 # Définition du jeu Pong
-class Eclilpsoide:
+class Eclipsoide:
     # time between wave in milliseconds
     TIME_BETWEEN_WAVE = 5000
     VITESSE_BOSS = 0.1  # pixels par milliseconde
@@ -68,7 +68,7 @@ class Eclilpsoide:
                             pg.display.toggle_fullscreen()
                         case pg.K_ESCAPE:
                             # alterne la pause
-                            Eclilpsoide.pause = not Eclilpsoide.pause
+                            Eclipsoide.pause = not Eclipsoide.pause
         return True
 
     def update(self,dt : int):
@@ -77,7 +77,7 @@ class Eclilpsoide:
         et des touches préssées par le joueur
         """
         # Si le jeu est en pause, ne modifie plus rien
-        if Eclilpsoide.pause:
+        if Eclipsoide.pause:
             return
 
         if (self.time + dt) % self.TIME_BETWEEN_WAVE < dt:
@@ -104,7 +104,7 @@ class Eclilpsoide:
                         enemy.hited(40)
 
         if self.player.is_alive == False:
-            Eclilpsoide.pause = True
+            Eclipsoide.pause = True
 
         # Met à jours tous les sprites en fonction du temps qui a passé
         self.enemies_group.update(dt)
