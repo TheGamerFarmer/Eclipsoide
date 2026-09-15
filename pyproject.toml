@@ -4,5 +4,7 @@ version = "0.1"
 requires-python = ">=3.12, <3.13"
 dependencies = [
     "pygame==2.6.1",
-    "mypy"
+    "mypy",
 ]
+[tool.setuptools.packages.find]
+include = ["boxes*"]
