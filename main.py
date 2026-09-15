@@ -45,7 +45,6 @@ def main():
                     eclipsoide = Eclipsoide(game_surface)
                 elif action == "quit":
                     pg.quit()
-            screen.fill((0, 0, 0))
             menu.draw(screen)
             pg.display.flip()
 
