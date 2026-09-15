@@ -1,5 +1,4 @@
 import pygame as pg
-import constantes
 from projectile import Projectile
 
 class Player(pg.sprite.Sprite):
@@ -28,7 +27,7 @@ class Player(pg.sprite.Sprite):
         self.surface.blit(self.image, (0, 0))
 
         self.rect = self.surface.get_rect()
-        self.rect.move_ip(constantes.SCREEN_SIZE[0] // 2, constantes.SCREEN_SIZE[1] - 50)
+        self.rect.move_ip(screen.get_width() / 2 - self.size[0] / 2, screen.get_height() - 50)
         self.position = pg.Vector2(self.rect.midbottom)
 
     def update(self, dt):

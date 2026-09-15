@@ -13,7 +13,7 @@ class Enemy(pg.sprite.Sprite):
     MAX_SPEED_Y = 120
     MIN_SPEED_X = 30
     MAX_SPEED_X = 80
-    ASTEROID_SIZE = 85
+    ASTEROID_SIZE = 70
     TIME_BETWEEN_SHOOT = 1000
 
     image_set: bool = False

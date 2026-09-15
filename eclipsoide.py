@@ -9,6 +9,7 @@ class Eclilpsoide:
     # time between wave in milliseconds
     TIME_BETWEEN_WAVE = 5000
     VITESSE_BOSS = 0.1  # pixels par milliseconde
+    SUN_SIZE = 200
 
     # Simulation de collision : une cible automatique qui patrouille en bas
     VITESSE_CIBLE = 0.25  # pixels par milliseconde
@@ -29,6 +30,9 @@ class Eclilpsoide:
 
         self.bg_image = pg.image.load('images/background1.png')
         self.bg_image = pg.transform.scale(self.bg_image, (screen.get_width(), screen.get_height()))
+
+        self.sun_image = pg.image.load('images/sun.png')
+        self.sun_image = pg.transform.scale(self.sun_image, (self.SUN_SIZE, self.SUN_SIZE))
 
         # Objet sous groupe pour avoir la liste des sprites et automatiser la mise à jour par update()
         # Automatise aussi l'affichage : draw() par défaut affiche dans l'écran image à la position rect
@@ -106,6 +110,7 @@ class Eclilpsoide:
         """ Dessine le nouvel état du jeu """
         # Redessine le fond entier
         self.screen.blit(self.bg_image, (0, 0))
+        self.screen.blit(self.sun_image, (self.screen.get_width() / 2 - self.SUN_SIZE / 2, self.SUN_SIZE / 4))
         # Dessine tous les sprites dans la surface de l'écran
         self.enemies_group.draw(self.screen)
         self.player_group.draw(self.screen)
