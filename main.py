@@ -3,17 +3,22 @@
 
 # Utilisation de pygame avec un préfixe plus simple
 import pygame as pg
-# Utilisation de la classe Pong du module pong, sans prefixe
-from eclipsoide import Eclilpsoide
+# Utilisation de la classe Pong du module pong, sans prefix
+from Menu.main_menu import MainMenu as main_menu
+from eclipsoide import Eclipsoide
+from player import Player
+
 
 # Fonction principale
 def main():
     # Initialisation du package pygame
     pg.init()
+    screen = pg.display.set_mode((1024,768))
+    menu = main_menu(1024, 768)
     # Initalisation du module de gestion des fonts
     pg.font.init()
     # Donne un nom à la fenêtre
-    pg.display.set_caption("Eclipsoide")
+    pg.display.set_caption("ECLIPSOIDE")
 
     # Ratio du moniteur (ex: 16/9)
     monitor = pg.display.Info()
@@ -24,14 +29,27 @@ def main():
     GAME_H = int(GAME_W / aspect_ratio)
     game_surface = pg.Surface((GAME_W, GAME_H))
 
-    # Fenêtre redimensionnable, taille initiale = résolution du jeu
-    screen = pg.display.set_mode((GAME_W, GAME_H), pg.RESIZABLE)
+    start_menu = True
+    while start_menu:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+            action = menu.handle_event(event)
+            if action == "start":
+                print("Lancer le game")
+                start_menu = False
+                screen = pg.display.set_mode((GAME_W, GAME_H), pg.RESIZABLE)
+                clock = pg.time.Clock()
+                eclipsoide = Eclipsoide(game_surface)
+            elif action == "quit":
+                pg.quit()
+        screen.fill((0, 0, 0))
+        menu.draw(screen)
+        pg.display.flip()
 
-    # Crée un objet horloge pour gerer le temps entre deux images
-    clock = pg.time.Clock()
-    # Création d'une instance du jeu, donne la surface de rendu fixe
-    eclipsoide = Eclilpsoide(game_surface)
-
+    screen.fill((0, 0, 0))
+    menu.draw(screen)
+    pg.display.flip()
     # Boucle de jeu
     while eclipsoide.isRunning():
         # Limite la vitesse à 60 images max par secondes
