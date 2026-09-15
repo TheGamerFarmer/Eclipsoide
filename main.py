@@ -109,6 +109,7 @@ def main():
                     eclipsoide = Eclilpsoide(game_surface)
                 elif action == "menu":
                     start_menu = True
+                    game_over_running = False
                 elif action == "quit":
                     pg.quit()
                     return
