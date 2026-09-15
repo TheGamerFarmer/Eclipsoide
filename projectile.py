@@ -1,12 +1,11 @@
 import pygame as pg
 from pygame.math import Vector2
-from pygame.sprite import RenderUpdates
 
 class Projectile(pg.sprite.Sprite):
     FRAME_SPEED: float = 0.01
     time = 0
 
-    def __init__(self, all: RenderUpdates, origin: Vector2, speed: float, direction: pg.Vector2, textures: list[pg.Surface], *groups):
+    def __init__(self, origin: Vector2, speed: float, direction: pg.Vector2, textures: list[pg.Surface], *groups):
         super().__init__(*groups)
         self.all = all
         self.speed = speed
@@ -24,7 +23,6 @@ class Projectile(pg.sprite.Sprite):
 
         self.rect = self.surface.get_rect()
         self.rect.move_ip(origin)
-        self.all.add(self)
 
     def update(self, dt):
         self.time += dt
@@ -37,6 +35,5 @@ class Projectile(pg.sprite.Sprite):
         self.rect.y = int(newPos.y)
 
         if self.rect.bottom <= 0:
-            self.all.remove(self)
             self.kill()
 

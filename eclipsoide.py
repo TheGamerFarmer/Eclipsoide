@@ -3,10 +3,6 @@ import pygame as pg
 # Accès à la classe Enemy
 from enemy import Enemy
 from player import Player
-from Menu import menu_pause
-
-from boss import Rectangle, Triangle
-
 
 # Définition du jeu Pong
 class Eclilpsoide:
@@ -36,11 +32,11 @@ class Eclilpsoide:
 
         # Objet sous groupe pour avoir la liste des sprites et automatiser la mise à jour par update()
         # Automatise aussi l'affichage : draw() par défaut affiche dans l'écran image à la position rect
-        self.enemies = pg.sprite.Group()
+        self.enemies_group = pg.sprite.Group()
         self.player_group = pg.sprite.Group()
-        self.projectiles = pg.sprite.Group()
+        self.projectiles_group = pg.sprite.Group()
         # Création d'une instance du joueur
-        self.player = Player(self.player_group, screen, 0.3)
+        self.player = Player(screen, 0.3, self.projectiles_group, self.player_group)
         # Création du groupe du joueur
 
         # Vrai si le jeu est fini
@@ -82,30 +78,30 @@ class Eclilpsoide:
         if (self.time + dt) % self.TIME_BETWEEN_WAVE < dt:
             nbEnemies: int = int(self.time / self.TIME_BETWEEN_WAVE)
             for i in range(0, nbEnemies):
-                Enemy(self.screen, self.enemies, self.player)
+                Enemy(self.screen, self.player, self.enemies_group)
 
         self.time += dt
 
         # Collisions entre le joueur et les ennemies
-        if pg.sprite.spritecollide(self.player, self.enemies, dokill=False):
+        if pg.sprite.spritecollide(self.player, self.enemies_group, dokill=False):
             self.player.on_hit()
 
         # Collisions entre les projectiles du joueur et les ennemies
-        pg.sprite.groupcollide(self.projectiles, self.enemies, dokilla=True, dokillb=True)
+        pg.sprite.groupcollide(self.projectiles_group, self.enemies_group, dokilla=True, dokillb=True)
 
         if self.player.is_alive == False:
             self.isEnded = True
 
         # Met à jours tous les sprites en fonction du temps qui a passé
-        self.enemies.update(dt)
+        self.enemies_group.update(dt)
         self.player_group.update(dt)
-        self.projectiles.update(dt)
+        self.projectiles_group.update(dt)
 
     def draw(self):
         """ Dessine le nouvel état du jeu """
         # Redessine le fond entier
         self.screen.blit(self.bg_image, (0, 0))
         # Dessine tous les sprites dans la surface de l'écran
-        self.enemies.draw(self.screen)
+        self.enemies_group.draw(self.screen)
         self.player_group.draw(self.screen)
-        self.projectiles.draw(self.screen)
+        self.projectiles_group.draw(self.screen)

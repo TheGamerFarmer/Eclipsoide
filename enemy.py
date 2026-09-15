@@ -5,7 +5,6 @@ import random
 
 from player import Player
 from projectile import Projectile
-from pygame.sprite import RenderUpdates
 
 # Une balle qui rebondie sur les bords et des paddles
 class Enemy(pg.sprite.Sprite):
@@ -24,7 +23,7 @@ class Enemy(pg.sprite.Sprite):
 
     size = (ASTEROID_SIZE,ASTEROID_SIZE)
 
-    def __init__(self,screen: pg.Surface, group: RenderUpdates, player: Player, *groups):
+    def __init__(self,screen: pg.Surface, player: Player, *groups):
         # Appel du constructeur la super classe
         pg.sprite.Sprite.__init__(self, *groups)
 
@@ -51,7 +50,6 @@ class Enemy(pg.sprite.Sprite):
 
         self.player = player
         self.screen = screen
-        self.group = group
         # Recupère le rectangle de la surface du Sprite
         self.rect = self.surface.get_rect()
 
@@ -71,7 +69,6 @@ class Enemy(pg.sprite.Sprite):
             self.speedX = -self.speedX
 
         self.movement = pg.Vector2(self.speedX, self.speedY)
-        self.group.add(self)
 
     def update(self,dt):
         """ Met à jour la position de la balle  """
@@ -81,7 +78,7 @@ class Enemy(pg.sprite.Sprite):
             playerRect = self.player.rect
             direction = pg.Vector2(playerRect.center) - oldPos
             if direction.length() > 0:
-                Projectile(self.group, oldPos, 0.2, direction.normalize(), Enemy.image_shoot)
+                Projectile(oldPos, 0.2, direction.normalize(), Enemy.image_shoot, self.groups()[0])
 
         # Déplace la position de la raquette en fonction du veteur de mouvement
         # Calcule le vecteur déplacement
@@ -90,7 +87,6 @@ class Enemy(pg.sprite.Sprite):
         newPos = self.initPosition + (self.movement * self.time)
 
         if newPos.y > self.screen.get_height() + Enemy.ASTEROID_SIZE:
-            self.group.remove(self)
             self.kill()
 
         self.rect.x = int(newPos.x)

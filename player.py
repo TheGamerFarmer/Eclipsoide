@@ -1,16 +1,15 @@
 import pygame as pg
 import constantes
 from projectile import Projectile
-from pygame.sprite import RenderUpdates
 
 class Player(pg.sprite.Sprite):
     image_shoot = None
 
-    def __init__(self, group: RenderUpdates, screen: pg.Surface, speed: float, *groups):
+    def __init__(self, screen: pg.Surface, speed: float, projectilsGroup: pg.sprite.AbstractGroup, *groups):
         super().__init__(*groups)
 
-        self.group = group
         self.speed = speed
+        self.projectilsGroup = projectilsGroup
         self.screen = screen
 
         self.is_alive = True
@@ -27,7 +26,6 @@ class Player(pg.sprite.Sprite):
 
         self.rect = self.image.get_rect(midbottom=(constantes.SCREEN_SIZE[0] // 2, constantes.SCREEN_SIZE[1] - 50))
         self.position = pg.Vector2(self.rect.midbottom)
-        group.add(self)
 
     def update(self, dt):
         keystate = pg.key.get_pressed()
@@ -53,10 +51,9 @@ class Player(pg.sprite.Sprite):
         self.fire_timer -= dt
 
         if self.fire_timer <= 0 and keystate[pg.K_SPACE]:
-            Projectile(self.group, pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), [Player.image_shoot])
+            Projectile(pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), [Player.image_shoot], self.projectilsGroup)
             self.fire_timer = self.fire_delay
 
     def on_hit(self):
         self.is_alive = False
-        self.group.remove(self)
         self.kill()
