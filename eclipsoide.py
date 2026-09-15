@@ -32,9 +32,9 @@ class Eclilpsoide:
 
         # Objet sous groupe pour avoir la liste des sprites et automatiser la mise à jour par update()
         # Automatise aussi l'affichage : draw() par défaut affiche dans l'écran image à la position rect
-        self.enemies_group = pg.sprite.Group()
-        self.player_group = pg.sprite.Group()
-        self.projectiles_group = pg.sprite.Group()
+        self.enemies_group : pg.sprite.Group = pg.sprite.Group()
+        self.player_group : pg.sprite.Group = pg.sprite.Group()
+        self.projectiles_group : pg.sprite.Group = pg.sprite.Group()
         # Création d'une instance du joueur
         self.player = Player(screen, 0.3, self.projectiles_group, self.player_group)
         # Création du groupe du joueur
