@@ -8,7 +8,7 @@ from pygame.sprite import RenderUpdates
 
 # Une balle qui rebondie sur les bords et des paddles
 class Enemy(pg.sprite.Sprite):
-    SPAWN_EXTRA_PROPORTION = 7.0
+    SPAWN_EXTRA_PROPORTION = 3
     MIN_SPEED_Y = 80
     MAX_SPEED_Y = 120
     MIN_SPEED_X = 30
@@ -36,9 +36,9 @@ class Enemy(pg.sprite.Sprite):
         # Recupère le rectangle de la surface du Sprite
         self.rect = self.surface.get_rect()
 
-        screenWith = int(screen.get_width() / self.SPAWN_EXTRA_PROPORTION)
+        screenWith = Enemy.ASTEROID_SIZE * self.SPAWN_EXTRA_PROPORTION
 
-        self.initPosition = pg.Vector2(random.randint(-screenWith, screen.get_width() + screenWith), random.randint(-int(screen.get_height() / Enemy.SPAWN_EXTRA_PROPORTION), -Enemy.ASTEROID_SIZE))
+        self.initPosition = pg.Vector2(random.randint(-screenWith, screen.get_width() + screenWith), random.randint(-Enemy.ASTEROID_SIZE * Enemy.SPAWN_EXTRA_PROPORTION, -Enemy.ASTEROID_SIZE))
         self.rect.move_ip(self.initPosition.x, self.initPosition.y)
 
 
