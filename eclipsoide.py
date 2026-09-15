@@ -87,7 +87,7 @@ class Eclilpsoide:
             self.player.on_hit()
 
         # Collisions entre les projectiles du joueur et les ennemies
-        collisions = pg.sprite.groupcollide(self.projectiles, self.enemies, dokilla=True, dokillb=False)
+        collisions = pg.sprite.groupcollide(self.projectiles_group, self.enemies_group, dokilla=True, dokillb=False)
         if collisions:
             for enemies in collisions.values():
                 for enemy in enemies:
