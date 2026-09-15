@@ -41,6 +41,7 @@ def main():
                     start_menu = False
                     screen = pg.display.set_mode((GAME_W, GAME_H), pg.RESIZABLE)
                     clock = pg.time.Clock()
+
                     eclipsoide = Eclipsoide(game_surface)
                 elif action == "quit":
                     pg.quit()
@@ -82,9 +83,8 @@ def main():
                     return
                 action = eclipsoide.menu_game_over.handle_event(event)
                 if action == "retry":
-                    eclipsoide.isEnded = False
-                    eclipsoide.player.is_alive = True
                     game_over_running = False
+                    del eclipsoide
                     eclipsoide = Eclipsoide(game_surface)
                 elif action == "menu":
                     start_menu = True
