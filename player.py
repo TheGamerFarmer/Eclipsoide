@@ -40,8 +40,8 @@ class Player(pygame.sprite.Sprite):
         self.rect.clamp_ip(self.screen.get_rect())
         self.position = pygame.Vector2(self.rect.midbottom)
 
-        self.fire_timer -= dt
+        self.fire_timer -= (dt / 1000)
 
         if self.fire_timer <= 0 and keystate[pygame.K_SPACE]:
-            Projectile(self.projectiles, speed=400, origin=self.rect.midtop)
+            Projectile(self.projectiles, speed=0.4, origin=self.rect.midtop)
             self.fire_timer = self.fire_delay
