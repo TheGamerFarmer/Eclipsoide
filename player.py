@@ -15,6 +15,8 @@ class Player(pg.sprite.Sprite):
 
         self.is_alive = True
 
+        self.coins = 0
+
         self.fire_delay = 300
         self.fire_timer = 0
 
@@ -62,3 +64,6 @@ class Player(pg.sprite.Sprite):
     def on_hit(self):
         self.is_alive = False
         self.kill()
+
+    def add_coins(self, amount: int):
+        self.coins += amount

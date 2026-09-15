@@ -1,3 +1,4 @@
+import os
 # Utilisation de pygame avec un préfixe plus simple
 import pygame as pg
 
@@ -5,6 +6,8 @@ from Menu.menu_game_over import GameOver
 # Accès à la classe Enemy
 from enemy import Enemy
 from player import Player
+from coin import Coin
+from coin_popup import CoinPopup
 
 # Définition du jeu Pong
 class Eclipsoide:
@@ -42,6 +45,11 @@ class Eclipsoide:
         self.player_group = pg.sprite.Group()
         self.projectiles_group = pg.sprite.Group()
         self.enemy_projectiles_group = pg.sprite.Group()
+        self.coins_group = pg.sprite.Group()
+        self.popups_group = pg.sprite.Group()
+
+        self.coin_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 24)
+        self.coin_icon = pg.transform.scale(pg.image.load('images/ui/Coins/coin_0.png'), (24, 24))
         # Création d'une instance du joueur
         self.player = Player(screen, 0.3, self.projectiles_group, self.player_group)
         # Création du groupe du joueur
@@ -105,7 +113,17 @@ class Eclipsoide:
             for enemies in collisions.values():
                 for enemy in enemies:
                     if type(enemy) == Enemy:
+                        was_alive = enemy.life > 0
                         enemy.hited(40)
+                        if was_alive and enemy.life <= 0:
+                            Coin(pg.Vector2(enemy.rect.center), self.player, self.coins_group)
+
+        # Le joueur ramasse les pièces qu'il croise (aspirées automatiquement vers lui)
+        collected_coins = pg.sprite.spritecollide(self.player, self.coins_group, dokill=True)
+        if collected_coins:
+            self.player.add_coins(len(collected_coins) * Coin.VALUE)
+            for coin in collected_coins:
+                CoinPopup(pg.Vector2(coin.rect.center), Coin.VALUE, self.popups_group)
 
         if self.player.is_alive == False:
             self.isEnded = True
@@ -116,6 +134,8 @@ class Eclipsoide:
         self.player_group.update(dt)
         self.projectiles_group.update(dt)
         self.enemy_projectiles_group.update(dt)
+        self.coins_group.update(dt)
+        self.popups_group.update(dt)
 
     def draw(self):
         """ Dessine le nouvel état du jeu """
@@ -127,3 +147,10 @@ class Eclipsoide:
         self.player_group.draw(self.screen)
         self.projectiles_group.draw(self.screen)
         self.enemy_projectiles_group.draw(self.screen)
+        self.coins_group.draw(self.screen)
+        self.popups_group.draw(self.screen)
+
+        # Affiche le compteur de pièces en haut à gauche
+        self.screen.blit(self.coin_icon, (10, 10))
+        coin_text = self.coin_font.render(str(self.player.coins), True, (255, 220, 80))
+        self.screen.blit(coin_text, (40, 10))
