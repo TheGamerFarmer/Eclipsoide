@@ -8,15 +8,16 @@ from pygame.sprite import RenderUpdates
 
 # Une balle qui rebondie sur les bords et des paddles
 class Enemy(pg.sprite.Sprite):
-    SPAWN_EXTRA_PROPORTION = 7.0
+    SPAWN_EXTRA_PROPORTION = 3
     MIN_SPEED_Y = 80
     MAX_SPEED_Y = 120
     MIN_SPEED_X = 30
     MAX_SPEED_X = 80
+    ASTEROID_SIZE = 85
 
-    """ Une balle qui rebondit """
-    # Taille largeur, hauteur de la balle
-    size = (85,85)
+    image = None
+
+    size = (ASTEROID_SIZE,ASTEROID_SIZE)
     time = 0
     life = 100
 
@@ -25,24 +26,25 @@ class Enemy(pg.sprite.Sprite):
         pg.sprite.Sprite.__init__(self, *groups)
         # La surface (image) à afficher de ce sprite
         self.surface = pg.Surface(self.size)
-        self.image = pg.image.load('images/asteroide.png')
-        self.image = pg.transform.scale(self.image, self.size)
-        self.image = pg.transform.rotate(self.image, random.randint(-180, 180))
+        if Enemy.image is None:
+            Enemy.image = pg.image.load('images/asteroide.png')
+            Enemy.image = pg.transform.scale(Enemy.image, self.size)
+        self.image = pg.transform.rotate(Enemy.image, random.randint(-180, 180))
         self.surface.blit(self.image, (0,0))
         self.screen = screen
         self.all = all
         # Recupère le rectangle de la surface du Sprite
         self.rect = self.surface.get_rect()
 
-        screenWith = int(screen.get_width() / self.SPAWN_EXTRA_PROPORTION)
+        screenWith = Enemy.ASTEROID_SIZE * self.SPAWN_EXTRA_PROPORTION
 
-        self.initPosition = pg.Vector2(random.randint(-screenWith, screen.get_width() + screenWith), random.randint(-int(screen.get_height() / self.SPAWN_EXTRA_PROPORTION), -20))
+        self.initPosition = pg.Vector2(random.randint(-screenWith, screen.get_width() + screenWith), random.randint(-Enemy.ASTEROID_SIZE * Enemy.SPAWN_EXTRA_PROPORTION, -Enemy.ASTEROID_SIZE))
         self.rect.move_ip(self.initPosition.x, self.initPosition.y)
 
 
         # Vecteur de mouvement
-        self.speedY = random.randrange(self.MIN_SPEED_Y, self.MAX_SPEED_Y, 1) / 1000.0
-        self.speedX = random.randrange(self.MIN_SPEED_X, self.MAX_SPEED_X, 1) / 1000.0
+        self.speedY = random.randrange(Enemy.MIN_SPEED_Y, Enemy.MAX_SPEED_Y, 1) / 1000.0
+        self.speedX = random.randrange(Enemy.MIN_SPEED_X, Enemy.MAX_SPEED_X, 1) / 1000.0
 
         self.speedY = max(self.speedX, self.speedY)
 
