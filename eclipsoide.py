@@ -3,10 +3,14 @@ import pygame as pg
 # Accès à la classe Enemy
 from enemy import Enemy
 
+from boxes import Rectangle, Triangle
+
+
 # Définition du jeu Pong
 class Eclilpsoide:
     # time between wave in milliseconds
     TIME_BETWEEN_WAVE = 5000
+    VITESSE_JOUEUR = 0.3  # pixels par milliseconde
 
     # variable de classe pour mettre le jeu en pause pour débug
     pause = False
@@ -27,6 +31,10 @@ class Eclilpsoide:
         # Objet sous groupe pour avoir la liste des sprites et automatiser la mise à jour par update()
         # Automatise aussi l'affichage : draw() par défaut affiche dans l'écran image à la position rect
         self.all = pg.sprite.RenderUpdates()
+
+        # nos joueurs sont créés ici, mais rattachés directement au groupe self.all
+        self.joueur = Rectangle(100, 500, 50, 30, (0, 200, 255), self.all)
+        self.boss = Triangle(400, 50, 120, 100, (255, 60, 60), self.all)
 
         # Vrai si le jeu est fini
         self.isEnded = False
@@ -66,13 +74,24 @@ class Eclilpsoide:
         if Eclilpsoide.pause:
             return
 
+        keys = pg.key.get_pressed()
+        if keys[pg.K_LEFT]:
+            self.joueur.move(-self.VITESSE_JOUEUR * dt, 0)
+        if keys[pg.K_RIGHT]:
+            self.joueur.move(self.VITESSE_JOUEUR * dt, 0)
+        if keys[pg.K_SPACE]:
+            pass  # TODO: logique de tir (avec cooldown pour éviter un tir/frame)
+
+        if self.joueur.collides_with(self.boss):
+            pass  # TODO: dégâts au joueur
+
+
         if (self.time + dt) % self.TIME_BETWEEN_WAVE < dt:
             nbEnemies: int = int(self.time / self.TIME_BETWEEN_WAVE)
             for i in range(0, nbEnemies):
                 enemy = Enemy(self.screen, self.all)
 
         self.time += dt
-
         # Met à jours tous les sprites en fonction du temps qui a passé
         self.all.update(dt)
 
