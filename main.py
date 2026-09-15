@@ -5,6 +5,7 @@
 import pygame as pg
 # Utilisation de la classe Pong du module pong, sans prefixe
 from eclipsoide import Eclilpsoide
+from player import Player
 
 # Fonction principale
 def main():
@@ -32,6 +33,15 @@ def main():
     # Création d'une instance du jeu, donne la surface de rendu fixe
     eclipsoide = Eclilpsoide(game_surface)
 
+    # Création du groupe des projectiles
+    projectiles_group = pg.sprite.Group()
+
+    # Création d'une instance du joueur
+    player = Player(screen=screen, speed=0.3, projectiles=projectiles_group)
+    # Création du groupe du joueur
+    player_group = pg.sprite.Group()
+    player_group.add(player)
+
     # Boucle de jeu
     while eclipsoide.isRunning():
         # Limite la vitesse à 60 images max par secondes
@@ -53,8 +63,15 @@ def main():
             scale_w = int(win_h * aspect_ratio)
 
         scaled = pg.transform.scale(game_surface, (scale_w, scale_h))
+
+        player_group.update(dt)
+        projectiles_group.update(dt)
+
         screen.fill((0, 0, 0))
         screen.blit(scaled, ((win_w - scale_w) // 2, (win_h - scale_h) // 2))
+
+        player_group.draw(screen)
+        projectiles_group.draw(screen)
 
         # Bascule le nouvel état de l'écran
         pg.display.flip()
