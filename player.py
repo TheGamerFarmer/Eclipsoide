@@ -1,16 +1,24 @@
+import random
 import pygame as pg
 from projectile import Projectile
+from particle import Particle
 
 class Player(pg.sprite.Sprite):
     size = (30, 26)
     image_shoot_set: bool = False
     image_shoot: list[pg.Surface]
 
-    def __init__(self, screen: pg.Surface, speed: float, projectilsGroup: pg.sprite.AbstractGroup, *groups):
+    TRAIL_DELAY = 12  # ms entre deux particules de moteur
+    TRAIL_COLOR_START = (255, 230, 140)
+    TRAIL_COLOR_END = (255, 80, 20)
+
+    def __init__(self, screen: pg.Surface, speed: float, projectilsGroup: pg.sprite.AbstractGroup,
+                 particlesGroup: pg.sprite.AbstractGroup, *groups):
         super().__init__(*groups)
 
         self.speed = speed
         self.projectilsGroup = projectilsGroup
+        self.particlesGroup = particlesGroup
         self.screen = screen
 
         self.is_alive = True
@@ -19,6 +27,8 @@ class Player(pg.sprite.Sprite):
 
         self.fire_delay = 300
         self.fire_timer = 0
+
+        self.trail_timer = 0
 
         if not Player.image_shoot_set:
             Player.image_shoot = [pg.image.load(f'images/laser/player/laser_player_{i}.png') for i in range(4)]
@@ -60,6 +70,26 @@ class Player(pg.sprite.Sprite):
         if self.fire_timer <= 0:
             Projectile(pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), Player.image_shoot, (0, 255, 0), self.projectilsGroup)
             self.fire_timer = self.fire_delay
+
+        self._emit_trail(dt, movement)
+
+    def _emit_trail(self, dt, movement: pg.Vector2):
+        self.trail_timer -= dt
+        if self.trail_timer > 0:
+            return
+        self.trail_timer = Player.TRAIL_DELAY
+
+        # Point d'émission au niveau du réacteur, légèrement décalé pour ne pas
+        # coller pile sous le vaisseau
+        spawn_pos = pg.Vector2(self.rect.midbottom) - pg.Vector2(0, 2)
+        spawn_pos.x += random.uniform(-3, 3)
+
+        # Le panache part vers le bas et s'oppose un peu au mouvement du vaisseau
+        # pour donner un effet de traînée qui "reste en arrière"
+        velocity = pg.Vector2(random.uniform(-0.02, 0.02), random.uniform(0.09, 0.16))
+        velocity -= movement * 0.05
+
+        Particle(spawn_pos, velocity, Player.TRAIL_COLOR_START, Player.TRAIL_COLOR_END, self.particlesGroup)
 
     def on_hit(self):
         self.is_alive = False
