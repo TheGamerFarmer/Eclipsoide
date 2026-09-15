@@ -1,7 +1,7 @@
 import pygame
 
 class Projectile(pygame.sprite.Sprite):
-    def __init__(self, origin, speed: int, direction: pygame.Vector2, *groups):
+    def __init__(self, *groups, origin, speed: int, direction: pygame.Vector2):
         super().__init__(*groups)
 
         self.speed = speed
