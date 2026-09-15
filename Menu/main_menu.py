@@ -3,7 +3,7 @@ import sys
 import pygame as pg
 from . import ui_element
 
-UI_BASE_PATH = "ui"
+UI_BASE_PATH = "images/ui"
 
 
 class MainMenu:
@@ -18,7 +18,7 @@ class MainMenu:
             "start": ui_element.Button(center_x, 250, 200, 50, "Start Game", self.font),
             "option": ui_element.Button(center_x, 350, 200, 50, "Options", self.font),
             "credit": ui_element.Button(center_x, 450, 200, 50, "Credit", self.font),
-            "quit": ui_element.Button(center_x, 550, 200, 50, "Guit", self.font)
+            "quit": ui_element.Button(center_x, 550, 200, 50, "Quit", self.font)
         }
 
     def draw(self, surface):
