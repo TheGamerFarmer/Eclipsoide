@@ -15,6 +15,7 @@ class Enemy(pg.sprite.Sprite):
     MAX_SPEED_X = 80
     ASTEROID_SIZE = 70
     TIME_BETWEEN_SHOOT = 2000
+    HIT_FLASH_DURATION = 90  # ms de flash blanc quand touché
 
     image_set: bool = False
     image: pg.Surface
@@ -50,6 +51,11 @@ class Enemy(pg.sprite.Sprite):
         self.image = pg.transform.rotate(Enemy.image, random.randint(-180, 180))
         self.surface.blit(self.image, (0,0))
 
+        # Version "flashée" en blanc de l'image, affichée brièvement quand touché
+        self.normal_image = self.image
+        self.flash_image = self._build_flash_image(self.image)
+        self.hit_flash_timer = 0
+
         self.player = player
         self.screen = screen
         # Recupère le rectangle de la surface du Sprite
@@ -72,15 +78,25 @@ class Enemy(pg.sprite.Sprite):
 
         self.movement = pg.Vector2(self.speedX, self.speedY)
 
+    @staticmethod
+    def _build_flash_image(image: pg.Surface) -> pg.Surface:
+        flash = image.copy()
+        flash.fill((255, 255, 255, 0), special_flags=pg.BLEND_RGBA_ADD)
+        return flash
+
     def update(self,dt):
         """ Met à jour la position de la balle  """
+        if self.hit_flash_timer > 0:
+            self.hit_flash_timer -= dt
+            self.image = self.flash_image if self.hit_flash_timer > 0 else self.normal_image
+
         oldPos = pg.Vector2(self.rect.center)
 
         if (self.time + dt) % Enemy.TIME_BETWEEN_SHOOT < dt:
             playerRect = self.player.rect
             direction = pg.Vector2(playerRect.center) - oldPos
             if direction.length() > 0:
-                Projectile(oldPos, 0.15, direction.normalize(), Enemy.image_shoot, (255, 0, 0), self.projectiles_group)
+                Projectile(oldPos, 0.15, direction.normalize(), Enemy.image_shoot, (255, 0, 0), self.projectiles_group, trail_end_color=(255, 60, 20))
 
         # Déplace la position de la raquette en fonction du veteur de mouvement
         # Calcule le vecteur déplacement
@@ -96,5 +112,6 @@ class Enemy(pg.sprite.Sprite):
 
     def hited(self, damage: int):
         self.life -= damage
+        self.hit_flash_timer = Enemy.HIT_FLASH_DURATION
         if self.life <= 0:
             self.kill()
