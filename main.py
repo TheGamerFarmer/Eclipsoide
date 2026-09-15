@@ -85,7 +85,7 @@ def main():
                 action = eclipsoide.menu_game_over.handle_event(event)
                 if action == "retry":
                     eclipsoide.isEnded = False
-                    player.is_alive = True
+                    eclipsoide.player.is_alive = True
                     game_over_running = False
                     eclipsoide = Eclipsoide(game_surface)
                 elif action == "menu":
