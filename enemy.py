@@ -16,7 +16,7 @@ class Enemy(pg.sprite.Sprite):
 
     """ Une balle qui rebondit """
     # Taille largeur, hauteur de la balle
-    size = (20,20)
+    size = (85,85)
     time = 0
     life = 100
 
@@ -24,19 +24,21 @@ class Enemy(pg.sprite.Sprite):
         # Appel du constructeur la super classe
         pg.sprite.Sprite.__init__(self, *groups)
         # La surface (image) à afficher de ce sprite
-        self.image = pg.Surface(self.size)
+        self.surface = pg.Surface(self.size)
+        self.image = pg.image.load('images/asteroide.png')
+        self.image = pg.transform.scale(self.image, self.size)
+        self.image = pg.transform.rotate(self.image, random.randint(-180, 180))
+        self.surface.blit(self.image, (0,0))
         self.screen = screen
         self.all = all
         # Recupère le rectangle de la surface du Sprite
-        self.rect = self.image.get_bounding_rect()
+        self.rect = self.surface.get_rect()
 
         screenWith = int(screen.get_width() / self.SPAWN_EXTRA_PROPORTION)
 
         self.initPosition = pg.Vector2(random.randint(-screenWith, screen.get_width() + screenWith), random.randint(-int(screen.get_height() / self.SPAWN_EXTRA_PROPORTION), -20))
         self.rect.move_ip(self.initPosition.x, self.initPosition.y)
 
-        # Donne une couleur
-        self.image.fill("red")
 
         # Vecteur de mouvement
         self.speedY = random.randrange(self.MIN_SPEED_Y, self.MAX_SPEED_Y, 1) / 1000.0
