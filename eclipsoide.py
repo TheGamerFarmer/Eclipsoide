@@ -3,20 +3,12 @@ import pygame as pg
 # Accès à la classe Enemy
 from enemy import Enemy
 from player import Player
+from boss import Boss
 
-# Définition du jeu Pong
+# Définition du jeu Eclilpsoide
 class Eclilpsoide:
     # time between wave in milliseconds
     TIME_BETWEEN_WAVE = 5000
-    VITESSE_BOSS = 0.1  # pixels par milliseconde
-
-    # Simulation de collision : une cible automatique qui patrouille en bas
-    VITESSE_CIBLE = 0.25  # pixels par milliseconde
-    VIE_CIBLE = 100
-    DEGATS_EXPLOSION = 20
-    DUREE_FLASH = 150  # millisecondes
-    COULEUR_CIBLE = (0, 200, 255)
-    COULEUR_CIBLE_TOUCHEE = (255, 255, 255)
 
     # variable de classe pour mettre le jeu en pause pour débug
     pause = False
@@ -38,6 +30,10 @@ class Eclilpsoide:
         # Création d'une instance du joueur
         self.player = Player(screen, 0.3, self.projectiles_group, self.player_group)
         # Création du groupe du joueur
+
+        # Le boss n'apparaît que quand on appelle spawn_boss()
+        self.boss_group : pg.sprite.Group = pg.sprite.Group()
+        self.boss: Boss | None = None
 
         # Vrai si le jeu est fini
         self.isEnded = False
@@ -86,6 +82,9 @@ class Eclilpsoide:
         if pg.sprite.spritecollide(self.player, self.enemies_group, dokill=False):
             self.player.on_hit()
 
+        ## Apparition du boss après 30 secondes ...
+        if self.time > 3000:
+            self.spawn_boss('images/boss/boss1.gif')
         # Collisions entre les projectiles du joueur et les ennemies
         collisions = pg.sprite.groupcollide(self.projectiles_group, self.enemies_group, dokilla=True, dokillb=False)
         if collisions:
@@ -94,13 +93,32 @@ class Eclilpsoide:
                     if type(enemy) == Enemy:
                         enemy.hited(40)
 
-        if self.player.is_alive == False:
+        # Collisions entre les bombes du boss et le joueur
+        if self.boss is not None and self.player.alive() and self.boss.bombs_hitting(self.player):
+            self.player.on_hit()
+
+        if not self.player.is_alive:
             self.isEnded = True
 
         # Met à jours tous les sprites en fonction du temps qui a passé
         self.enemies_group.update(dt)
         self.player_group.update(dt)
         self.projectiles_group.update(dt)
+        self.boss_group.update(dt)
+
+    def spawn_boss(self, image: str | pg.Surface | None = None, size: int = 150,
+                   color: tuple[int, int, int] = (255, 200, 60)) -> Boss | None:
+        """
+        Fait apparaître le boss (lune, soleil...) en haut de l'écran.
+        Remplace le boss précédent s'il y en avait déjà un.
+        """
+        if self.boss is not None:
+            self.boss.bombs.empty()
+            self.boss.kill()
+        x = (self.screen.get_width() - size) // 2
+        self.boss = Boss(x, 50, size, size, color, self.boss_group,
+                         image=image, bounds=self.screen.get_rect())
+        return self.boss
 
     def draw(self):
         """ Dessine le nouvel état du jeu """
@@ -110,3 +128,6 @@ class Eclilpsoide:
         self.enemies_group.draw(self.screen)
         self.player_group.draw(self.screen)
         self.projectiles_group.draw(self.screen)
+        self.boss_group.draw(self.screen)
+        if self.boss is not None:
+            self.boss.draw_bombs(self.screen)
