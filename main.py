@@ -13,7 +13,7 @@ def main():
     # Initalisation du module de gestion des fonts
     pg.font.init()
     # Donne un nom à la fenêtre
-    pg.display.set_caption("PONG")
+    pg.display.set_caption("Eclipsoide")
 
     # Ratio du moniteur (ex: 16/9)
     monitor = pg.display.Info()

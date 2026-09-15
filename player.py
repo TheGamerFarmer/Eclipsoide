@@ -6,14 +6,16 @@ from pygame.sprite import RenderUpdates
 class Player(pg.sprite.Sprite):
     image_shoot = None
 
-    def __init__(self, all: RenderUpdates, screen: pg.Surface, speed: float, *groups):
+    def __init__(self, group: RenderUpdates, screen: pg.Surface, speed: float, *groups):
         super().__init__(*groups)
 
-        self.all = all
+        self.group = group
         self.speed = speed
         self.screen = screen
 
-        self.fire_delay = 0.3
+        self.is_alive = True
+
+        self.fire_delay = 300
         self.fire_timer = 0
 
         if Player.image_shoot is None:
@@ -25,7 +27,7 @@ class Player(pg.sprite.Sprite):
 
         self.rect = self.image.get_rect(midbottom=(constantes.SCREEN_SIZE[0] // 2, constantes.SCREEN_SIZE[1] - 50))
         self.position = pg.Vector2(self.rect.midbottom)
-        all.add(self)
+        group.add(self)
 
     def update(self, dt):
         keystate = pg.key.get_pressed()
@@ -48,8 +50,13 @@ class Player(pg.sprite.Sprite):
         self.rect.clamp_ip(self.screen.get_rect())
         self.position = pg.Vector2(self.rect.midbottom)
 
-        self.fire_timer -= (dt / 1000)
+        self.fire_timer -= dt
 
         if self.fire_timer <= 0 and keystate[pg.K_SPACE]:
-            Projectile(self.all, pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), [Player.image_shoot])
+            Projectile(self.group, pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), [Player.image_shoot])
             self.fire_timer = self.fire_delay
+
+    def on_hit(self):
+        self.is_alive = False
+        self.group.remove(self)
+        self.kill()

@@ -23,12 +23,16 @@ class Enemy(pg.sprite.Sprite):
     image_shoot: list[pg.Surface]
 
     size = (ASTEROID_SIZE,ASTEROID_SIZE)
-    time = 0
-    life = 100
 
-    def __init__(self,screen: pg.Surface, all: RenderUpdates, player: Player, *groups):
+    def __init__(self,screen: pg.Surface, group: RenderUpdates, player: Player, *groups):
         # Appel du constructeur la super classe
         pg.sprite.Sprite.__init__(self, *groups)
+
+        # Points de vie de l'ennemie
+        self.life = 100
+
+        self.time = 0
+
         # La surface (image) à afficher de ce sprite
         self.surface = pg.Surface(self.size)
 
@@ -47,7 +51,7 @@ class Enemy(pg.sprite.Sprite):
 
         self.player = player
         self.screen = screen
-        self.all = all
+        self.group = group
         # Recupère le rectangle de la surface du Sprite
         self.rect = self.surface.get_rect()
 
@@ -67,7 +71,7 @@ class Enemy(pg.sprite.Sprite):
             self.speedX = -self.speedX
 
         self.movement = pg.Vector2(self.speedX, self.speedY)
-        self.all.add(self)
+        self.group.add(self)
 
     def update(self,dt):
         """ Met à jour la position de la balle  """
@@ -77,7 +81,7 @@ class Enemy(pg.sprite.Sprite):
             playerRect = self.player.rect
             direction = pg.Vector2(playerRect.center) - oldPos
             if direction.length() > 0:
-                Projectile(self.all, oldPos, 0.2, direction.normalize(), Enemy.image_shoot)
+                Projectile(self.group, oldPos, 0.2, direction.normalize(), Enemy.image_shoot)
 
         # Déplace la position de la raquette en fonction du veteur de mouvement
         # Calcule le vecteur déplacement
@@ -86,7 +90,7 @@ class Enemy(pg.sprite.Sprite):
         newPos = self.initPosition + (self.movement * self.time)
 
         if newPos.y > self.screen.get_height() + Enemy.ASTEROID_SIZE:
-            self.all.remove(self)
+            self.group.remove(self)
             self.kill()
 
         self.rect.x = int(newPos.x)
