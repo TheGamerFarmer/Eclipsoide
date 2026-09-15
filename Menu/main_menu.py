@@ -14,6 +14,9 @@ class MainMenu:
 
         center_x = screen_width // 2 - 100
 
+        self.bg_image = pg.image.load('images/backgroundWellcom.png')
+        self.bg_image = pg.transform.scale(self.bg_image, (screen_width, screen_height))
+
         self.buttons = {
             "start": ui_element.Button(center_x, 250, 200, 50, "Start Game", self.font),
             "option": ui_element.Button(center_x, 350, 200, 50, "Options", self.font),
@@ -22,11 +25,9 @@ class MainMenu:
         }
 
     def draw(self, surface):
-        surface.fill((10, 10, 30))
-
         titre_shadow = self.titre_font.render("ECLIPSOIDE", True, (0, 80, 150))
         surface.blit(titre_shadow, titre_shadow.get_rect(center=(surface.get_width() // 2 + 4, 104)))
-
+        surface.blit(self.bg_image, (0, 0))
         titre = self.titre_font.render("ECLIPSOIDE", True, (255, 255, 255))
         surface.blit(titre, titre.get_rect(center=(surface.get_width() // 2, 100)))
 
