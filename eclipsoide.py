@@ -26,7 +26,7 @@ class Eclilpsoide:
 
         # Objet sous groupe pour avoir la liste des sprites et automatiser la mise à jour par update()
         # Automatise aussi l'affichage : draw() par défaut affiche dans l'écran image à la position rect
-        self.all = pg.sprite.RenderUpdates()
+        self.all : pg.sprite.RenderUpdates = pg.sprite.RenderUpdates()
 
         # nos joueurs sont créés ici, mais rattachés directement au groupe self.all
         self.joueur = Rectangle(100, 500, 50, 30, (0, 200, 255), self.all)
