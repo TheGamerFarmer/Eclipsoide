@@ -39,6 +39,7 @@ class Eclilpsoide:
         self.enemies_group = pg.sprite.Group()
         self.player_group = pg.sprite.Group()
         self.projectiles_group = pg.sprite.Group()
+        self.enemy_projectiles_group = pg.sprite.Group()
         # Création d'une instance du joueur
         self.player = Player(screen, 0.3, self.projectiles_group, self.player_group)
         # Création du groupe du joueur
@@ -82,12 +83,16 @@ class Eclilpsoide:
         if (self.time + dt) % self.TIME_BETWEEN_WAVE < dt:
             nbEnemies: int = int(self.time / self.TIME_BETWEEN_WAVE)
             for i in range(0, nbEnemies):
-                Enemy(self.screen, self.player, self.enemies_group)
+                Enemy(self.screen, self.player, self.enemy_projectiles_group, self.enemies_group)
 
         self.time += dt
 
         # Collisions entre le joueur et les ennemies
         if pg.sprite.spritecollide(self.player, self.enemies_group, dokill=False):
+            self.player.on_hit()
+
+        # Collisions entre le joueur et les projectiles ennemies
+        if pg.sprite.spritecollide(self.player, self.enemy_projectiles_group, dokill=True):
             self.player.on_hit()
 
         # Collisions entre les projectiles du joueur et les ennemies
@@ -99,12 +104,13 @@ class Eclilpsoide:
                         enemy.hited(40)
 
         if self.player.is_alive == False:
-            self.isEnded = True
+            Eclilpsoide.pause = True
 
         # Met à jours tous les sprites en fonction du temps qui a passé
         self.enemies_group.update(dt)
         self.player_group.update(dt)
         self.projectiles_group.update(dt)
+        self.enemy_projectiles_group.update(dt)
 
     def draw(self):
         """ Dessine le nouvel état du jeu """
@@ -115,3 +121,4 @@ class Eclilpsoide:
         self.enemies_group.draw(self.screen)
         self.player_group.draw(self.screen)
         self.projectiles_group.draw(self.screen)
+        self.enemy_projectiles_group.draw(self.screen)

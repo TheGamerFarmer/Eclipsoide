@@ -56,7 +56,7 @@ class Player(pg.sprite.Sprite):
         self.fire_timer -= dt
 
         if self.fire_timer <= 0:
-            Projectile(pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), Player.image_shoot, self.projectilsGroup)
+            Projectile(pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), Player.image_shoot, (0, 255, 0), self.projectilsGroup)
             self.fire_timer = self.fire_delay
 
     def on_hit(self):

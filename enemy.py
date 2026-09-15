@@ -23,9 +23,11 @@ class Enemy(pg.sprite.Sprite):
 
     size = (ASTEROID_SIZE,ASTEROID_SIZE)
 
-    def __init__(self,screen: pg.Surface, player: Player, *groups):
+    def __init__(self,screen: pg.Surface, player: Player, projectiles_group: pg.sprite.AbstractGroup, *groups):
         # Appel du constructeur la super classe
         pg.sprite.Sprite.__init__(self, *groups)
+
+        self.projectiles_group = projectiles_group
 
         # Points de vie de l'ennemie
         self.life = 100
@@ -78,7 +80,7 @@ class Enemy(pg.sprite.Sprite):
             playerRect = self.player.rect
             direction = pg.Vector2(playerRect.center) - oldPos
             if direction.length() > 0:
-                Projectile(oldPos, 0.2, direction.normalize(), Enemy.image_shoot, self.groups()[0])
+                Projectile(oldPos, 0.2, direction.normalize(), Enemy.image_shoot, (255, 0, 0), self.projectiles_group)
 
         # Déplace la position de la raquette en fonction du veteur de mouvement
         # Calcule le vecteur déplacement
