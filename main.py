@@ -5,7 +5,7 @@
 import pygame as pg
 # Utilisation de la classe Pong du module pong, sans prefix
 from Menu.main_menu import MainMenu as main_menu
-from eclipsoide import Eclilpsoide
+from eclipsoide import Eclipsoide
 from player import Player
 
 

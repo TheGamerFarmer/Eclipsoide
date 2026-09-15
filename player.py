@@ -1,24 +1,35 @@
 import pygame as pg
-import constantes
 from projectile import Projectile
 
 class Player(pg.sprite.Sprite):
-    def __init__(self, *groups, screen, speed, projectiles):
+    size = (30, 26)
+    image_shoot_set: bool = False
+    image_shoot: list[pg.Surface]
+
+    def __init__(self, screen: pg.Surface, speed: float, projectilsGroup: pg.sprite.AbstractGroup, *groups):
         super().__init__(*groups)
 
         self.speed = speed
+        self.projectilsGroup = projectilsGroup
         self.screen = screen
-        self.projectiles = projectiles
 
         self.is_alive = True
 
         self.fire_delay = 300
         self.fire_timer = 0
 
-        self.image = pg.Surface((30, 30))
-        self.image.fill("white")
+        if not Player.image_shoot_set:
+            Player.image_shoot = [pg.image.load(f'images/laser/player/laser_player_{i}.png') for i in range(4)]
+            Player.image_shoot = [pg.transform.scale(image, (6, 16)) for image in Player.image_shoot]
+            Player.image_shoot_set = True
 
-        self.rect = self.image.get_rect(midbottom=(constantes.SCREEN_SIZE[0] // 2, constantes.SCREEN_SIZE[1] - 50))
+        self.surface = pg.Surface(self.size)
+        self.image = pg.image.load('images/ship.png')
+        self.image = pg.transform.scale(self.image, self.size)
+        self.surface.blit(self.image, (0, 0))
+
+        self.rect = self.surface.get_rect()
+        self.rect.move_ip(screen.get_width() / 2 - self.size[0] / 2, screen.get_height() - 50)
         self.position = pg.Vector2(self.rect.midbottom)
 
     def update(self, dt):
@@ -44,8 +55,8 @@ class Player(pg.sprite.Sprite):
 
         self.fire_timer -= dt
 
-        if self.fire_timer <= 0 and keystate[pg.K_SPACE]:
-            Projectile(self.projectiles, origin=self.rect.midtop, speed=0.4, direction=pg.Vector2(0, -1))
+        if self.fire_timer <= 0:
+            Projectile(pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), Player.image_shoot, (0, 255, 0), self.projectilsGroup)
             self.fire_timer = self.fire_delay
 
     def on_hit(self):
