@@ -3,11 +3,10 @@
 
 # Utilisation de pygame avec un préfixe plus simple
 import pygame as pg
-# Utilisation de la classe Pong du module pong, sans prefixe
-from pong import Pong
-from message import Message
+# Utilisation de la classe Pong du module pong, sans prefix
 from Menu.main_menu import MainMenu as main_menu
 from eclipsoide import Eclilpsoide
+
 
 # Fonction principale
 def main():
@@ -29,30 +28,33 @@ def main():
     GAME_W = 1024
     GAME_H = int(GAME_W / aspect_ratio)
     game_surface = pg.Surface((GAME_W, GAME_H))
+    start_menu = True
 
-    # Fenêtre redimensionnable, taille initiale = résolution du jeu
-    screen = pg.display.set_mode((GAME_W, GAME_H), pg.RESIZABLE)
+    while start_menu:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+                return  # or sys.exit()
+            action = menu.handle_event(event)
+            if action == "start":
+                print("Lancer le game")
+                start_menu = False
+                screen = pg.display.set_mode((GAME_W, GAME_H), pg.RESIZABLE)
+                clock = pg.time.Clock()
+                eclipsoide = Eclilpsoide(game_surface)
+            elif action == "quit":
+                pg.quit()
+                return
 
-    # Crée un objet horloge pour gerer le temps entre deux images
-    clock = pg.time.Clock()
-    # Création d'une instance du jeu, donne la surface de rendu fixe
-    eclipsoide = Eclilpsoide(game_surface)
-
+        screen.fill((0, 0, 0))
+        menu.draw(screen)
+        pg.display.flip()
     # Boucle de jeu
     while eclipsoide.isRunning():
         # Limite la vitesse à 60 images max par secondes
         # Calcule le temps réel entre deux images en millisecondes
         dt = clock.tick(60)
 
-    while running:
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                running =False
-            action = menu.handle_event(event)
-            if action =="start":
-                print("Lancer le game")
-            elif action =="quit":
-                running = False
         # Met à jour le jeu sachant que dt millisecondes se sont écoulées
         eclipsoide.update(dt)
 
