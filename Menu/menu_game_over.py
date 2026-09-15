@@ -9,16 +9,15 @@ class GameOver:
         center_x = screen_height // 2 - 100
 
         self.buttons = {
-            "start": ui_element.Button(center_x, 250, 200, 50, "Start Game", self.font),
-            "option": ui_element.Button(center_x, 350, 200, 50, "Options", self.font),
-            "credit": ui_element.Button(center_x, 450, 200, 50, "Credit", self.font),
-            "quit": ui_element.Button(center_x, 550, 200, 50, "Guit", self.font)
+            "retry": ui_element.Button(center_x, 250, 200, 50, "Retry", self.font),
+            "menu": ui_element.Button(center_x, 350, 200, 50, "Menu", self.font),
+            "quit": ui_element.Button(center_x, 450, 200, 50, "Quit", self.font)
         }
 
     def draw(self, surface):
 
-        surface.fill(pg.image.load('images/background1.png'))
-        titre = self.titre_font.render("ECLIPSOIDE", True, (255, 244, 255))
+        surface.fill((20,20,30))
+        titre = self.titre_font.render("GAME OVER", True, (255, 244, 255))
         surface.blit(titre, titre.get_rect(center=(surface.get_width() // 2, 120)))
 
         for button in self.buttons.values():

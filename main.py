@@ -30,71 +30,91 @@ def main():
     game_surface = pg.Surface((GAME_W, GAME_H))
 
     start_menu = True
-    while start_menu:
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                pg.quit()
-            action = menu.handle_event(event)
-            if action == "start":
-                print("Lancer le game")
-                start_menu = False
-                screen = pg.display.set_mode((GAME_W, GAME_H), pg.RESIZABLE)
-                clock = pg.time.Clock()
-                eclipsoide = Eclilpsoide(game_surface)
-            elif action == "quit":
-                pg.quit()
+
+    while True:
+        while start_menu:
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
+                action = menu.handle_event(event)
+                if action == "start":
+                    print("Lancer le game")
+                    start_menu = False
+                    screen = pg.display.set_mode((GAME_W, GAME_H), pg.RESIZABLE)
+                    clock = pg.time.Clock()
+                    eclipsoide = Eclilpsoide(game_surface)
+                elif action == "quit":
+                    pg.quit()
+            screen.fill((0, 0, 0))
+            menu.draw(screen)
+            pg.display.flip()
+
+        # Création du groupe des projectiles
+        projectiles_group = pg.sprite.Group()
+
+        # Création d'une instance du joueur
+        player = Player(screen=screen, speed=0.3, projectiles=projectiles_group)
+        # Création du groupe du joueur
+        player_group = pg.sprite.Group()
+        player_group.add(player)
+
         screen.fill((0, 0, 0))
         menu.draw(screen)
         pg.display.flip()
+        # Boucle de jeu
+        while eclipsoide.isRunning():
+            # Limite la vitesse à 60 images max par secondes
+            # Calcule le temps réel entre deux images en millisecondes
+            dt = clock.tick(60)
 
-    # Création du groupe des projectiles
-    projectiles_group = pg.sprite.Group()
+            # Met à jour le jeu sachant que dt millisecondes se sont écoulées
+            eclipsoide.update(dt)
 
-    # Création d'une instance du joueur
-    player = Player(screen=screen, speed=0.3, projectiles=projectiles_group)
-    # Création du groupe du joueur
-    player_group = pg.sprite.Group()
-    player_group.add(player)
+            # Demande au jeu d'afficher sur la surface de rendu son nouvel état
+            eclipsoide.draw()
 
-    screen.fill((0, 0, 0))
-    menu.draw(screen)
-    pg.display.flip()
-    # Boucle de jeu
-    while eclipsoide.isRunning():
-        # Limite la vitesse à 60 images max par secondes
-        # Calcule le temps réel entre deux images en millisecondes
-        dt = clock.tick(60)
+            # Scale la surface de rendu pour remplir la fenêtre en gardant le ratio
+            win_w, win_h = screen.get_size()
+            scale_w = win_w
+            scale_h = int(win_w / aspect_ratio)
+            if scale_h > win_h:
+                scale_h = win_h
+                scale_w = int(win_h * aspect_ratio)
 
-        # Met à jour le jeu sachant que dt millisecondes se sont écoulées
-        eclipsoide.update(dt)
+            scaled = pg.transform.scale(game_surface, (scale_w, scale_h))
 
-        # Demande au jeu d'afficher sur la surface de rendu son nouvel état
-        eclipsoide.draw()
+            player_group.update(dt)
+            projectiles_group.update(dt)
 
-        # Scale la surface de rendu pour remplir la fenêtre en gardant le ratio
-        win_w, win_h = screen.get_size()
-        scale_w = win_w
-        scale_h = int(win_w / aspect_ratio)
-        if scale_h > win_h:
-            scale_h = win_h
-            scale_w = int(win_h * aspect_ratio)
+            screen.fill((0, 0, 0))
+            screen.blit(scaled, ((win_w - scale_w) // 2, (win_h - scale_h) // 2))
 
-        scaled = pg.transform.scale(game_surface, (scale_w, scale_h))
+            player_group.draw(screen)
+            projectiles_group.draw(screen)
 
-        player_group.update(dt)
-        projectiles_group.update(dt)
+            # Bascule le nouvel état de l'écran
+            pg.display.flip()
 
-        screen.fill((0, 0, 0))
-        screen.blit(scaled, ((win_w - scale_w) // 2, (win_h - scale_h) // 2))
-
-        player_group.draw(screen)
-        projectiles_group.draw(screen)
-
-        # Bascule le nouvel état de l'écran
-        pg.display.flip()
-
-    # Fin utilisation de pygame
-    pg.quit()
+        game_over_running = True
+        while game_over_running:
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    return
+                action = eclipsoide.menu_game_over.handle_event(event)
+                if action == "retry":
+                    eclipsoide.isEnded = False
+                    player.is_alive = True
+                    game_over_running = False
+                    eclipsoide = Eclilpsoide(game_surface)
+                elif action == "menu":
+                    start_menu = True
+                elif action == "quit":
+                    pg.quit()
+                    return
+            screen.fill((0, 0, 0))
+            eclipsoide.menu_game_over.draw(screen)
+            pg.display.flip()
 
 
 # Appel automatiquement la fonction main si pas utilisé comme module

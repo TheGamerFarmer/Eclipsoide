@@ -1,5 +1,7 @@
 # Utilisation de pygame avec un préfixe plus simple
 import pygame as pg
+
+from Menu.menu_game_over import GameOver
 # Accès à la classe Enemy
 from enemy import Enemy
 from player import Player
@@ -39,6 +41,8 @@ class Eclilpsoide:
         self.player_group = pg.sprite.Group()
         self.projectiles = pg.sprite.Group()
         self.player = Player(self.player_group, screen=self.screen, speed=0.3, projectiles=self.projectiles)
+
+        self.menu_game_over = GameOver(self.screen.get_width(), self.screen.get_height())
 
         # Vrai si le jeu est fini
         self.isEnded = False
