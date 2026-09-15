@@ -29,7 +29,7 @@ class Eclilpsoide:
         self.all : pg.sprite.RenderUpdates = pg.sprite.RenderUpdates()
 
         # nos joueurs sont créés ici, mais rattachés directement au groupe self.all
-        self.joueur = Rectangle(100, 500, 50, 30, (0, 200, 255), self.all)
+      #  self.joueur = Rectangle(100, 500, 50, 30, (0, 200, 255), self.all)
         self.boss = Triangle(400, 50, 120, 100, (255, 60, 60), self.all)
 
         # Vrai si le jeu est fini
@@ -76,8 +76,8 @@ class Eclilpsoide:
         if keys[pg.K_SPACE]:
             pass  # TODO: logique de tir (avec cooldown pour éviter un tir/frame)
 
-        if self.joueur.collides_with(self.boss):
-            pass  # TODO: dégâts au joueur
+#       if self.joueur.collides_with(self.boss):
+#          pass  # TODO: dégâts au joueur
 
 
         if (self.time + dt) % self.TIME_BETWEEN_WAVE < dt:
