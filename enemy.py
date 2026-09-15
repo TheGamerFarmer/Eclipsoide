@@ -3,8 +3,6 @@ import pygame as pg
 # Accès à la classe Random
 import random
 
-from pygame.sprite import RenderUpdates
-
 
 # Une balle qui rebondie sur les bords et des paddles
 class Enemy(pg.sprite.Sprite):
@@ -18,12 +16,16 @@ class Enemy(pg.sprite.Sprite):
     image = None
 
     size = (ASTEROID_SIZE,ASTEROID_SIZE)
-    time = 0
-    life = 100
 
-    def __init__(self,screen: pg.Surface, all: RenderUpdates , *groups):
+    def __init__(self, *groups, screen: pg.Surface):
         # Appel du constructeur la super classe
         pg.sprite.Sprite.__init__(self, *groups)
+
+        # Points de vie de l'ennemie
+        self.life = 100
+
+        self.time = 0
+
         # La surface (image) à afficher de ce sprite
         self.surface = pg.Surface(self.size)
         if Enemy.image is None:
@@ -32,7 +34,6 @@ class Enemy(pg.sprite.Sprite):
         self.image = pg.transform.rotate(Enemy.image, random.randint(-180, 180))
         self.surface.blit(self.image, (0,0))
         self.screen = screen
-        self.all = all
         # Recupère le rectangle de la surface du Sprite
         self.rect = self.surface.get_rect()
 
@@ -52,7 +53,6 @@ class Enemy(pg.sprite.Sprite):
             self.speedX = -self.speedX
 
         self.movement = pg.Vector2(self.speedX, self.speedY)
-        self.all.add(self)
 
     def update(self,dt):
         """ Met à jour la position de la balle  """
@@ -63,7 +63,7 @@ class Enemy(pg.sprite.Sprite):
         newPos = self.initPosition + (self.movement * self.time)
 
         if newPos.y > self.screen.get_height() + 20:
-            self.all.remove(self)
+            self.kill()
 
         self.rect.x = int(newPos.x)
         self.rect.y = int(newPos.y)

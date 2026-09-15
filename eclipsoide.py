@@ -2,6 +2,7 @@
 import pygame as pg
 # Accès à la classe Enemy
 from enemy import Enemy
+from player import Player
 
 # Définition du jeu Pong
 class Eclilpsoide:
@@ -23,6 +24,13 @@ class Eclilpsoide:
         # Objet sous groupe pour avoir la liste des sprites et automatiser la mise à jour par update()
         # Automatise aussi l'affichage : draw() par défaut affiche dans l'écran image à la position rect
         self.all = pg.sprite.RenderUpdates()
+
+        # Groupe dédié aux ennemis, pour les détections de collision (tirs, joueur, ...)
+        self.enemies = pg.sprite.Group()
+        self.player_group = pg.sprite.Group()
+        self.projeciles = pg.sprite.Group()
+        self.player = Player(self.player_group, screen=self.screen, speed=0.3, projectiles=self.projeciles)
+        self.player_group.add(self.player)
 
         # Vrai si le jeu est fini
         self.isEnded = False
@@ -63,12 +71,20 @@ class Eclilpsoide:
         if (self.time + dt) % self.TIME_BETWEEN_WAVE < dt:
             nbEnemies: int = int(self.time / self.TIME_BETWEEN_WAVE)
             for i in range(0, nbEnemies):
-                Enemy(self.screen, self.all)
+                Enemy(self.enemies, screen=self.screen)
 
         self.time += dt
 
+        if pg.sprite.spritecollide(self.player, self.enemies, dokill=False):
+            self.player.on_hit()
+
+        pg.sprite.groupcollide(self.projeciles, self.enemies, dokilla=True, dokillb=True)
+
         # Met à jours tous les sprites en fonction du temps qui a passé
         self.all.update(dt)
+        self.enemies.update(dt)
+        self.player_group.update(dt)
+        self.projeciles.update(dt)
 
     def draw(self):
         """ Dessine le nouvel état du jeu """
@@ -76,3 +92,6 @@ class Eclilpsoide:
         self.screen.blit(self.bg_image, (0, 0))
         # Dessine tous les sprites dans la surface de l'écran
         self.all.draw(self.screen)
+        self.enemies.draw(self.screen)
+        self.player_group.draw(self.screen)
+        self.projeciles.draw(self.screen)
