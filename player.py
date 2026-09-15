@@ -23,13 +23,13 @@ class Player(pygame.sprite.Sprite):
         keystate = pygame.key.get_pressed()
         movement = pygame.Vector2()
 
-        if keystate[pygame.K_z]:
+        if keystate[pygame.K_z] or keystate[pygame.K_UP]:
             movement.y -= 1
-        if keystate[pygame.K_s]:
+        if keystate[pygame.K_s] or keystate[pygame.K_DOWN]:
             movement.y += 1
-        if keystate[pygame.K_q]:
+        if keystate[pygame.K_q] or keystate[pygame.K_LEFT]:
             movement.x -= 1
-        if keystate[pygame.K_d]:
+        if keystate[pygame.K_d] or keystate[pygame.K_RIGHT]:
             movement.x += 1
 
         if movement.length_squared() != 0:
