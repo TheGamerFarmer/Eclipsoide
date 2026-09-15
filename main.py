@@ -11,15 +11,14 @@ from player import Player
 
 # Fonction principale
 def main():
+    # Initialisation du package pygame
     pg.init()
     screen = pg.display.set_mode((1024,768))
     menu = main_menu(1024, 768)
-
-    running = True
     # Initalisation du module de gestion des fonts
     pg.font.init()
     # Donne un nom à la fenêtre
-    pg.display.set_caption("PONG")
+    pg.display.set_caption("ECLIPSOIDE")
 
     # Ratio du moniteur (ex: 16/9)
     monitor = pg.display.Info()
@@ -29,13 +28,12 @@ def main():
     GAME_W = 1024
     GAME_H = int(GAME_W / aspect_ratio)
     game_surface = pg.Surface((GAME_W, GAME_H))
-    start_menu = True
 
+    start_menu = True
     while start_menu:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
-                return  # or sys.exit()
             action = menu.handle_event(event)
             if action == "start":
                 print("Lancer le game")
@@ -45,13 +43,10 @@ def main():
                 eclipsoide = Eclilpsoide(game_surface)
             elif action == "quit":
                 pg.quit()
-                return
-
-<<<<<<< HEAD
         screen.fill((0, 0, 0))
         menu.draw(screen)
         pg.display.flip()
-=======
+
     # Création du groupe des projectiles
     projectiles_group = pg.sprite.Group()
 
@@ -61,7 +56,9 @@ def main():
     player_group = pg.sprite.Group()
     player_group.add(player)
 
->>>>>>> refs/remotes/origin/main
+    screen.fill((0, 0, 0))
+    menu.draw(screen)
+    pg.display.flip()
     # Boucle de jeu
     while eclipsoide.isRunning():
         # Limite la vitesse à 60 images max par secondes
@@ -74,7 +71,6 @@ def main():
         # Demande au jeu d'afficher sur la surface de rendu son nouvel état
         eclipsoide.draw()
 
-        menu.draw(screen)
         # Scale la surface de rendu pour remplir la fenêtre en gardant le ratio
         win_w, win_h = screen.get_size()
         scale_w = win_w
