@@ -2,11 +2,12 @@
 import pygame as pg
 # Accès à la classe Enemy
 from enemy import Enemy
+from player import Player
 
 # Définition du jeu Pong
 class Eclilpsoide:
     # time between wave in milliseconds
-    TIME_BETWEEN_WAVE = 5000
+    TIME_BETWEEN_WAVE = 1000
 
     # variable de classe pour mettre le jeu en pause pour débug
     pause = False
@@ -23,6 +24,9 @@ class Eclilpsoide:
         # Objet sous groupe pour avoir la liste des sprites et automatiser la mise à jour par update()
         # Automatise aussi l'affichage : draw() par défaut affiche dans l'écran image à la position rect
         self.all = pg.sprite.RenderUpdates()
+        # Création d'une instance du joueur
+        self.player = Player(self.all, screen, 0.3)
+        # Création du groupe du joueur
 
         # Vrai si le jeu est fini
         self.isEnded = False
@@ -63,7 +67,7 @@ class Eclilpsoide:
         if (self.time + dt) % self.TIME_BETWEEN_WAVE < dt:
             nbEnemies: int = int(self.time / self.TIME_BETWEEN_WAVE)
             for i in range(0, nbEnemies):
-                Enemy(self.screen, self.all)
+                Enemy(self.screen, self.all, self.player)
 
         self.time += dt
 
