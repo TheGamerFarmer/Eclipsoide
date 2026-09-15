@@ -14,7 +14,7 @@ class Enemy(pg.sprite.Sprite):
     MIN_SPEED_X = 30
     MAX_SPEED_X = 80
     ASTEROID_SIZE = 70
-    TIME_BETWEEN_SHOOT = 1000
+    TIME_BETWEEN_SHOOT = 2000
 
     image_set: bool = False
     image: pg.Surface
@@ -80,7 +80,7 @@ class Enemy(pg.sprite.Sprite):
             playerRect = self.player.rect
             direction = pg.Vector2(playerRect.center) - oldPos
             if direction.length() > 0:
-                Projectile(oldPos, 0.2, direction.normalize(), Enemy.image_shoot, (255, 0, 0), self.projectiles_group)
+                Projectile(oldPos, 0.15, direction.normalize(), Enemy.image_shoot, (255, 0, 0), self.projectiles_group)
 
         # Déplace la position de la raquette en fonction du veteur de mouvement
         # Calcule le vecteur déplacement

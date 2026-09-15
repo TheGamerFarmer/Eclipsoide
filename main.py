@@ -8,7 +8,6 @@ from Menu.main_menu import MainMenu as main_menu
 from eclipsoide import Eclipsoide
 from player import Player
 
-
 # Fonction principale
 def main():
     # Initialisation du package pygame
