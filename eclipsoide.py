@@ -3,11 +3,24 @@ import pygame as pg
 # Accès à la classe Enemy
 from enemy import Enemy
 from player import Player
+from Menu import menu_pause
+
+from boss import Rectangle, Triangle
+
 
 # Définition du jeu Pong
 class Eclilpsoide:
     # time between wave in milliseconds
     TIME_BETWEEN_WAVE = 5000
+    VITESSE_BOSS = 0.1  # pixels par milliseconde
+
+    # Simulation de collision : une cible automatique qui patrouille en bas
+    VITESSE_CIBLE = 0.25  # pixels par milliseconde
+    VIE_CIBLE = 100
+    DEGATS_EXPLOSION = 20
+    DUREE_FLASH = 150  # millisecondes
+    COULEUR_CIBLE = (0, 200, 255)
+    COULEUR_CIBLE_TOUCHEE = (255, 255, 255)
 
     # variable de classe pour mettre le jeu en pause pour débug
     pause = False
