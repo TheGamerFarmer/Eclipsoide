@@ -46,7 +46,7 @@ class Eclilpsoide:
                         case pg.K_f:
                             # Touche 'f' passe en fullscreen ou revient en mode window
                             pg.display.toggle_fullscreen()
-                        case pg.K_SPACE | pg.K_ESCAPE:
+                        case pg.K_ESCAPE:
                             # alterne la pause
                             Eclilpsoide.pause = not Eclilpsoide.pause
         return True
