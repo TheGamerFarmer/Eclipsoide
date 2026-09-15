@@ -16,12 +16,17 @@ class Boss(Box):
     est redimensionnée et découpée à la forme du boss. Sans image, la forme
     est dessinée avec la couleur color.
 
+    Animation : image peut aussi être une liste d'images (chemins ou
+    Surfaces) qui défilent toutes les frame_duration millisecondes, et
+    rotation_speed (degrés par milliseconde) fait tourner le boss sur lui-même.
+
     Pour une autre forme, surcharger _draw_shape() (voir Triangle).
     """
 
     BOMB_INTERVAL = 1500  # millisecondes entre deux bombes
     MAX_BOMBS = 5
     SPEED = 0.1  # pixels par milliseconde
+    FRAME_DURATION = 100  # millisecondes par image d'animation
 
     def __init__(
             self,
@@ -31,15 +36,20 @@ class Boss(Box):
             height,
             color=(255, 255, 255),
             *groups,
-            image: str | pg.Surface | None = None,
+            image: str | pg.Surface | list[str | pg.Surface] | None = None,
             detonate_key: int | None = None,
             bounds: pg.Rect | None = None,
+            frame_duration: int = FRAME_DURATION,
+            rotation_speed: float = 0,
     ):
         self.width = width
         self.height = height
         self.detonate_key = detonate_key
         self.bounds = bounds
-        self.bg_image = self._load_image(image)
+        self.bg_images = self._load_images(image)
+        self.frame_duration = frame_duration
+        self.rotation_speed = rotation_speed
+        self.anim_time = 0
         self.direction = 1
         # Groupe des bombes de ce boss : c'est le boss qui les met à jour
         # et les dessine, elles fonctionnent donc même s'il n'est dans aucun groupe
@@ -49,31 +59,39 @@ class Boss(Box):
         super().__init__(x, y, color, *groups)
 
     @staticmethod
-    def _load_image(image: str | pg.Surface | None) -> pg.Surface | None:
-        if isinstance(image, str):
-            return pg.image.load(image).convert_alpha()
-        return image
+    def _load_images(image: str | pg.Surface | list[str | pg.Surface] | None) -> list[pg.Surface]:
+        """Retourne la liste des images d'animation (vide si pas d'image)."""
+        if image is None:
+            return []
+        if not isinstance(image, list):
+            image = [image]
+        return [pg.image.load(img).convert_alpha() if isinstance(img, str) else img for img in image]
 
     def _draw_shape(self, surface: pg.Surface, color) -> None:
         """Dessine la forme du boss (un disque/ellipse par défaut)."""
         pg.draw.ellipse(surface, color, surface.get_rect())
 
-    def _build_image(self) -> pg.Surface:
+    def _build_frame(self, bg_image: pg.Surface | None) -> pg.Surface:
         surface = pg.Surface((self.width, self.height), pg.SRCALPHA)
-        if self.bg_image is None:
+        if bg_image is None:
             self._draw_shape(surface, self.color)
             return surface
 
         # Masque blanc à la forme du boss, puis on ne garde de l'image
         # que les pixels à l'intérieur (BLEND_RGBA_MIN)
         self._draw_shape(surface, (255, 255, 255, 255))
-        scaled = pg.transform.smoothscale(self.bg_image.convert_alpha(), (self.width, self.height))
+        scaled = pg.transform.smoothscale(bg_image.convert_alpha(), (self.width, self.height))
         surface.blit(scaled, (0, 0), special_flags=pg.BLEND_RGBA_MIN)
         return surface
 
-    def set_image(self, image: str | pg.Surface | None) -> None:
-        """Change l'image de fond du boss (None pour revenir à la couleur unie)."""
-        self.bg_image = self._load_image(image)
+    def _build_image(self) -> pg.Surface:
+        # Les images d'animation sont préparées une seule fois ici
+        self.frames = [self._build_frame(img) for img in self.bg_images] or [self._build_frame(None)]
+        return self.frames[0]
+
+    def set_image(self, image: str | pg.Surface | list[str | pg.Surface] | None) -> None:
+        """Change l'image (ou la liste d'images) du boss (None pour revenir à la couleur unie)."""
+        self.bg_images = self._load_images(image)
         self._refresh_image()
 
     def set_color(self, color: tuple[int, int, int]) -> None:
@@ -120,6 +138,19 @@ class Boss(Box):
         if self.detonate_key is not None and event.type == pg.KEYDOWN and event.key == self.detonate_key:
             self.detonate()
 
+    def _animate(self, dt: int) -> None:
+        """Fait défiler les images d'animation et tourne le boss si rotation_speed != 0."""
+        if len(self.frames) == 1 and self.rotation_speed == 0:
+            return
+        self.anim_time += dt
+        frame = self.frames[int(self.anim_time / self.frame_duration) % len(self.frames)]
+        if self.rotation_speed != 0:
+            frame = pg.transform.rotate(frame, -self.anim_time * self.rotation_speed % 360)
+        # La rotation change la taille de l'image : on garde le même centre
+        center = self.rect.center
+        self.image = frame
+        self.rect = self.image.get_rect(center=center)
+
     def _patrol(self, dt: int) -> None:
         """Déplace le boss horizontalement et le fait rebondir sur les bords de bounds."""
         if self.bounds is None:
@@ -136,6 +167,7 @@ class Boss(Box):
         dt: int = args[0] if args else 0
 
         self._patrol(dt)
+        self._animate(dt)
 
         # Largage périodique des bombes
         self.bomb_timer += dt

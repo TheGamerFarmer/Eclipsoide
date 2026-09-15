@@ -82,9 +82,9 @@ class Eclilpsoide:
         if pg.sprite.spritecollide(self.player, self.enemies_group, dokill=False):
             self.player.on_hit()
 
-        ## Apparition du boss après 30 secondes ...
-        if self.time > 3000:
-            self.spawn_boss('images/boss/boss1.gif')
+        ## Apparition du boss après 30 secondes
+        if self.boss is None and self.time > 3000:
+            self.spawn_boss('images/boss/boss-1.png')
         # Collisions entre les projectiles du joueur et les ennemies
         collisions = pg.sprite.groupcollide(self.projectiles_group, self.enemies_group, dokilla=True, dokillb=False)
         if collisions:
@@ -106,10 +106,11 @@ class Eclilpsoide:
         self.projectiles_group.update(dt)
         self.boss_group.update(dt)
 
-    def spawn_boss(self, image: str | pg.Surface | None = None, size: int = 150,
-                   color: tuple[int, int, int] = (255, 200, 60)) -> Boss | None:
+    def spawn_boss(self, image: str | pg.Surface | list[str | pg.Surface] | None = None, size: int = 150,
+                   color: tuple[int, int, int] = (255, 200, 60), **kwargs) -> Boss:
         """
         Fait apparaître le boss (lune, soleil...) en haut de l'écran.
+        kwargs est passé à Boss (ex : frame_duration=80, rotation_speed=0.05).
         Remplace le boss précédent s'il y en avait déjà un.
         """
         if self.boss is not None:
@@ -117,7 +118,7 @@ class Eclilpsoide:
             self.boss.kill()
         x = (self.screen.get_width() - size) // 2
         self.boss = Boss(x, 50, size, size, color, self.boss_group,
-                         image=image, bounds=self.screen.get_rect())
+                         image=image, bounds=self.screen.get_rect(), **kwargs)
         return self.boss
 
     def draw(self):
