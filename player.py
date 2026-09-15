@@ -4,6 +4,7 @@ from projectile import Projectile
 
 class Player(pg.sprite.Sprite):
     image_shoot = None
+    size = (30, 26)
 
     def __init__(self, screen: pg.Surface, speed: float, projectilsGroup: pg.sprite.AbstractGroup, *groups):
         super().__init__(*groups)
@@ -21,10 +22,13 @@ class Player(pg.sprite.Sprite):
             Player.image_shoot = pg.image.load('images/asteroide.png')
             Player.image_shoot = pg.transform.scale(Player.image_shoot, (6, 16))
 
-        self.image = pg.Surface((30, 30))
-        self.image.fill("white")
+        self.surface = pg.Surface(self.size)
+        self.image = pg.image.load('images/ship.png')
+        self.image = pg.transform.scale(self.image, self.size)
+        self.surface.blit(self.image, (0, 0))
 
-        self.rect = self.image.get_rect(midbottom=(constantes.SCREEN_SIZE[0] // 2, constantes.SCREEN_SIZE[1] - 50))
+        self.rect = self.surface.get_rect()
+        self.rect.move_ip(constantes.SCREEN_SIZE[0] // 2, constantes.SCREEN_SIZE[1] - 50)
         self.position = pg.Vector2(self.rect.midbottom)
 
     def update(self, dt):
