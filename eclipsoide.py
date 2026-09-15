@@ -1,4 +1,6 @@
 import os
+import sys
+
 # Utilisation de pygame avec un préfixe plus simple
 import pygame as pg
 
@@ -76,7 +78,9 @@ class Eclipsoide:
             match event.type:
                 case pg.QUIT:
                     # On ferme la fenêtre
-                    return False
+                    pg.quit()
+                    sys.exit(0)
+
                 # Un appui sur une touche
                 case pg.KEYDOWN:
                     match event.key:
