@@ -9,6 +9,7 @@ from pygame.transform import flip
 
 import settings
 from Menu.menu_option import MenuOption
+from Menu.menu_credit import MenuCredit
 from Menu.main_menu import MainMenu as main_menu
 from Menu.menu_pause import PauseMenu
 from eclipsoide import Eclipsoide
@@ -30,6 +31,7 @@ def main():
 
     menu = main_menu(1024, 768)
     options_menu = MenuOption(1024, 768)
+    credit_menu = MenuCredit(1024, 768)
 
     # Initialisation du module de gestion des fonts
     pg.font.init()
@@ -68,6 +70,8 @@ def main():
                 # Menu options
                 elif action == "option":
                     active_menu = options_menu
+                elif action == "credit":
+                    active_menu = credit_menu
                 elif action == "back":
                     active_menu = menu
 
