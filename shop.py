@@ -126,7 +126,3 @@ class Shop:
                     self.player.double_shot = True
                 elif item['id'] == 'coin':
                     self.player.coin_mult = 2
-
-                print(f"[{item['name']}] Acheté ! Lvl: {item['lvl']} | Reste: {self.player.coins} ¢")
-            else:
-                print(f"Fonds insuffisants pour {item['name']} ! (Prix: {item['price']} ¢)")

@@ -123,7 +123,7 @@ class Player(pg.sprite.Sprite):
                            Player.image_shoot, (0, 255, 0), self.datas.projectiles_group)
             else:
                 Projectile(pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), Player.image_shoot, (0, 255, 0),
-                           self.projectilsGroup)
+                           self.datas.projectiles_group)
 
             self.fire_timer = self.fire_delay
             self._play_shoot_sound()
