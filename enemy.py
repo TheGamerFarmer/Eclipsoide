@@ -31,7 +31,7 @@ class Enemy(pg.sprite.Sprite):
         self.projectiles_group = projectiles_group
 
         # Points de vie de l'ennemie
-        self.life = 100
+        self.life = 60
 
         self.time = 0
 
