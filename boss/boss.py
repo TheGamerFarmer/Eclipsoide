@@ -1,28 +1,22 @@
 import pygame as pg
-from typing import Any
-from .base import Box
+import os
 
-from .bomb import Bomb
+from boss.bomb import Bomb
+from datas import Datas
+from explosion import Explosion
+from hud import Hud
+from player import Player
 
 
-class Boss(Box):
+class Boss(pg.sprite.Sprite):
     """
-    Boss générique (lune, soleil...) : patrouille horizontalement et lâche
-    régulièrement des bombes qui explosent au bout de Bomb.FUSE_TIME, ou
-    quand le bouton spécial (detonate_key) est pressé si on en a défini un.
-
-    Par défaut le boss est rond. L'image de fond est modifiable : on passe
-    un chemin ou une Surface (paramètre image ou méthode set_image()), elle
-    est redimensionnée et découpée à la forme du boss. Sans image, la forme
-    est dessinée avec la couleur color.
-
-    Animation : image peut aussi être une liste d'images (chemins ou
-    Surfaces) qui défilent toutes les frame_duration millisecondes, et
-    rotation_speed (degrés par milliseconde) fait tourner le boss sur lui-même.
-
-    Pour une autre forme, surcharger _draw_shape() (voir Triangle).
+    Interface commune pour touts les bosses du jeu.
     """
-
+    BOSS_SIZE = 70
+    GROW_DURATION = 2000
+    BOSS_MAX_SIZE = 620
+    # Chaque boss vaincu rend le suivant 1,5 fois plus résistant
+    BOSS_LIFE_GROWTH = 1.5
     BOMB_INTERVAL = 1500  # millisecondes entre deux bombes
     MAX_BOMBS = 5
     SPEED = 0.1  # pixels par milliseconde
@@ -43,42 +37,7 @@ class Boss(Box):
     BAR_BORDER_COLOR = (255, 255, 255)
     BAR_MIN_SEGMENT = 6  # en dessous, on n'affiche plus les séparations
 
-    def __init__(
-            self,
-            x,
-            y,
-            width,
-            height,
-            color=(255, 255, 255),
-            *groups,
-            image: str | pg.Surface | list[str | pg.Surface] | None = None,
-            detonate_key: int | None = None,
-            bounds: pg.Rect | None = None,
-            frame_duration: int = FRAME_DURATION,
-            rotation_speed: float = 0,
-            life: int | None = None,
-    ):
-        self.width = width
-        self.height = height
-        self.detonate_key = detonate_key
-        self.bounds = bounds
-        self.bg_images = self._load_images(image)
-        self.frame_duration = frame_duration
-        self.rotation_speed = rotation_speed
-        self.anim_time = 0
-        self.direction = 1
-        # Groupe des bombes de ce boss : c'est le boss qui les met à jour
-        # et les dessine, elles fonctionnent donc même s'il n'est dans aucun groupe
-        self.bombs: pg.sprite.Group = pg.sprite.Group()
-        self.bomb_timer = 0
-        self._detonate_was_pressed = False
-        # Vie du boss : LIFE par défaut, sinon celle demandée (paliers successifs)
-        self.max_life = self.LIFE if life is None else int(life)
-        self.life = self.max_life
-        # Toujours le même nombre de crans : aux paliers suivants, chaque vie
-        # coûte simplement plus de tirs
-        self.lives = self.LIVES
-        super().__init__(x, y, color, *groups)
+    size = (BOSS_SIZE, BOSS_SIZE)
 
     @staticmethod
     def _load_images(image: str | pg.Surface | list[str | pg.Surface] | None) -> list[pg.Surface]:
@@ -89,44 +48,71 @@ class Boss(Box):
             image = [image]
         return [pg.image.load(img).convert_alpha() if isinstance(img, str) else img for img in image]
 
-    def _draw_shape(self, surface: pg.Surface, color) -> None:
-        """Dessine la forme du boss (un disque/ellipse par défaut)."""
-        pg.draw.ellipse(surface, color, surface.get_rect())
+    def __init__(self, datas: Datas, player: Player, *groups):
+        pg.sprite.Sprite.__init__(self, *groups)
 
-    def _build_frame(self, bg_image: pg.Surface | None) -> pg.Surface:
-        surface = pg.Surface((self.width, self.height), pg.SRCALPHA)
-        if bg_image is None:
-            self._draw_shape(surface, self.color)
-            return surface
+        self.datas = datas
+        self.player = player
+        self.is_spawn = False
 
-        # Masque blanc à la forme du boss, puis on ne garde de l'image
-        # que les pixels à l'intérieur (BLEND_RGBA_MIN)
-        self._draw_shape(surface, (255, 255, 255, 255))
-        scaled = pg.transform.smoothscale(bg_image.convert_alpha(), (self.width, self.height))
-        surface.blit(scaled, (0, 0), special_flags=pg.BLEND_RGBA_MIN)
-        return surface
+        self.max_life = int(Boss.LIFE * Boss.BOSS_LIFE_GROWTH ** (self.datas.stage - 1))
+        self.life = self.max_life
 
-    def _build_image(self) -> pg.Surface:
-        # Les images d'animation sont préparées une seule fois ici
-        self.frames = [self._build_frame(img) for img in self.bg_images] or [self._build_frame(None)]
-        # Masque de la forme réelle, pour que les tirs ne touchent pas les coins vides
-        self.mask = pg.mask.from_surface(self.frames[0])
-        return self.frames[0]
+        self._base_image = pg.image.load('images/boss1.png').convert_alpha()
+        self.image = self._base_image
+        self.rect = self.image.get_rect()
+        self.mask = pg.mask.from_surface(self.image)
 
-    def set_image(self, image: str | pg.Surface | list[str | pg.Surface] | None) -> None:
-        """Change l'image (ou la liste d'images) du boss (None pour revenir à la couleur unie)."""
-        self.bg_images = self._load_images(image)
-        self._refresh_image()
+        self.bomb_timer = 0
+        self._detonate_was_pressed = False
 
-    def set_color(self, color: tuple[int, int, int]) -> None:
-        """Change la couleur (utilisée seulement quand il n'y a pas d'image)."""
-        self.color = color
-        self._refresh_image()
+        self.boss_bar_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 24)
 
-    def _refresh_image(self) -> None:
-        center = self.rect.center
-        self.image = self._build_image()
-        self.rect = self.image.get_rect(center=center)
+    def _boss_vaincu(self):
+        """ Le boss explose, le palier suivant démarre : les vagues reprennent """
+        Explosion(pg.Vector2(self.rect.center), self.datas.explosions_group)
+        self.datas.bombs_group.empty()
+        self.is_spawn = False
+        self.datas.stage += 1
+        self.max_life = int(Boss.LIFE * Boss.BOSS_LIFE_GROWTH ** (self.datas.stage - 1))
+        self.life = self.max_life
+        self.image = self._base_image
+        self.rect = self.image.get_rect()
+        self.mask = pg.mask.from_surface(self.image)
+        self.bomb_timer = 0
+        # Remettre l'horloge à zéro relance les vagues d'ennemis, puis l'arrivée
+        # du boss suivant une fois TIME_BEFORE_BOSS écoulé
+        self.datas.time = 0
+
+    def update(self, dt) -> None:
+        # Les bombes du boss explosent au contact du joueur et le tuent
+        if  self.bombs_hitting(self.player):
+            self.player.on_hit()
+
+        # Les tirs du joueur entament la vie du boss
+        if self.is_spawn:
+            self.check_hits(self.datas.projectiles_group, 40)
+            if not self.is_alive:
+                self._boss_vaincu()
+
+        # Le boss sprite prend le relais de l'animation d'arrivée une fois la croissance finie
+        if not self.is_spawn and self.datas.time > Datas.TIME_BEFORE_BOSS + self.GROW_DURATION:
+            self.is_spawn = True
+            screen = self.datas.screen
+            scaled = pg.transform.scale(self._base_image, (Boss.BOSS_MAX_SIZE, Boss.BOSS_MAX_SIZE))
+            self.image = scaled
+            bossX = int(screen.get_width() / 2 - Boss.BOSS_MAX_SIZE / 2)
+            bossY = int((Hud.SUN_SIZE / 4) + (Hud.SUN_SIZE / 2) - Boss.BOSS_MAX_SIZE / 2)
+            self.rect = self.image.get_rect(topleft=(bossX, bossY))
+            self.mask = pg.mask.from_surface(self.image)
+
+        if self.is_spawn:
+            self.bomb_timer += dt
+            if self.bomb_timer >= self.BOMB_INTERVAL:
+                self.bomb_timer -= self.BOMB_INTERVAL
+                self.drop_bomb()
+
+            self.datas.bombs_group.update(dt)
 
     @property
     def is_alive(self) -> bool:
@@ -139,6 +125,7 @@ class Boss(Box):
     @staticmethod
     def collide(boss: "Boss", projectile: pg.sprite.Sprite) -> bool:
         """Collision tir -> boss : hitbox du tir contre la forme réelle du boss (son masque)."""
+        # noinspection unresolved-references
         rect = getattr(projectile, 'hitbox', projectile.rect)
         if not boss.rect.colliderect(rect):
             return False
@@ -148,6 +135,7 @@ class Boss(Box):
     def check_hits(self, projectiles_group, damage: int, collided=None) -> list[tuple[int, int]]:
         """ Applique les dégâts des tirs touchant le boss. Retourne la position de
         chaque impact, pour laisser l'appelant afficher les nombres de dégâts """
+        # noinspection bad-argument-type
         touches = pg.sprite.spritecollide(self, projectiles_group, dokill=True, collided=collided or Boss.collide)
         positions = []
         for touch in touches:
@@ -171,9 +159,9 @@ class Boss(Box):
             pg.draw.rect(surface, self.BAR_FILL_COLOR, pg.Rect(x, y, remplissage, self.BAR_HEIGHT))
 
         # Séparations entre les vies, tant qu'elles restent lisibles
-        pas = width / self.lives
+        pas = width / Boss.LIVES
         if pas >= self.BAR_MIN_SEGMENT:
-            for i in range(1, self.lives):
+            for i in range(1, Boss.LIVES):
                 sep_x = x + int(i * pas)
                 pg.draw.line(surface, self.BAR_BORDER_COLOR, (sep_x, y), (sep_x, y + self.BAR_HEIGHT - 1))
 
@@ -193,14 +181,14 @@ class Boss(Box):
 
     def drop_bomb(self) -> Bomb | None:
         """Lâche une bombe depuis le bas du boss, si la limite n'est pas atteinte."""
-        active = [b for b in self.bombs if not b.exploding]
+        active = [b for b in self.datas.bombs_group if not b.exploding]
         if len(active) >= self.MAX_BOMBS:
             return None
-        return Bomb(self._mouth(), self.bounds, self.bombs)
+        return Bomb(self._mouth(), self.datas.screen, self.datas.bombs_group)
 
     def detonate(self) -> None:
         """Fait exploser toutes les bombes lâchées par ce boss."""
-        for bomb in self.bombs:
+        for bomb in self.datas.bombs_group:
             bomb.explode()
 
     def bombs_hitting(self, target: pg.sprite.Sprite) -> list[Bomb]:
@@ -208,66 +196,8 @@ class Boss(Box):
         Retourne les bombes qui touchent target (collision au pixel près).
         Une bombe qui tombe sur la cible explose au contact.
         """
-        hits = pg.sprite.spritecollide(target, self.bombs, False, pg.sprite.collide_mask)
+        # noinspection bad-argument-type
+        hits = pg.sprite.spritecollide(target, self.datas.bombs_group, False, pg.sprite.collide_mask)
         for bomb in hits:
             bomb.explode()
         return hits
-
-    def draw_bombs(self, surface: pg.Surface) -> None:
-        """Dessine les bombes/explosions du boss (à appeler après le draw des groupes)."""
-        self.bombs.draw(surface)
-
-    def handle_event(self, event: pg.event.Event) -> None:
-        """
-        Alternative à l'écoute clavier dans update() : à appeler depuis
-        la boucle d'événements du jeu si on préfère.
-        """
-        if self.detonate_key is not None and event.type == pg.KEYDOWN and event.key == self.detonate_key:
-            self.detonate()
-
-    def _animate(self, dt: int) -> None:
-        """Fait défiler les images d'animation et tourne le boss si rotation_speed != 0."""
-        if len(self.frames) == 1 and self.rotation_speed == 0:
-            return
-        self.anim_time += dt
-        frame = self.frames[int(self.anim_time / self.frame_duration) % len(self.frames)]
-        if self.rotation_speed != 0:
-            frame = pg.transform.rotate(frame, -self.anim_time * self.rotation_speed % 360)
-        # La rotation change la taille de l'image : on garde le même centre
-        center = self.rect.center
-        self.image = frame
-        self.rect = self.image.get_rect(center=center)
-        self.mask = pg.mask.from_surface(frame)
-
-    def _patrol(self, dt: int) -> None:
-        """Déplace le boss horizontalement et le fait rebondir sur les bords de bounds."""
-        if self.bounds is None:
-            return
-        self.move(self.direction * self.SPEED * dt, 0)
-        if self.rect.left <= self.bounds.left:
-            self.rect.left = self.bounds.left
-            self.direction = 1
-        elif self.rect.right >= self.bounds.right:
-            self.rect.right = self.bounds.right
-            self.direction = -1
-
-    def update(self, *args: Any, **kwargs: Any) -> None:
-        dt: int = args[0] if args else 0
-
-        self._patrol(dt)
-        self._animate(dt)
-
-        # Largage périodique des bombes
-        self.bomb_timer += dt
-        if self.bomb_timer >= self.BOMB_INTERVAL:
-            self.bomb_timer -= self.BOMB_INTERVAL
-            self.drop_bomb()
-
-        self.bombs.update(dt)
-
-        # Écoute du bouton spécial (front montant : une détonation par appui)
-        if self.detonate_key is not None:
-            pressed = pg.key.get_pressed()[self.detonate_key]
-            if pressed and not self._detonate_was_pressed:
-                self.detonate()
-            self._detonate_was_pressed = pressed

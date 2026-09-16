@@ -1,5 +1,7 @@
 import random
 import pygame as pg
+
+from datas import Datas
 from projectile import Projectile
 from particle import Particle
 import settings
@@ -9,6 +11,8 @@ class Player(pg.sprite.Sprite):
     hitbox_size = (10, 9)
     image_shoot_set: bool = False
     image_shoot: list[pg.Surface]
+    image: pg.Surface
+    rect: pg.Rect
     damage: int = 20
 
     # Texture du vaisseau selon le pourcentage de vie restant : le premier
@@ -34,14 +38,11 @@ class Player(pg.sprite.Sprite):
     INVINCIBILITY_DURATION = 1200  # ms d'invincibilité après un coup
     BLINK_INTERVAL = 100           # ms entre chaque clignotement pendant l'invincibilité
 
-    def __init__(self, screen: pg.Surface, speed: float, projectilsGroup: pg.sprite.AbstractGroup,
-                 particlesGroup: pg.sprite.AbstractGroup, *groups):
+    def __init__(self, speed: float, datas: Datas, *groups):
         super().__init__(*groups)
 
         self.speed = speed
-        self.projectilsGroup = projectilsGroup
-        self.particlesGroup = particlesGroup
-        self.screen = screen
+        self.datas = datas
 
         self.is_alive = True
         self.lives = Player.MAX_LIVES
@@ -77,7 +78,7 @@ class Player(pg.sprite.Sprite):
 
         self.image = Player.damage_images[0]
         self.rect = self.image.get_rect()
-        self.rect.move_ip(screen.get_width() / 2 - self.size[0] / 2, screen.get_height() - 50)
+        self.rect.move_ip(datas.screen.get_width() / 2 - self.size[0] / 2, datas.screen.get_height() - 50)
 
         self.hitbox = pg.Rect(0, 0, self.hitbox_size[0], self.hitbox_size[1])
         self.hitbox.center = self.rect.center
@@ -105,14 +106,14 @@ class Player(pg.sprite.Sprite):
 
         self.position += movement * self.speed * dt
         self.rect.midbottom = self.position
-        self.rect.clamp_ip(self.screen.get_rect())
+        self.rect.clamp_ip(self.datas.screen.get_rect())
         self.position = pg.Vector2(self.rect.midbottom)
         self.hitbox.center = self.rect.center
 
         self.fire_timer -= dt
 
         if self.fire_timer <= 0:
-            Projectile(pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), Player.image_shoot, (0, 255, 0), self.projectilsGroup)
+            Projectile(pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), Player.image_shoot, (0, 255, 0), self.datas.projectiles_group)
             self.fire_timer = self.fire_delay
             self._play_shoot_sound()
 
@@ -141,7 +142,7 @@ class Player(pg.sprite.Sprite):
         velocity = pg.Vector2(random.uniform(-0.02, 0.02), random.uniform(0.09, 0.16))
         velocity -= movement * 0.05
 
-        Particle(spawn_pos, velocity, Player.TRAIL_COLOR_START, Player.TRAIL_COLOR_END, self.particlesGroup)
+        Particle(spawn_pos, velocity, Player.TRAIL_COLOR_START, Player.TRAIL_COLOR_END, self.datas.particles_group)
 
     def _update_damage_texture(self):
         ratio = self.lives / Player.MAX_LIVES
@@ -187,11 +188,13 @@ class Player(pg.sprite.Sprite):
         ennemi, bombe du boss). Retourne True si un coup a réellement été encaissé
         (pour déclencher un feedback comme un flash d'écran) """
         hit = False
+        # noinspection bad-argument-type
         if pg.sprite.spritecollide(self, enemies_group, dokill=False):
             hit = self.on_hit() or hit
 
         # (on collisionne sur la hitbox du tir, pas sur son rect visuel qui
         # inclut le halo et la traînée)
+        # noinspection bad-argument-type
         if pg.sprite.spritecollide(self, enemy_projectiles_group, dokill=True, collided=collided):
             hit = self.on_hit() or hit
 

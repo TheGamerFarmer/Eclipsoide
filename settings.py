@@ -11,7 +11,7 @@ OPTIONS = {
     "volume": 50.0,
     "music": True,
     "sfx": True,
-    "fullscreen": False,
+    "fullscreen": True,
     # Historique des scores, du plus ancien au plus récent
     "scores": []
 }
