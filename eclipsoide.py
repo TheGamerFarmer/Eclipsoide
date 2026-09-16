@@ -5,6 +5,7 @@ import math
 # Utilisation de pygame avec un préfixe plus simple
 import pygame as pg
 
+import settings
 from Menu.menu_game_over import GameOver
 from boss import Boss
 # Accès à la classe Enemy
@@ -49,6 +50,9 @@ class Eclipsoide:
     DUREE_FLASH = 150  # millisecondes
     COULEUR_CIBLE = (0, 200, 255)
     COULEUR_CIBLE_TOUCHEE = (255, 255, 255)
+
+    # Passe à False avant de livrer : coupe les raccourcis de debug (B / N)
+    DEBUG = True
 
     # variable de classe pour mettre le jeu en pause pour débug
     pause = False
@@ -117,13 +121,26 @@ class Eclipsoide:
                         case pg.K_f:
                             # Touche 'f' passe en fullscreen ou revient en mode window
                             pg.display.toggle_fullscreen()
-                        case pg.K_ESCAPE:
+                        case pg.K_ESCAPE | pg.K_p:
                             # alterne la pause
                             Eclipsoide.pause = not Eclipsoide.pause
-                        case pg.K_b:
+                        case pg.K_b if self.DEBUG:
                             # DEBUG : saute directement à la phase boss
                             self.time = max(self.time, self.TIME_BEFORE_BOSS)
+                        case pg.K_n if self.DEBUG:
+                            # DEBUG : quitte la phase boss et repart en phase vagues
+                            self._exit_boss()
         return True
+
+    def _exit_boss(self):
+        """ DEBUG : supprime le boss et ses bombes, et remet le jeu en phase vagues """
+        if self.boss is not None:
+            self.boss.bombs.empty()
+            self.boss.kill()
+            self.boss = None
+        # Remet l'horloge au début : les vagues reprennent et l'animation
+        # d'arrivée du boss recommence depuis la droite
+        self.time = 0
 
     def update(self,dt : int):
         """
@@ -156,6 +173,10 @@ class Eclipsoide:
         if pg.sprite.spritecollide(self.player, self.enemy_projectiles_group, dokill=True, collided=collide_projectile):
             self.player.on_hit()
 
+        # Les bombes du boss explosent au contact du joueur et le tuent
+        if self.boss is not None and self.boss.bombs_hitting(self.player):
+            self.player.on_hit()
+
         # Collisions entre les projectiles du joueur et les ennemies
         collisions = pg.sprite.groupcollide(self.projectiles_group, self.enemies_group, dokilla=True, dokillb=False, collided=collide_projectile)
         if collisions:
@@ -177,6 +198,10 @@ class Eclipsoide:
 
         if self.player.is_alive == False:
             self.isEnded = True
+            # L'historique est lu avant l'ajout : il ne contient que les parties précédentes
+            historique = settings.last_scores(3)
+            settings.add_score(self.player.coins)
+            self.menu_game_over.set_score(self.player.coins, historique)
             #Eclipsoide.pause = True
 
         # Met à jours tous les sprites en fonction du temps qui a passé

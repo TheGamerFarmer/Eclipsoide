@@ -52,7 +52,9 @@ class MenuOption:
             ui_element.Button(715, 295, 50, 50, "Q", self.keys_font, key_square, text_color=(40, 40, 40)),
             ui_element.Button(770, 295, 50, 50, "S", self.keys_font, key_square, text_color=(40, 40, 40)),
             ui_element.Button(825, 295, 50, 50, "D", self.keys_font, key_square, text_color=(40, 40, 40)),
-            ui_element.Button(715, 380, 160, 50, "ECHAP", self.keys_font, key_rect, text_color=(40, 40, 40))
+            # ECHAP + P alignés sur la rangée Q/S/D au-dessus (715 -> 875)
+            ui_element.Button(715, 380, 105, 50, "ECHAP", self.keys_font, key_rect, text_color=(40, 40, 40)),
+            ui_element.Button(825, 380, 50, 50, "P", self.keys_font, key_square, text_color=(40, 40, 40))
         ]
 
     def draw(self, surface):
