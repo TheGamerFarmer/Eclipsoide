@@ -6,6 +6,7 @@ import math
 import pygame as pg
 
 from Menu.menu_game_over import GameOver
+from boss import Boss
 # Accès à la classe Enemy
 from enemy import Enemy
 from player import Player
@@ -81,6 +82,8 @@ class Eclipsoide:
         self.popups_group = pg.sprite.Group()
         self.particles_group = pg.sprite.Group()
         self.explosions_group = pg.sprite.Group()
+        self.boss_group = pg.sprite.Group()
+        self.boss = None
 
         self.coin_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 24)
         self.coin_icon = pg.transform.scale(pg.image.load('images/ui/Coins/coin_0.png'), (24, 24))
@@ -117,6 +120,9 @@ class Eclipsoide:
                         case pg.K_ESCAPE:
                             # alterne la pause
                             Eclipsoide.pause = not Eclipsoide.pause
+                        case pg.K_b:
+                            # DEBUG : saute directement à la phase boss
+                            self.time = max(self.time, self.TIME_BEFORE_BOSS)
         return True
 
     def update(self,dt : int):
@@ -182,6 +188,18 @@ class Eclipsoide:
         self.popups_group.update(dt)
         self.particles_group.update(dt)
         self.explosions_group.update(dt)
+        # Le boss sprite prend le relais de l'animation d'arrivée une fois la croissance finie
+        if self.boss is None and self.time > self.TIME_BEFORE_BOSS + self.GROW_DURATION:
+            self.boss = Boss(
+                self.screen.get_width() / 2 - self.BOSS_MAX_SIZE / 2,
+                (self.SUN_SIZE / 4) + (self.SUN_SIZE / 2) - (self.BOSS_MAX_SIZE / 2),
+                self.BOSS_MAX_SIZE, self.BOSS_MAX_SIZE,
+                (255, 255, 255),
+                self.boss_group,
+                image='images/boss1.png',
+                bounds=self.screen.get_rect(),
+            )
+        self.boss_group.update(dt)
 
     def _draw_sun(self):
         """ Dessine le soleil avec une légère rotation continue et une pulsation de taille/glow """
@@ -238,7 +256,9 @@ class Eclipsoide:
 
         self.screen.blit(self.sun_image, (self.screen.get_width() / 2 - self.SUN_SIZE / 2, self.SUN_SIZE / 4))
 
-        self.screen.blit(scaled_boss, (bossX, (self.SUN_SIZE / 4) + (self.SUN_SIZE / 2) - (current_size / 2)))
+        # Animation d'arrivée : tant que le sprite Boss n'existe pas encore
+        if self.boss is None:
+            self.screen.blit(scaled_boss, (bossX, (self.SUN_SIZE / 4) + (self.SUN_SIZE / 2) - (current_size / 2)))
 
         self._draw_sun()
         # Dessine tous les sprites dans la surface de l'écran
@@ -250,8 +270,11 @@ class Eclipsoide:
         self.enemy_projectiles_group.draw(self.screen)
         self.coins_group.draw(self.screen)
         self.popups_group.draw(self.screen)
+        self.boss_group.draw(self.screen)
 
         # Affiche le compteur de pièces en haut à gauche
         self.screen.blit(self.coin_icon, (10, 10))
         coin_text = self.coin_font.render(str(self.player.coins), True, (255, 220, 80))
         self.screen.blit(coin_text, (40, 10))
+        if self.boss:
+            self.boss.draw_bombs(self.screen)
