@@ -11,6 +11,7 @@ from enemy import Enemy
 from player import Player
 from coin import Coin
 from coin_popup import CoinPopup
+from explosion import Explosion
 
 def collide_projectile(a: pg.sprite.Sprite, b: pg.sprite.Sprite) -> bool:
     """ Collision utilisant la hitbox du projectile plutôt que son rect visuel (halo + traînée) """
@@ -28,17 +29,6 @@ class Eclipsoide:
     BOSS_SIZE = 70
     GROW_DURATION = 2000
     BOSS_MAX_SIZE = 620
-
-    # Rotation lente + légère pulsation/glow du soleil
-    SUN_ROTATION_SPEED = 0.006  # degrés par milliseconde (~1 tour par minute)
-    SUN_PULSE_PERIOD = 3000     # ms pour un cycle complet de pulsation
-    SUN_PULSE_AMPLITUDE = 0.035 # variation de taille (+/- 3.5%)
-    SUN_GLOW_COLOR = (255, 170, 60)
-    SUN_GLOW_LAYERS = 3
-    SUN_GLOW_PADDING = 25
-    SUN_GLOW_MAX_ALPHA = 55
-    SUN_GLOW_PULSE_RADIUS = 10
-    SUN_GLOW_PULSE_ALPHA = 20
 
     # Rotation lente + légère pulsation/glow du soleil
     SUN_ROTATION_SPEED = 0.006  # degrés par milliseconde (~1 tour par minute)
@@ -90,6 +80,7 @@ class Eclipsoide:
         self.coins_group = pg.sprite.Group()
         self.popups_group = pg.sprite.Group()
         self.particles_group = pg.sprite.Group()
+        self.explosions_group = pg.sprite.Group()
 
         self.coin_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 24)
         self.coin_icon = pg.transform.scale(pg.image.load('images/ui/Coins/coin_0.png'), (24, 24))
@@ -169,6 +160,7 @@ class Eclipsoide:
                         enemy.hited(40)
                         if was_alive and enemy.life <= 0:
                             Coin(pg.Vector2(enemy.rect.center), self.player, self.coins_group)
+                            Explosion(pg.Vector2(enemy.rect.center), self.explosions_group)
 
         # Le joueur ramasse les pièces qu'il croise (aspirées automatiquement vers lui)
         collected_coins = pg.sprite.spritecollide(self.player, self.coins_group, dokill=True)
@@ -189,6 +181,7 @@ class Eclipsoide:
         self.coins_group.update(dt)
         self.popups_group.update(dt)
         self.particles_group.update(dt)
+        self.explosions_group.update(dt)
 
     def _draw_sun(self):
         """ Dessine le soleil avec une légère rotation continue et une pulsation de taille/glow """
@@ -250,6 +243,7 @@ class Eclipsoide:
         self._draw_sun()
         # Dessine tous les sprites dans la surface de l'écran
         self.enemies_group.draw(self.screen)
+        self.explosions_group.draw(self.screen)
         self.particles_group.draw(self.screen)
         self.player_group.draw(self.screen)
         self.projectiles_group.draw(self.screen)
