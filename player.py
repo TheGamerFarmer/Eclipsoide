@@ -55,6 +55,9 @@ class Player(pg.sprite.Sprite):
 
         self.trail_timer = 0
 
+        self.coin_mult = 1
+        self.double_shot = False
+
         if not Player.image_shoot_set:
             Player.image_shoot = [pg.image.load(f'images/laser/player/laser_player_{i}.png') for i in range(4)]
             Player.image_shoot = [pg.transform.scale(image, (6, 16)) for image in Player.image_shoot]
@@ -112,9 +115,16 @@ class Player(pg.sprite.Sprite):
         self.fire_timer -= dt
 
         if self.fire_timer <= 0:
-            Projectile(pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), Player.image_shoot, (0, 255, 0), self.projectilsGroup)
+            if self.double_shot:
+                Projectile(pg.Vector2(self.rect.centerx - 10, self.rect.centery), 0.4, pg.Vector2(0, -1),
+                           Player.image_shoot, (0, 255, 0), self.projectilsGroup)
+                Projectile(pg.Vector2(self.rect.centerx + 10, self.rect.centery), 0.4, pg.Vector2(0, -1),
+                           Player.image_shoot, (0, 255, 0), self.projectilsGroup)
+            else:
+                Projectile(pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), Player.image_shoot, (0, 255, 0),
+                           self.projectilsGroup)
+
             self.fire_timer = self.fire_delay
-            self._play_shoot_sound()
 
         self._emit_trail(dt, movement)
 
@@ -201,5 +211,5 @@ class Player(pg.sprite.Sprite):
         return hit
 
     def add_coins(self, amount: int):
-        self.coins += amount
+        self.coins += amount * self.coin_mult
         self.score += amount
