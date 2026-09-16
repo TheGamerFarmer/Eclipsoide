@@ -3,3 +3,4 @@ Eclipsoide.egg-info/
 .idea/
 __pycache__/
 /uv.lock
+/settings.json
