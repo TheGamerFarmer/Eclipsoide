@@ -236,11 +236,10 @@ class Eclipsoide:
         self.bg_image2.set_alpha(int(grow_ratio * 255))
         self.screen.blit(self.bg_image2, (0, 0))
 
-        self.screen.blit(self.sun_image, (self.screen.get_width() / 2 - self.SUN_SIZE / 2, self.SUN_SIZE / 4))
+        self._draw_sun()
 
         self.screen.blit(scaled_boss, (bossX, (self.SUN_SIZE / 4) + (self.SUN_SIZE / 2) - (current_size / 2)))
 
-        self._draw_sun()
         # Dessine tous les sprites dans la surface de l'écran
         self.enemies_group.draw(self.screen)
         self.explosions_group.draw(self.screen)
