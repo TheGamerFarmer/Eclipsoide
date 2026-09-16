@@ -255,7 +255,7 @@ class Eclipsoide:
                 CoinPopup(pg.Vector2(heart.rect.center), 1, self.popups_group, color=self.HEART_POPUP_COLOR)
                 self.hud.trigger_heal_flash()
 
-        if self.player.is_alive == False:
+        if not self.player.is_alive:
             self.death_timer = self.DEATH_COOLDOWN
             Explosion(pg.Vector2(self.player.rect.center), self.explosions_group)
             # L'historique est lu avant l'ajout : il ne contient que les parties précédentes
@@ -277,7 +277,7 @@ class Eclipsoide:
         if self.boss is None and self.time > self.TIME_BEFORE_BOSS + self.GROW_DURATION:
             self.boss = Boss(
                 self.screen.get_width() / 2 - self.BOSS_MAX_SIZE / 2,
-                (self.SUN_SIZE / 4) + (self.SUN_SIZE / 2) - (self.BOSS_MAX_SIZE / 2),
+                (self.hud.SUN_SIZE / 4) + (self.hud.SUN_SIZE / 2) - (self.BOSS_MAX_SIZE / 2),
                 self.BOSS_MAX_SIZE, self.BOSS_MAX_SIZE,
                 (255, 255, 255),
                 self.boss_group,
@@ -337,7 +337,7 @@ class Eclipsoide:
         # Barre de vie du boss et palier courant, en haut au centre
         if self.boss is not None:
             self.boss.draw_life_bar(self.screen)
-            niveau = self.coin_font.render(f"BOSS NIV. {self.boss_level}", True, (255, 255, 255))
+            niveau = self.hud.coin_font.render(f"BOSS NIV. {self.boss_level}", True, (255, 255, 255))
             self.screen.blit(niveau, niveau.get_rect(center=(self.screen.get_width() // 2, 50)))
         if self.boss:
             self.boss.draw_bombs(self.screen)
