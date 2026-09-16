@@ -70,7 +70,7 @@ class Eclipsoide:
     time = 0
 
     def __del__(self):
-        print("new hemoroid")
+        print("new Eclipsoide")
 
     def __init__(self,screen: pg.Surface):
         """ Création des attribut du jeux """
