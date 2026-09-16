@@ -3,6 +3,7 @@ import pygame as pg
 # Accès à la classe Random
 import random
 
+from datas import Datas
 from player import Player
 from projectile import Projectile
 from particle import Particle
@@ -30,13 +31,11 @@ class Enemy(pg.sprite.Sprite):
 
     size = (ASTEROID_SIZE,ASTEROID_SIZE)
 
-    def __init__(self,screen: pg.Surface, player: Player, projectiles_group: pg.sprite.AbstractGroup,
-                 *groups, particles_group: pg.sprite.AbstractGroup = None):
+    def __init__(self,screen: pg.Surface, player: Player, datas: Datas, *groups):
         # Appel du constructeur la super classe
         pg.sprite.Sprite.__init__(self, *groups)
 
-        self.projectiles_group = projectiles_group
-        self.particles_group = particles_group
+        self.datas = datas
         # Décalage aléatoire pour que les astéroïdes n'émettent pas leurs
         # débris tous en même temps
         self.debris_timer = random.uniform(0, Enemy.DEBRIS_DELAY)
@@ -107,7 +106,7 @@ class Enemy(pg.sprite.Sprite):
             playerRect = self.player.rect
             direction = pg.Vector2(playerRect.center) - oldPos
             if direction.length() > 0:
-                Projectile(oldPos, 0.15, direction.normalize(), Enemy.image_shoot, (255, 0, 0), self.projectiles_group, trail_end_color=(255, 60, 20))
+                Projectile(oldPos, 0.15, direction.normalize(), Enemy.image_shoot, (255, 0, 0), self.datas.projectiles_group, trail_end_color=(255, 60, 20))
 
         # Déplace la position de la raquette en fonction du veteur de mouvement
         # Calcule le vecteur déplacement
@@ -124,9 +123,6 @@ class Enemy(pg.sprite.Sprite):
         self._emit_debris(dt)
 
     def _emit_debris(self, dt):
-        if self.particles_group is None:
-            return
-
         self.debris_timer -= dt
         if self.debris_timer > 0:
             return
@@ -140,7 +136,7 @@ class Enemy(pg.sprite.Sprite):
 
         velocity = direction * random.uniform(0.015, 0.04)
 
-        Particle(spawn_pos, velocity, Enemy.DEBRIS_COLOR_START, Enemy.DEBRIS_COLOR_END, self.particles_group)
+        Particle(spawn_pos, velocity, Enemy.DEBRIS_COLOR_START, Enemy.DEBRIS_COLOR_END, self.datas.particles_group)
 
     def hited(self, damage: int):
         self.life -= damage
@@ -149,12 +145,13 @@ class Enemy(pg.sprite.Sprite):
             self.kill()
 
     @classmethod
-    def check_hits(cls, projectiles_group, enemies_group, damage: int, collided=Projectile.collide) -> list[tuple["Enemy", bool]]:
+    def check_hits(cls, datas: Datas, damage: int, collided=Projectile.collide) -> list[tuple["Enemy", bool]]:
         """ Applique les dégâts des tirs du joueur touchant des ennemis.
         Retourne la liste des (ennemi, vient_de_mourir) pour chaque impact,
         pour laisser l'appelant gérer les récompenses (pièces, coeurs, etc.) """
         hits = []
-        collisions = pg.sprite.groupcollide(projectiles_group, enemies_group, dokilla=True, dokillb=False, collided=collided)
+        # noinspection bad-argument-type
+        collisions = pg.sprite.groupcollide(datas.projectiles_group, datas.enemies_group, dokilla=True, dokillb=False, collided=collided)
         for enemies in collisions.values():
             for enemy in enemies:
                 if type(enemy) == cls:

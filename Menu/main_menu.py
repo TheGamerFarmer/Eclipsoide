@@ -24,10 +24,11 @@ class MainMenu:
         btn_quit = os.path.join(UI_BASE_PATH, "PNG", "Red", "Default", "button_rectangle_depth_flat.png")
 
         self.buttons = {
-            "start": ui_element.Button(center_x, 250, btn_width, btn_height, "Start Game", self.font, btn_normal),
-            "option": ui_element.Button(center_x, 360, btn_width, btn_height, "Options", self.font, btn_normal),
-            "credit": ui_element.Button(center_x, 470, btn_width, btn_height, "Credit", self.font, btn_normal),
-            "quit": ui_element.Button(center_x, 580, btn_width, btn_height, "Quit", self.font, btn_quit)
+            "start": ui_element.Button(center_x, 200, btn_width, btn_height, "Start Game", self.font, btn_normal),
+            "option": ui_element.Button(center_x, 310, btn_width, btn_height, "Options", self.font, btn_normal),
+            "credit": ui_element.Button(center_x, 420, btn_width, btn_height, "Credit", self.font, btn_normal),
+            "leaderboard": ui_element.Button(center_x, 530, btn_width, btn_height, "Leaderboard", self.font, btn_normal),
+            "quit": ui_element.Button(center_x, 640, btn_width, btn_height, "Quit", self.font, btn_quit)
         }
 
     def draw(self, surface):

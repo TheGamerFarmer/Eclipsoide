@@ -24,9 +24,9 @@ class Bomb(pg.sprite.Sprite):
     EXPLOSION_COLOR = (255, 160, 0)
     EXPLOSION_CORE_COLOR = (255, 230, 150)
 
-    def __init__(self, center: tuple[int, int], bounds: pg.Rect | None = None, *groups):
+    def __init__(self, center: tuple[int, int], screen: pg.Surface | None = None, *groups):
         pg.sprite.Sprite.__init__(self, *groups)
-        self.bounds = bounds
+        self.screen = screen
         self.pos = pg.Vector2(center)
         self.exploding = False
         self.explosion_time = 0
@@ -95,5 +95,5 @@ class Bomb(pg.sprite.Sprite):
         self.rect.center = (int(self.pos.x), int(self.pos.y))
 
         # Supprime la bombe si elle sort de l'écran
-        if self.bounds is not None and self.rect.top > self.bounds.bottom:
+        if self.rect.top > self.screen.get_height() + Bomb.RADIUS:
             self.kill()

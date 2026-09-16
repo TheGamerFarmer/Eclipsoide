@@ -5,11 +5,13 @@ import sys
 
 # Utilisation de pygame avec un préfixe plus simple
 import pygame as pg
+import sys
 
 import audio
 import settings
 from Menu.main_menu import MainMenu as main_menu
 from Menu.menu_credit import MenuCredit
+from Menu.menu_leaderboard import MenuLeaderboard
 from Menu.menu_option import MenuOption
 from Menu.menu_pause import PauseMenu
 from eclipsoide import Eclipsoide
@@ -22,11 +24,9 @@ def main():
 
     # Initialisation du package pygame
     pg.init()
+
     # Mode plein écran initial au démarrage si sauvegardé
-    if settings.OPTIONS["fullscreen"]:
-        screen = pg.display.set_mode((1024, 768), pg.FULLSCREEN | pg.SCALED)
-    else:
-        screen = pg.display.set_mode((1024, 768), pg.RESIZABLE | pg.SCALED)
+    screen = settings.apply_display_mode()
 
     menu = main_menu(1024, 768)
     options_menu = MenuOption(1024, 768)
@@ -41,6 +41,7 @@ def main():
     #menu_pause =False
     game_over_running = False
     pause = PauseMenu(1024, 768)
+    leaderboard = MenuLeaderboard(1024, 768)
     while True:
         # On s'assure de revenir au menu principal par défaut
         active_menu = menu
@@ -75,16 +76,15 @@ def main():
                     active_menu = options_menu
                 elif action == "credit":
                     active_menu = credit_menu
+                elif action == "leaderboard":
+                    active_menu = leaderboard
                 elif action == "back":
                     active_menu = menu
                     audio.apply_settings()
 
                 # pleine écran
                 elif action == "toggle_fullscreen":
-                    if settings.OPTIONS["fullscreen"]:
-                        screen = pg.display.set_mode((1024, 768), pg.FULLSCREEN | pg.SCALED)
-                    else:
-                        screen = pg.display.set_mode((1024, 768), pg.RESIZABLE | pg.SCALED)
+                    screen = settings.apply_display_mode()
 
             # On dessine le menu actif
             active_menu.draw(screen)
@@ -96,13 +96,13 @@ def main():
             # (QUIT compris). En lire une seconde fois volerait les touches.
             dt = clock.tick(60)
 
-            if Eclipsoide.pause:
+            if eclipsoide.pause:
                 audio.set_paused(True)
                 # Le menu affiche le score de la partie en cours
                 pause.set_score(eclipsoide.player.coins)
                 pause.draw(screen)
                 pg.display.flip()
-            while Eclipsoide.pause:
+            while eclipsoide.pause:
                 clock.tick(0)
                 for event in pg.event.get():
                     if event.type == pg.QUIT:
@@ -110,17 +110,17 @@ def main():
                         sys.exit()
                     action = pause.handle_event(event)
                     if action == "resume":
-                        Eclipsoide.pause = False
+                        eclipsoide.pause = False
                         eclipsoide.draw()
                     elif action == "restart":
-                        Eclipsoide.pause = False
+                        eclipsoide.pause = False
                         eclipsoide = Eclipsoide(screen)
                     elif action == "quit":
                         pg.quit()
                         sys.exit()
                     elif action == "menu":
                         start_menu = True
-                        Eclipsoide.pause = False
+                        eclipsoide.pause = False
                         eclipsoide.isEnded = True
 
                     elif action == "option":
@@ -137,10 +137,7 @@ def main():
                                     audio.apply_settings()
                                 # pleine écran
                                 elif sub_action == "toggle_fullscreen":
-                                    if settings.OPTIONS["fullscreen"]:
-                                        screen = pg.display.set_mode((1024, 768), pg.FULLSCREEN | pg.SCALED)
-                                    else:
-                                        screen = pg.display.set_mode((1024, 768), pg.RESIZABLE | pg.SCALED)
+                                    screen = settings.apply_display_mode()
                                 active_menu.draw(screen)
                                 pg.display.flip()
                         eclipsoide.draw()
@@ -149,7 +146,7 @@ def main():
                     elif event.type == pg.KEYDOWN:
                         # Les deux touches de pause reprennent aussi la partie
                         if event.key in (pg.K_ESCAPE, pg.K_p):
-                            Eclipsoide.pause = False
+                            eclipsoide.pause = False
                             eclipsoide.draw()
 
             # Sortie de pause (reprise, restart ou retour menu)
