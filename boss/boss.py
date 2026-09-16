@@ -136,6 +136,25 @@ class Boss(Box):
         """Inflige des dégâts au boss (même nom que Enemy.hited)."""
         self.life = max(0, self.life - damage)
 
+    @staticmethod
+    def collide(boss: "Boss", projectile: pg.sprite.Sprite) -> bool:
+        """Collision tir -> boss : hitbox du tir contre la forme réelle du boss (son masque)."""
+        rect = getattr(projectile, 'hitbox', projectile.rect)
+        if not boss.rect.colliderect(rect):
+            return False
+        offset = (rect.x - boss.rect.x, rect.y - boss.rect.y)
+        return boss.mask.overlap(pg.Mask(rect.size, fill=True), offset) is not None
+
+    def check_hits(self, projectiles_group, damage: int, collided=None) -> list[tuple[int, int]]:
+        """ Applique les dégâts des tirs touchant le boss. Retourne la position de
+        chaque impact, pour laisser l'appelant afficher les nombres de dégâts """
+        touches = pg.sprite.spritecollide(self, projectiles_group, dokill=True, collided=collided or Boss.collide)
+        positions = []
+        for touch in touches:
+            self.hited(damage)
+            positions.append(touch.rect.center)
+        return positions
+
     def draw_life_bar(self, surface: pg.Surface) -> None:
         """
         Dessine la barre de vie du boss en haut de la surface (à appeler avec le HUD).

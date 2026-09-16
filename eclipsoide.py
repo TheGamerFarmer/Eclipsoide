@@ -16,20 +16,6 @@ from explosion import Explosion
 from heart_pickup import HeartPickup
 from hud import Hud
 
-def collide_projectile(a: pg.sprite.Sprite, b: pg.sprite.Sprite) -> bool:
-    """ Collision utilisant la hitbox du projectile plutôt que son rect visuel (halo + traînée) """
-    rect_a = getattr(a, 'hitbox', a.rect)
-    rect_b = getattr(b, 'hitbox', b.rect)
-    return rect_a.colliderect(rect_b)
-
-def collide_boss(boss: pg.sprite.Sprite, projectile: pg.sprite.Sprite) -> bool:
-    """ Collision tir -> boss : hitbox du tir contre la forme réelle du boss (son masque) """
-    rect = getattr(projectile, 'hitbox', projectile.rect)
-    if not boss.rect.colliderect(rect):
-        return False
-    offset = (rect.x - boss.rect.x, rect.y - boss.rect.y)
-    return boss.mask.overlap(pg.Mask(rect.size, fill=True), offset) is not None
-
 # Définition du jeu Pong
 class Eclipsoide:
     # time between wave in milliseconds
@@ -206,45 +192,25 @@ class Eclipsoide:
 
         self.time += dt
 
-        # Collisions entre le joueur et les ennemies
-        if pg.sprite.spritecollide(self.player, self.enemies_group, dokill=False):
-            if self.player.on_hit():
-                self.hud.trigger_hit_flash()
-
-        # Collisions entre le joueur et les projectiles ennemies
-        # (on collisionne sur la hitbox du tir, pas sur son rect visuel qui
-        # inclut le halo et la traînée)
-        if pg.sprite.spritecollide(self.player, self.enemy_projectiles_group, dokill=True, collided=collide_projectile):
-            if self.player.on_hit():
-                self.hud.trigger_hit_flash()
-
-        # Les bombes du boss explosent au contact du joueur et le tuent
-        if self.boss is not None and self.boss.bombs_hitting(self.player):
-            self.player.on_hit()
+        # Le joueur encaisse les coups (contact ennemi, tir ennemi, bombe du boss)
+        if self.player.check_hits(self.enemies_group, self.enemy_projectiles_group, self.boss):
+            self.hud.trigger_hit_flash()
 
         # Les tirs du joueur entament la vie du boss
         if self.boss is not None:
-            touches = pg.sprite.spritecollide(self.boss, self.projectiles_group, dokill=True, collided=collide_boss)
-            for touch in touches:
-                self.boss.hited(self.player.damage)
-                CoinPopup(pg.Vector2(touch.rect.center), self.player.damage, self.popups_group, color=self.DAMAGE_POPUP_COLOR, prefix="-")
+            for position in self.boss.check_hits(self.projectiles_group, self.player.damage):
+                CoinPopup(pg.Vector2(position), self.player.damage, self.popups_group, color=self.DAMAGE_POPUP_COLOR, prefix="-")
             if not self.boss.is_alive:
                 self._boss_vaincu()
 
         # Collisions entre les projectiles du joueur et les ennemies
-        collisions = pg.sprite.groupcollide(self.projectiles_group, self.enemies_group, dokilla=True, dokillb=False, collided=collide_projectile)
-        if collisions:
-            for enemies in collisions.values():
-                for enemy in enemies:
-                    if type(enemy) == Enemy:
-                        was_alive = enemy.life > 0
-                        enemy.hited(self.player.damage)
-                        CoinPopup(pg.Vector2(enemy.rect.center), self.player.damage, self.popups_group, color=self.DAMAGE_POPUP_COLOR, prefix="-")
-                        if was_alive and enemy.life <= 0:
-                            Coin(pg.Vector2(enemy.rect.center), self.player, self.coins_group)
-                            Explosion(pg.Vector2(enemy.rect.center), self.explosions_group)
-                            if self.player.lives < Player.MAX_LIVES and random.random() < self.HEART_DROP_CHANCE:
-                                HeartPickup(pg.Vector2(enemy.rect.center), self.player, self.hearts_group)
+        for enemy, died in Enemy.check_hits(self.projectiles_group, self.enemies_group, self.player.damage):
+            CoinPopup(pg.Vector2(enemy.rect.center), self.player.damage, self.popups_group, color=self.DAMAGE_POPUP_COLOR, prefix="-")
+            if died:
+                Coin(pg.Vector2(enemy.rect.center), self.player, self.coins_group)
+                Explosion(pg.Vector2(enemy.rect.center), self.explosions_group)
+                if self.player.lives < Player.MAX_LIVES and random.random() < self.HEART_DROP_CHANCE:
+                    HeartPickup(pg.Vector2(enemy.rect.center), self.player, self.hearts_group)
 
         # Le joueur ramasse les pièces et les coeurs qu'il croise (aspirés
         # automatiquement vers lui) ; chaque classe gère sa propre collecte

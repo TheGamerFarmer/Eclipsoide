@@ -92,6 +92,14 @@ class Projectile(pg.sprite.Sprite):
             pg.draw.circle(segment, (color.r, color.g, color.b, alpha), pos, radius)
             frame.blit(segment, (0, 0), special_flags=pg.BLEND_RGBA_ADD)
 
+    @staticmethod
+    def collide(a: pg.sprite.Sprite, b: pg.sprite.Sprite) -> bool:
+        """ Collision utilisant la hitbox du projectile plutôt que son rect visuel
+        (halo + traînée), quel que soit le côté (a ou b) qui porte le projectile """
+        rect_a = getattr(a, 'hitbox', a.rect)
+        rect_b = getattr(b, 'hitbox', b.rect)
+        return rect_a.colliderect(rect_b)
+
     def update(self, dt):
         self.time += dt
         self.frameIndex += dt * self.FRAME_SPEED

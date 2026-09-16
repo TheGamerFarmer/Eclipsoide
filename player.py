@@ -161,6 +161,24 @@ class Player(pg.sprite.Sprite):
 
         return True
 
+    def check_hits(self, enemies_group, enemy_projectiles_group, boss, collided=Projectile.collide) -> bool:
+        """ Vérifie les collisions qui blessent le joueur (contact ennemi, tir
+        ennemi, bombe du boss). Retourne True si un coup a réellement été encaissé
+        (pour déclencher un feedback comme un flash d'écran) """
+        hit = False
+        if pg.sprite.spritecollide(self, enemies_group, dokill=False):
+            hit = self.on_hit() or hit
+
+        # (on collisionne sur la hitbox du tir, pas sur son rect visuel qui
+        # inclut le halo et la traînée)
+        if pg.sprite.spritecollide(self, enemy_projectiles_group, dokill=True, collided=collided):
+            hit = self.on_hit() or hit
+
+        if boss is not None and boss.bombs_hitting(self):
+            hit = self.on_hit() or hit
+
+        return hit
+
     def add_coins(self, amount: int):
         self.coins += amount
         self.score += amount
