@@ -35,7 +35,7 @@ class Eclipsoide:
     # time between wave in milliseconds
     TIME_BETWEEN_WAVE = 5000
     VITESSE_BOSS = 0.1  # pixels par milliseconde
-    TIME_BEFORE_BOSS = 300000
+    TIME_BEFORE_BOSS = 10000
     BOSS_SIZE = 70
     GROW_DURATION = 2000
     BOSS_MAX_SIZE = 620
@@ -75,7 +75,6 @@ class Eclipsoide:
         self.bg_image2 = pg.transform.scale(self.bg_image2, (screen.get_width(), screen.get_height()))
 
         self.boss_image = pg.image.load('images/boss1.png')
-        self.boss_image = pg.transform.scale(self.boss_image, (self.BOSS_SIZE, self.BOSS_SIZE))
 
         # Objet sous groupe pour avoir la liste des sprites et automatiser la mise à jour par update()
         # Automatise aussi l'affichage : draw() par défaut affiche dans l'écran image à la position rect
@@ -270,7 +269,7 @@ class Eclipsoide:
         if self.boss is None and self.time > self.TIME_BEFORE_BOSS + self.GROW_DURATION:
             self.boss = Boss(
                 self.screen.get_width() / 2 - self.BOSS_MAX_SIZE / 2,
-                (self.SUN_SIZE / 4) + (self.SUN_SIZE / 2) - (self.BOSS_MAX_SIZE / 2),
+                (self.hud.SUN_SIZE / 4) + (self.hud.SUN_SIZE / 2) - (self.BOSS_MAX_SIZE / 2),
                 self.BOSS_MAX_SIZE, self.BOSS_MAX_SIZE,
                 (255, 255, 255),
                 self.boss_group,
@@ -330,7 +329,7 @@ class Eclipsoide:
         # Barre de vie du boss et palier courant, en haut au centre
         if self.boss is not None:
             self.boss.draw_life_bar(self.screen)
-            niveau = self.coin_font.render(f"BOSS NIV. {self.boss_level}", True, (255, 255, 255))
+            niveau = self.hud.coin_font.render(f"BOSS NIV. {self.boss_level}", True, (255, 255, 255))
             self.screen.blit(niveau, niveau.get_rect(center=(self.screen.get_width() // 2, 50)))
         if self.boss:
             self.boss.draw_bombs(self.screen)
