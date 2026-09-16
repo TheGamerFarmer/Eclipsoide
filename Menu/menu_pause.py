@@ -1,23 +1,37 @@
+import os
+
 import pygame as pg
 from . import ui_element
+
+UI_BASE_PATH = "images/ui"
+
 
 class PauseMenu:
     def __init__(self, screen_width, screen_height):
         self.font = pg.font.SysFont('ComicSans', 20)
         self.titre_font = pg.font.SysFont('ComicSans', 50)
 
-        center_x = screen_height // 2 - 100
+        btn_width = 300
+        btn_height = 75
+
+        center_x = screen_width // 2 - (btn_width // 2)
+
+        btn_normal = os.path.join(UI_BASE_PATH, "PNG", "Blue", "Default", "button_rectangle_depth_flat.png")
+        btn_quit = os.path.join(UI_BASE_PATH, "PNG", "Red", "Default", "button_rectangle_depth_flat.png")
 
         self.buttons = {
-            "resume": ui_element.Button(center_x, 250, 200, 50, "Resume", self.font),
-            "restart": ui_element.Button(center_x, 350, 200, 50, "Restart", self.font),
-            "option": ui_element.Button(center_x, 450, 200, 50, "Option", self.font),
-            "quit": ui_element.Button(center_x, 550, 200, 50, "Quit", self.font)
+            "resume": ui_element.Button(center_x, 250, btn_width, btn_height, "Resume", self.font, btn_normal),
+            "restart": ui_element.Button(center_x, 350, btn_width, btn_height, "Restart", self.font, btn_normal),
+            "option": ui_element.Button(center_x, 450, btn_width, btn_height, "Option", self.font, btn_normal),
+            "quit": ui_element.Button(center_x, 550, btn_width, btn_height, "Quit", self.font, btn_quit)
         }
 
     def draw(self, surface):
-        surface.fill(pg.image.load('images/background1.png'))
-        titre = self.titre_font.render("ECLIPSOIDE", True, (255, 244, 255))
+        overlay = pg.Surface(surface.get_size(), pg.SRCALPHA)
+        overlay.fill((0, 0, 0, 160))
+        surface.blit(overlay, (0, 0))
+
+        titre = self.titre_font.render("PAUSED", True, (255, 244, 255))
         surface.blit(titre, titre.get_rect(center=(surface.get_width() // 2, 120)))
 
         for button in self.buttons.values():
