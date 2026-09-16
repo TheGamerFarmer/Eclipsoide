@@ -56,6 +56,11 @@ class Hud:
     RECORD_BEATEN_COLOR = (80, 255, 140)
     RECORD_Y = 40
     HEARTS_Y = 64
+    # Fond arrondi derrière chaque coeur, pour que les emplacements vides
+    # (juste un contour fin) restent visibles sur un fond d'écran chargé
+    HEART_BG_COLOR = (255, 255, 255, 140)
+    HEART_BG_PADDING = 3
+    HEART_BG_RADIUS = 6
     # Animation du bouclier (images/shield/) autour du vaisseau tant qu'il est
     # actif, avec un pic de taille bref quand un coup est bloqué et un
     # clignotement d'avertissement juste avant qu'il ne s'éteigne
@@ -100,7 +105,7 @@ class Hud:
 
         self.shop = Shop(self.screen, self.player)
 
-    # --- Déclenchement des effets, appelé par Eclipsoide au moment des événements ---
+    # Déclenchement des effets, appelé par Eclipsoide au moment des événements
 
     def trigger_hit_flash(self):
         self.hit_flash_timer = self.HIT_FLASH_DURATION
@@ -114,7 +119,7 @@ class Hud:
     def trigger_shield_pulse(self):
         self.shield_pulse_timer = self.SHIELD_PULSE_DURATION
 
-    # --- Mise à jour ---
+    # Mise à jour
 
     def update_timers(self, dt):
         """ Décomptes des flashs/pop : toujours appelé, même pendant une pause de gameplay
@@ -274,9 +279,23 @@ class Hud:
         self.screen.blit(record_text, (10, self.RECORD_Y))
 
     def _draw_hearts(self):
+        icon_w, icon_h = self.heart_full_icon.get_size()
+
+        # Un seul fond qui s'étire pour couvrir tous les emplacements de coeurs,
+        # plutôt qu'un fond répété derrière chacun
+        span_w = (self.player.max_lives - 1) * 26 + icon_w
+        bg_size = (span_w + self.HEART_BG_PADDING * 2, icon_h + self.HEART_BG_PADDING * 2)
+        bg_surface = pg.Surface(bg_size, pg.SRCALPHA)
+        pg.draw.rect(bg_surface, self.HEART_BG_COLOR, bg_surface.get_rect(), border_radius=self.HEART_BG_RADIUS)
+        self.screen.blit(bg_surface, (10 - self.HEART_BG_PADDING, self.HEARTS_Y - self.HEART_BG_PADDING))
+
         for i in range(self.player.max_lives):
+            x = 10 + i * 26
             icon = self.heart_full_icon if i < self.player.lives else self.heart_empty_icon
-            self.screen.blit(icon, (10 + i * 26, self.HEARTS_Y))
+            self.screen.blit(icon, (x, self.HEARTS_Y))
+
+            icon = self.heart_full_icon if i < self.player.lives else self.heart_empty_icon
+            self.screen.blit(icon, (x, self.HEARTS_Y))
 
     def draw_overlay(self):
         """ Dessine, par-dessus le jeu, les flashs, la vignette de vie basse puis le HUD (pièces/vies) """
