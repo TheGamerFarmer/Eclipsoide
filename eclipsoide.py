@@ -260,6 +260,7 @@ class Eclipsoide:
         # Dessine tous les sprites dans la surface de l'écran
         self.datas.enemies_group.draw(self.screen)
         self.datas.player_group.draw(self.screen)
+        self.hud.draw_shield()
         self.datas.projectiles_group.draw(self.screen)
         self.datas.enemy_projectiles_group.draw(self.screen)
         self.datas.coins_group.draw(self.screen)
@@ -267,6 +268,7 @@ class Eclipsoide:
         self.datas.particles_group.draw(self.screen)
         self.datas.explosions_group.draw(self.screen)
         self.datas.hearts_group.draw(self.screen)
+        self.datas.shields_group.draw(self.screen)
         self.datas.bombs_group.draw(self.screen)
         self.datas.shields_group.draw(self.screen)
 
