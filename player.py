@@ -5,6 +5,7 @@ from particle import Particle
 
 class Player(pg.sprite.Sprite):
     size = (30, 26)
+    hitbox_size = (10, 9)
     image_shoot_set: bool = False
     image_shoot: list[pg.Surface]
 
@@ -42,6 +43,10 @@ class Player(pg.sprite.Sprite):
 
         self.rect = self.surface.get_rect()
         self.rect.move_ip(screen.get_width() / 2 - self.size[0] / 2, screen.get_height() - 50)
+
+        self.hitbox = pg.Rect(0, 0, self.hitbox_size[0], self.hitbox_size[1])
+        self.hitbox.center = self.rect.center
+
         self.position = pg.Vector2(self.rect.midbottom)
 
     def update(self, dt):
@@ -64,6 +69,7 @@ class Player(pg.sprite.Sprite):
         self.rect.midbottom = self.position
         self.rect.clamp_ip(self.screen.get_rect())
         self.position = pg.Vector2(self.rect.midbottom)
+        self.hitbox.center = self.rect.center
 
         self.fire_timer -= dt
 
