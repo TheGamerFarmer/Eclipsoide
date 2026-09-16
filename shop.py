@@ -117,7 +117,7 @@ class Shop:
                 item['price'] = nouveau_prix
 
                 if item['id'] == 'damage':
-                    self.player.damage = 40 * (1 + 0.10 * item['lvl'])
+                    self.player.damage = 20 * (1 + 0.10 * item['lvl'])
                 elif item['id'] == 'cadence':
                     self.player.fire_delay = 300 / (1 + 0.10 * item['lvl'])
                 elif item['id'] == 'health':
