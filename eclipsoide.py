@@ -66,6 +66,9 @@ class Eclipsoide:
     pause = False
     time = 0
 
+    def __del__(self):
+        print("new hemoroid")
+
     def __init__(self,screen: pg.Surface):
         """ Création des attribut du jeux """
         # Conserve le lien vers l'objet surface ecran du jeux
