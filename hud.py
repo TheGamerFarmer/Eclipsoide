@@ -1,6 +1,7 @@
 import os
 import math
 import pygame as pg
+from shop import Shop
 
 import settings
 
@@ -81,6 +82,8 @@ class Hud:
         self.hit_flash_timer = 0
         self.heal_flash_timer = 0
         self.coin_pop_timer = 0
+
+        self.shop = Shop(self.screen, self.player)
 
     # --- Déclenchement des effets, appelé par Eclipsoide au moment des événements ---
 
@@ -241,3 +244,8 @@ class Hud:
         self._draw_coin_counter()
         self._draw_record()
         self._draw_hearts()
+
+        self.shop.draw()
+
+    def handle_event(self, event):
+        self.shop.handle_event(event)
