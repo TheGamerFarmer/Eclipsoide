@@ -13,7 +13,7 @@ class Player(pg.sprite.Sprite):
     image_shoot: list[pg.Surface]
     image: pg.Surface
     rect: pg.Rect
-    damage: int = 20
+    damage: float = 20.0
     # Référence pour le halo des tirs : au-dessus de ce seuil de dégâts (ex.
     # améliorations), le halo grossit ; en dessous, il rétrécit
     BASE_DAMAGE = 20
@@ -62,7 +62,7 @@ class Player(pg.sprite.Sprite):
         self.invincible_timer = 0
         self.shield_timer = 0
 
-        self.coins = 99999
+        self.coins = 0
         self.score = 0
 
         self.fire_delay = 300
