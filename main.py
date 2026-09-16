@@ -23,10 +23,7 @@ def main():
     # Initialisation du package pygame
     pg.init()
     # Mode plein écran initial au démarrage si sauvegardé
-    if settings.OPTIONS["fullscreen"]:
-        screen = pg.display.set_mode((1024, 768), pg.FULLSCREEN | pg.SCALED)
-    else:
-        screen = pg.display.set_mode((1024, 768), pg.RESIZABLE | pg.SCALED)
+    screen = settings.apply_display_mode()
 
     menu = main_menu(1024, 768)
     options_menu = MenuOption(1024, 768)
@@ -81,10 +78,7 @@ def main():
 
                 # pleine écran
                 elif action == "toggle_fullscreen":
-                    if settings.OPTIONS["fullscreen"]:
-                        screen = pg.display.set_mode((1024, 768), pg.FULLSCREEN | pg.SCALED)
-                    else:
-                        screen = pg.display.set_mode((1024, 768), pg.RESIZABLE | pg.SCALED)
+                    screen = settings.apply_display_mode()
 
             # On dessine le menu actif
             active_menu.draw(screen)
@@ -137,10 +131,7 @@ def main():
                                     audio.apply_settings()
                                 # pleine écran
                                 elif sub_action == "toggle_fullscreen":
-                                    if settings.OPTIONS["fullscreen"]:
-                                        screen = pg.display.set_mode((1024, 768), pg.FULLSCREEN | pg.SCALED)
-                                    else:
-                                        screen = pg.display.set_mode((1024, 768), pg.RESIZABLE | pg.SCALED)
+                                    screen = settings.apply_display_mode()
                                 active_menu.draw(screen)
                                 pg.display.flip()
                         eclipsoide.draw()

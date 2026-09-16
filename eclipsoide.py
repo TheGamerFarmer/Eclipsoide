@@ -128,7 +128,7 @@ class Eclipsoide:
                     match event.key:
                         case pg.K_f:
                             # Touche 'f' passe en fullscreen ou revient en mode window
-                            pg.display.toggle_fullscreen()
+                            settings.toggle_fullscreen()
                         case pg.K_ESCAPE | pg.K_p:
                             # alterne la pause
                             Eclipsoide.pause = not Eclipsoide.pause

@@ -77,6 +77,8 @@ class MenuOption:
         self.slider_volume.draw(surface)
         self.check_music.draw(surface)
         self.check_sfx.draw(surface)
+        # La touche F peut changer le mode en jeu : la case suit l'option réelle
+        self.check_fullscreen.is_checked = settings.OPTIONS["fullscreen"]
         self.check_fullscreen.draw(surface)
 
         # CONTROLES
