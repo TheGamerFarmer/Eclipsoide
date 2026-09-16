@@ -1,5 +1,6 @@
 import sys
 import random
+import math
 
 # Utilisation de pygame avec un préfixe plus simple
 import pygame as pg
@@ -39,6 +40,12 @@ class Eclipsoide:
 
     # Nombres de dégâts flottants affichés sur les ennemis/le boss touchés
     DAMAGE_POPUP_COLOR = (255, 255, 255)
+
+    # Télégraphe d'apparition : petit marqueur qui pulse en haut de l'écran
+    # juste avant qu'un ennemi n'entre dans le champ (encore au-dessus, invisible)
+    SPAWN_WARNING_DISTANCE = 150  # px au-dessus de l'écran, distance à partir de laquelle le marqueur apparaît
+    SPAWN_WARNING_COLOR = (255, 140, 40)
+    SPAWN_WARNING_PULSE_PERIOD = 260  # ms
 
     # Simulation de collision : une cible automatique qui patrouille en bas
     VITESSE_CIBLE = 0.25  # pixels par milliseconde
@@ -188,7 +195,7 @@ class Eclipsoide:
         if (self.time + dt) % self.TIME_BETWEEN_WAVE < dt and self.time < self.TIME_BEFORE_BOSS:
             nbEnemies: int = int(self.time / self.TIME_BETWEEN_WAVE / 2)
             for i in range(-2, nbEnemies):
-                Enemy(self.screen, self.player, self.enemy_projectiles_group, self.enemies_group)
+                Enemy(self.screen, self.player, self.enemy_projectiles_group, self.enemies_group, particles_group=self.particles_group)
 
         self.time += dt
 
@@ -252,6 +259,25 @@ class Eclipsoide:
             )
         self.boss_group.update(dt)
 
+    def _draw_spawn_warnings(self):
+        """ Marqueur triangulaire pulsant en haut de l'écran, tant qu'un ennemi
+        approche par le haut sans être encore visible (rect entièrement au-dessus) """
+        for enemy in self.enemies_group:
+            distance = -enemy.rect.bottom
+            if not (0 < distance <= self.SPAWN_WARNING_DISTANCE):
+                continue
+
+            # 0 = vient d'entrer dans la zone d'alerte, 1 = sur le point d'apparaître
+            proximity = 1 - (distance / self.SPAWN_WARNING_DISTANCE)
+            pulse = (math.sin(self.time * (2 * math.pi / self.SPAWN_WARNING_PULSE_PERIOD)) + 1) / 2
+            alpha = max(0, min(255, int(70 + 150 * proximity * (0.5 + 0.5 * pulse))))
+            size = 7 + int(6 * proximity)
+
+            x = max(size, min(self.screen.get_width() - size, enemy.rect.centerx))
+            marker = pg.Surface((size * 2, size), pg.SRCALPHA)
+            pg.draw.polygon(marker, (*self.SPAWN_WARNING_COLOR, alpha), [(0, 0), (size * 2, 0), (size, size)])
+            self.screen.blit(marker, (x - size, 4))
+
     def draw(self):
         """ Dessine le nouvel état du jeu """
         # Redessine le fond entier
@@ -286,6 +312,7 @@ class Eclipsoide:
 
         # Dessine tous les sprites dans la surface de l'écran
         self.enemies_group.draw(self.screen)
+        self._draw_spawn_warnings()
         self.explosions_group.draw(self.screen)
         self.particles_group.draw(self.screen)
         self.player_group.draw(self.screen)
