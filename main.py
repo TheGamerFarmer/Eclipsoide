@@ -35,7 +35,7 @@ def main():
 
     start_menu = True
     menu_pause =False
-    pause = PauseMenu(GAME_W, GAME_H)
+    pause = PauseMenu(1024, 768)
     while True:
         # On s'assure de revenir au menu principal par défaut
         active_menu = menu
@@ -109,7 +109,7 @@ def main():
                         eclipsoide.draw()
                     elif action == "restart":
                         Eclipsoide.pause = False
-                        eclipsoide = Eclipsoide(game_surface)
+                        eclipsoide = Eclipsoide(screen)
                     elif action == "quit":
                         pg.quit()
                         sys.exit()
