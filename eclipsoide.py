@@ -7,6 +7,7 @@ import pygame as pg
 import settings
 from Menu.menu_game_over import GameOver
 from boss import Boss
+from coin_popup import CoinPopup
 # Accès à la classe Enemy
 from enemy import Enemy
 from player import Player
