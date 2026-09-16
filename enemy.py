@@ -123,6 +123,9 @@ class Enemy(pg.sprite.Sprite):
         self._emit_debris(dt)
 
     def _emit_debris(self, dt):
+        if self.datas.particles_group is None:
+            return
+
         self.debris_timer -= dt
         if self.debris_timer > 0:
             return

@@ -192,7 +192,7 @@ class Eclipsoide:
     def _draw_spawn_warnings(self):
         """ Marqueur triangulaire pulsant en haut de l'écran, tant qu'un ennemi
         approche par le haut sans être encore visible (rect entièrement au-dessus) """
-        for enemy in self.enemies_group:
+        for enemy in self.datas.enemies_group:
             distance = -enemy.rect.bottom
             if not (0 < distance <= self.SPAWN_WARNING_DISTANCE):
                 continue
