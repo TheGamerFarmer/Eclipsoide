@@ -1,5 +1,6 @@
 import os
 import sys
+import random
 
 import math
 # Utilisation de pygame avec un préfixe plus simple
@@ -12,6 +13,7 @@ from player import Player
 from coin import Coin
 from coin_popup import CoinPopup
 from explosion import Explosion
+from heart_pickup import HeartPickup
 
 def collide_projectile(a: pg.sprite.Sprite, b: pg.sprite.Sprite) -> bool:
     """ Collision utilisant la hitbox du projectile plutôt que son rect visuel (halo + traînée) """
@@ -40,6 +42,34 @@ class Eclipsoide:
     SUN_GLOW_MAX_ALPHA = 55
     SUN_GLOW_PULSE_RADIUS = 10
     SUN_GLOW_PULSE_ALPHA = 20
+
+    # Délai (explosion du joueur) avant d'afficher l'écran de game over
+    DEATH_COOLDOWN = 1300  # ms
+
+    # Flash rouge plein écran, bref, au moment exact où un coup est encaissé
+    HIT_FLASH_DURATION = 180  # ms
+    HIT_FLASH_COLOR = (255, 30, 30)
+    HIT_FLASH_MAX_ALPHA = 130
+
+    # Même principe mais en vert, au moment où une vie est récupérée
+    HEAL_FLASH_DURATION = 180  # ms
+    HEAL_FLASH_COLOR = (40, 255, 90)
+    HEAL_FLASH_MAX_ALPHA = 130
+
+    # Fondu rouge sur les bords quand il ne reste plus qu'un coeur
+    LOW_HEALTH_THRESHOLD = 1
+    VIGNETTE_COLOR = (200, 0, 0)
+    VIGNETTE_PULSE_PERIOD = 700  # ms pour un cycle de pulsation (effet "battement")
+    VIGNETTE_MIN_ALPHA = 50
+    VIGNETTE_MAX_ALPHA = 140
+
+    # Chance qu'un ennemi tué drop un coeur (uniquement si le joueur n'est pas déjà à vie max)
+    HEART_DROP_CHANCE = 0.12
+    HEART_POPUP_COLOR = (255, 90, 120)
+
+    # Petit "pop" (grossit puis revient à la normale) sur le compteur de pièces
+    COIN_POP_DURATION = 220  # ms
+    COIN_POP_AMPLITUDE = 0.45  # +45% de taille au pic
 
     # Simulation de collision : une cible automatique qui patrouille en bas
     VITESSE_CIBLE = 0.25  # pixels par milliseconde
@@ -81,17 +111,27 @@ class Eclipsoide:
         self.popups_group = pg.sprite.Group()
         self.particles_group = pg.sprite.Group()
         self.explosions_group = pg.sprite.Group()
+        self.hearts_group = pg.sprite.Group()
 
         self.coin_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 24)
         self.coin_icon = pg.transform.scale(pg.image.load('images/ui/Coins/coin_0.png'), (24, 24))
+        self.heart_full_icon = pg.transform.scale(pg.image.load('images/ui/Hearts/heart_full.png'), (22, 22))
+        self.heart_empty_icon = pg.transform.scale(pg.image.load('images/ui/Hearts/heart_empty.png'), (22, 22))
         # Création d'une instance du joueur
         self.player = Player(screen, 0.3, self.projectiles_group, self.particles_group, self.player_group)
         # Création du groupe du joueur
+
+        self.vignette_surface = self._build_vignette(self.VIGNETTE_COLOR)
 
         self.menu_game_over = GameOver(self.screen.get_width(), self.screen.get_height())
 
         # Vrai si le jeu est fini
         self.isEnded = False
+        # None tant que le joueur est vivant ; sinon, ms restantes avant le game over
+        self.death_timer = None
+        self.hit_flash_timer = 0
+        self.heal_flash_timer = 0
+        self.coin_pop_timer = 0
 
     def isRunning(self):
         """
@@ -128,6 +168,20 @@ class Eclipsoide:
         if Eclipsoide.pause:
             return
 
+        self.hit_flash_timer = max(0, self.hit_flash_timer - dt)
+        self.heal_flash_timer = max(0, self.heal_flash_timer - dt)
+        self.coin_pop_timer = max(0, self.coin_pop_timer - dt)
+
+        # Séquence de mort en cours : on laisse l'explosion du joueur se jouer
+        # (le reste de la partie reste figé) avant de basculer sur le game over
+        if self.death_timer is not None:
+            self.death_timer -= dt
+            self.explosions_group.update(dt)
+            self.particles_group.update(dt)
+            if self.death_timer <= 0:
+                self.isEnded = True
+            return
+
         self.sun_angle = (self.sun_angle + self.SUN_ROTATION_SPEED * dt) % 360
         
         if (self.time + dt) % self.TIME_BETWEEN_WAVE < dt and self.time < self.TIME_BEFORE_BOSS:
@@ -142,13 +196,15 @@ class Eclipsoide:
 
         # Collisions entre le joueur et les ennemies
         if pg.sprite.spritecollide(self.player, self.enemies_group, dokill=False):
-            self.player.on_hit()
+            if self.player.on_hit():
+                self.hit_flash_timer = self.HIT_FLASH_DURATION
 
         # Collisions entre le joueur et les projectiles ennemies
         # (on collisionne sur la hitbox du tir, pas sur son rect visuel qui
         # inclut le halo et la traînée)
         if pg.sprite.spritecollide(self.player, self.enemy_projectiles_group, dokill=True, collided=collide_projectile):
-            self.player.on_hit()
+            if self.player.on_hit():
+                self.hit_flash_timer = self.HIT_FLASH_DURATION
 
         # Collisions entre les projectiles du joueur et les ennemies
         collisions = pg.sprite.groupcollide(self.projectiles_group, self.enemies_group, dokilla=True, dokillb=False, collided=collide_projectile)
@@ -161,17 +217,28 @@ class Eclipsoide:
                         if was_alive and enemy.life <= 0:
                             Coin(pg.Vector2(enemy.rect.center), self.player, self.coins_group)
                             Explosion(pg.Vector2(enemy.rect.center), self.explosions_group)
+                            if self.player.lives < Player.MAX_LIVES and random.random() < self.HEART_DROP_CHANCE:
+                                HeartPickup(pg.Vector2(enemy.rect.center), self.player, self.hearts_group)
 
         # Le joueur ramasse les pièces qu'il croise (aspirées automatiquement vers lui)
         collected_coins = pg.sprite.spritecollide(self.player, self.coins_group, dokill=True)
         if collected_coins:
             self.player.add_coins(len(collected_coins) * Coin.VALUE)
+            self.coin_pop_timer = self.COIN_POP_DURATION
             for coin in collected_coins:
                 CoinPopup(pg.Vector2(coin.rect.center), Coin.VALUE, self.popups_group)
 
+        # Le joueur ramasse les coeurs qu'il croise (une vie de plus, plafonnée au max)
+        collected_hearts = pg.sprite.spritecollide(self.player, self.hearts_group, dokill=True)
+        for heart in collected_hearts:
+            if self.player.lives < Player.MAX_LIVES:
+                self.player.lives += 1
+                CoinPopup(pg.Vector2(heart.rect.center), 1, self.popups_group, color=self.HEART_POPUP_COLOR)
+                self.heal_flash_timer = self.HEAL_FLASH_DURATION
+
         if self.player.is_alive == False:
-            self.isEnded = True
-            #Eclipsoide.pause = True
+            self.death_timer = self.DEATH_COOLDOWN
+            Explosion(pg.Vector2(self.player.rect.center), self.explosions_group)
 
         # Met à jours tous les sprites en fonction du temps qui a passé
         self.enemies_group.update(dt)
@@ -179,6 +246,7 @@ class Eclipsoide:
         self.projectiles_group.update(dt)
         self.enemy_projectiles_group.update(dt)
         self.coins_group.update(dt)
+        self.hearts_group.update(dt)
         self.popups_group.update(dt)
         self.particles_group.update(dt)
         self.explosions_group.update(dt)
@@ -210,6 +278,68 @@ class Eclipsoide:
 
         self.screen.blit(glow_surface, glow_surface.get_rect(center=self.sun_center))
 
+    # Rayon (proportion de la distance centre -> coin) à partir duquel le
+    # fondu commence à apparaître : en dessous, l'écran reste intact
+    VIGNETTE_INNER_RATIO = 0.55
+
+    def _build_vignette(self, color: tuple[int, int, int]) -> pg.Surface:
+        """ Construit une fois un dégradé radial rouge, transparent au centre et
+        de plus en plus visible vers les bords/coins. Calculé à basse résolution
+        (c'est un simple dégradé, pas de détail à préserver) puis lissé en
+        l'agrandissant, pour éviter une boucle pixel par pixel sur tout l'écran """
+        width, height = self.screen.get_width(), self.screen.get_height()
+        small_w, small_h = 80, 60
+        small = pg.Surface((small_w, small_h), pg.SRCALPHA)
+
+        cx, cy = small_w / 2, small_h / 2
+        max_dist = math.hypot(cx, cy)
+        for y in range(small_h):
+            for x in range(small_w):
+                dist_ratio = math.hypot(x - cx, y - cy) / max_dist
+                t = max(0.0, min(1.0, (dist_ratio - self.VIGNETTE_INNER_RATIO) / (1 - self.VIGNETTE_INNER_RATIO)))
+                alpha = int(255 * t ** 2)
+                small.set_at((x, y), (*color, alpha))
+
+        return pg.transform.smoothscale(small, (width, height))
+
+    def _draw_coin_counter(self):
+        icon_rect = self.coin_icon.get_rect(topleft=(10, 10))
+        coin_text = self.coin_font.render(str(self.player.coins), True, (255, 220, 80))
+        text_rect = coin_text.get_rect(topleft=(40, 10))
+
+        scale = 1.0
+        if self.coin_pop_timer > 0:
+            elapsed = 1 - (self.coin_pop_timer / self.COIN_POP_DURATION)
+            scale = 1 + self.COIN_POP_AMPLITUDE * math.sin(math.pi * elapsed)
+
+        icon_surface = self.coin_icon
+        text_surface = coin_text
+        if scale != 1.0:
+            icon_surface = pg.transform.smoothscale(self.coin_icon, (max(1, int(icon_rect.width * scale)), max(1, int(icon_rect.height * scale))))
+            text_surface = pg.transform.smoothscale(coin_text, (max(1, int(text_rect.width * scale)), max(1, int(text_rect.height * scale))))
+
+        self.screen.blit(icon_surface, icon_surface.get_rect(center=icon_rect.center))
+        self.screen.blit(text_surface, text_surface.get_rect(center=text_rect.center))
+
+    def _draw_full_screen_flash(self, timer: float, duration: float, color: tuple[int, int, int], max_alpha: int):
+        if timer <= 0:
+            return
+
+        ratio = timer / duration
+        alpha = int(max_alpha * ratio)
+        flash = pg.Surface(self.screen.get_size(), pg.SRCALPHA)
+        flash.fill((*color, alpha))
+        self.screen.blit(flash, (0, 0))
+
+    def _draw_low_health_vignette(self):
+        if self.player.lives > self.LOW_HEALTH_THRESHOLD:
+            return
+
+        pulse = (math.sin(self.time * (2 * math.pi / self.VIGNETTE_PULSE_PERIOD)) + 1) / 2
+        alpha = int(self.VIGNETTE_MIN_ALPHA + (self.VIGNETTE_MAX_ALPHA - self.VIGNETTE_MIN_ALPHA) * pulse)
+        self.vignette_surface.set_alpha(alpha)
+        self.screen.blit(self.vignette_surface, (0, 0))
+
     def draw(self):
         """ Dessine le nouvel état du jeu """
         # Redessine le fond entier
@@ -236,11 +366,10 @@ class Eclipsoide:
         self.bg_image2.set_alpha(int(grow_ratio * 255))
         self.screen.blit(self.bg_image2, (0, 0))
 
-        self.screen.blit(self.sun_image, (self.screen.get_width() / 2 - self.SUN_SIZE / 2, self.SUN_SIZE / 4))
-
+        self._draw_sun()
+        
         self.screen.blit(scaled_boss, (bossX, (self.SUN_SIZE / 4) + (self.SUN_SIZE / 2) - (current_size / 2)))
 
-        self._draw_sun()
         # Dessine tous les sprites dans la surface de l'écran
         self.enemies_group.draw(self.screen)
         self.explosions_group.draw(self.screen)
@@ -249,9 +378,17 @@ class Eclipsoide:
         self.projectiles_group.draw(self.screen)
         self.enemy_projectiles_group.draw(self.screen)
         self.coins_group.draw(self.screen)
+        self.hearts_group.draw(self.screen)
         self.popups_group.draw(self.screen)
 
+        self._draw_full_screen_flash(self.hit_flash_timer, self.HIT_FLASH_DURATION, self.HIT_FLASH_COLOR, self.HIT_FLASH_MAX_ALPHA)
+        self._draw_full_screen_flash(self.heal_flash_timer, self.HEAL_FLASH_DURATION, self.HEAL_FLASH_COLOR, self.HEAL_FLASH_MAX_ALPHA)
+        self._draw_low_health_vignette()
+
         # Affiche le compteur de pièces en haut à gauche
-        self.screen.blit(self.coin_icon, (10, 10))
-        coin_text = self.coin_font.render(str(self.player.coins), True, (255, 220, 80))
-        self.screen.blit(coin_text, (40, 10))
+        self._draw_coin_counter()
+
+        # Affiche les vies restantes juste en dessous (coeurs pleins/vides)
+        for i in range(Player.MAX_LIVES):
+            icon = self.heart_full_icon if i < self.player.lives else self.heart_empty_icon
+            self.screen.blit(icon, (10 + i * 26, 44))
