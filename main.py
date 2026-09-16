@@ -150,7 +150,7 @@ def main():
                         pause.draw(screen)
                         pg.display.flip()
                     elif event.type == pg.KEYDOWN:
-                        if event.key == pg.K_ESCAPE:
+                        if event.key == pg.K_ESCAPE or event.key == pg.K_p:
                             Eclipsoide.pause = not Eclipsoide.pause
 
             # Met à jour le jeu sachant que dt millisecondes se sont écoulées
