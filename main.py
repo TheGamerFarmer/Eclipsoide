@@ -6,6 +6,7 @@ import sys
 # Utilisation de pygame avec un préfixe plus simple
 import pygame as pg
 
+import audio
 import settings
 from Menu.main_menu import MainMenu as main_menu
 from Menu.menu_credit import MenuCredit
@@ -44,6 +45,9 @@ def main():
         # On s'assure de revenir au menu principal par défaut
         active_menu = menu
 
+        if start_menu:
+            audio.play_music(audio.MENU_MUSIC)
+
         while start_menu:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -56,6 +60,7 @@ def main():
                 if action == "start":
                     print("Lancer le game")
                     start_menu = False
+                    audio.play_music(audio.GAME_MUSIC)
 
                     # On ne recrée pas la fenêtre ici pour garder une transition ultra-fluide
                     clock = pg.time.Clock()
@@ -72,6 +77,7 @@ def main():
                     active_menu = credit_menu
                 elif action == "back":
                     active_menu = menu
+                    audio.apply_settings()
 
                 # pleine écran
                 elif action == "toggle_fullscreen":
@@ -127,6 +133,7 @@ def main():
                                 sub_action = options_menu.handle_event(evt)
                                 if sub_action == "back":
                                     active_menu = pause
+                                    audio.apply_settings()
                                 # pleine écran
                                 elif sub_action == "toggle_fullscreen":
                                     if settings.OPTIONS["fullscreen"]:
