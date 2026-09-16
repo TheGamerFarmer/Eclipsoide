@@ -24,7 +24,6 @@ def main():
 
     # Initialisation du package pygame
     pg.init()
-
     # Mode plein écran initial au démarrage si sauvegardé
     screen = settings.apply_display_mode()
 

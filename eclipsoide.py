@@ -33,6 +33,21 @@ class Eclipsoide:
     SPAWN_WARNING_COLOR = (255, 140, 40)
     SPAWN_WARNING_PULSE_PERIOD = 260  # ms
 
+    # Simulation de collision : une cible automatique qui patrouille en bas
+    VITESSE_CIBLE = 0.25  # pixels par milliseconde
+    VIE_CIBLE = 100
+    DEGATS_EXPLOSION = 20
+    DUREE_FLASH = 150  # millisecondes
+    COULEUR_CIBLE = (0, 200, 255)
+    COULEUR_CIBLE_TOUCHEE = (255, 255, 255)
+
+    # Passe à False avant de livrer : coupe les raccourcis de debug (B / N)
+    DEBUG = True
+
+    # variable de classe pour mettre le jeu en pause pour débug
+    pause = False
+    time = 0
+
     def __del__(self):
       # print("new Eclipsoide")
       pass
@@ -166,6 +181,25 @@ class Eclipsoide:
             # 0 = vient d'entrer dans la zone d'alerte, 1 = sur le point d'apparaître
             proximity = 1 - (distance / self.SPAWN_WARNING_DISTANCE)
             pulse = (math.sin(self.datas.time * (2 * math.pi / self.SPAWN_WARNING_PULSE_PERIOD)) + 1) / 2
+            alpha = max(0, min(255, int(70 + 150 * proximity * (0.5 + 0.5 * pulse))))
+            size = 7 + int(6 * proximity)
+
+            x = max(size, min(self.screen.get_width() - size, enemy.rect.centerx))
+            marker = pg.Surface((size * 2, size), pg.SRCALPHA)
+            pg.draw.polygon(marker, (*self.SPAWN_WARNING_COLOR, alpha), [(0, 0), (size * 2, 0), (size, size)])
+            self.screen.blit(marker, (x - size, 4))
+
+    def _draw_spawn_warnings(self):
+        """ Marqueur triangulaire pulsant en haut de l'écran, tant qu'un ennemi
+        approche par le haut sans être encore visible (rect entièrement au-dessus) """
+        for enemy in self.enemies_group:
+            distance = -enemy.rect.bottom
+            if not (0 < distance <= self.SPAWN_WARNING_DISTANCE):
+                continue
+
+            # 0 = vient d'entrer dans la zone d'alerte, 1 = sur le point d'apparaître
+            proximity = 1 - (distance / self.SPAWN_WARNING_DISTANCE)
+            pulse = (math.sin(self.time * (2 * math.pi / self.SPAWN_WARNING_PULSE_PERIOD)) + 1) / 2
             alpha = max(0, min(255, int(70 + 150 * proximity * (0.5 + 0.5 * pulse))))
             size = 7 + int(6 * proximity)
 
