@@ -52,6 +52,16 @@ def last_scores(count: int = 3) -> list[int]:
     scores = OPTIONS.get("scores", [])
     return list(reversed(scores[-count:]))
 
+def scores() -> list[int]:
+    """ Retourne les derniers scores joués, du plus récent au plus ancien """
+    try:
+        with open(SETTINGS_FILE, "r") as f:
+            OPTIONS.update(json.load(f))
+    except Exception as e:
+        print(f"Erreur lors du chargement des paramètres : {e}")
+
+    scores = OPTIONS.get("scores", [])
+    return list(scores)
 
 def apply_display_mode() -> pg.Surface:
     """ Crée la fenêtre au premier appel, puis la met en plein écran ou en

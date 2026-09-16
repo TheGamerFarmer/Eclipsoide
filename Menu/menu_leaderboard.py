@@ -10,6 +10,7 @@ UI_BASE_PATH = "images/ui"
 
 class MenuLeaderboard:
     def __init__(self, screen_width, screen_height):
+        self.scores = None
         self.bg_image = pg.image.load('images/backgroundWellcom.png').convert()
         self.bg_image = pg.transform.scale(self.bg_image, (screen_width, screen_height))
 
@@ -29,10 +30,15 @@ class MenuLeaderboard:
         self.btn_back = ui_element.Button(screen_width // 2 - 130, 690, 260, 55, "Retour", self.btn_font,
                                           btn_normal)
 
-        self.scores = settings.last_scores(99)
+    def updatescore(self):
+        self.scores = settings.scores(99)
         self.scores.sort(reverse=True)
 
+
     def draw(self, surface):
+
+        self.updatescore()
+
         surface.blit(self.bg_image, (0, 0))
 
         titre = self.titre_font.render("Leaderboard", True, (255, 255, 255))
