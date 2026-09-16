@@ -137,8 +137,8 @@ class Eclipsoide:
         self.hud.advance(dt)
 
         if (self.datas.time + dt) % Datas.TIME_BETWEEN_WAVE < dt and self.datas.time < Datas.TIME_BEFORE_BOSS:
-            nbEnemies: int = int(self.datas.time / Datas.TIME_BETWEEN_WAVE / 2)
-            for i in range(-2, nbEnemies):
+            nbEnemies: int = int(self.datas.time / Datas.TIME_BETWEEN_WAVE / 5)
+            for i in range(-3, nbEnemies):
                 Enemy(self.screen, self.player, self.datas, self.datas.enemies_group)
 
         self.datas.time += dt
@@ -194,25 +194,6 @@ class Eclipsoide:
             # 0 = vient d'entrer dans la zone d'alerte, 1 = sur le point d'apparaître
             proximity = 1 - (distance / self.SPAWN_WARNING_DISTANCE)
             pulse = (math.sin(self.datas.time * (2 * math.pi / self.SPAWN_WARNING_PULSE_PERIOD)) + 1) / 2
-            alpha = max(0, min(255, int(70 + 150 * proximity * (0.5 + 0.5 * pulse))))
-            size = 7 + int(6 * proximity)
-
-            x = max(size, min(self.screen.get_width() - size, enemy.rect.centerx))
-            marker = pg.Surface((size * 2, size), pg.SRCALPHA)
-            pg.draw.polygon(marker, (*self.SPAWN_WARNING_COLOR, alpha), [(0, 0), (size * 2, 0), (size, size)])
-            self.screen.blit(marker, (x - size, 4))
-
-    def _draw_spawn_warnings(self):
-        """ Marqueur triangulaire pulsant en haut de l'écran, tant qu'un ennemi
-        approche par le haut sans être encore visible (rect entièrement au-dessus) """
-        for enemy in self.datas.enemies_group:
-            distance = -enemy.rect.bottom
-            if not (0 < distance <= self.SPAWN_WARNING_DISTANCE):
-                continue
-
-            # 0 = vient d'entrer dans la zone d'alerte, 1 = sur le point d'apparaître
-            proximity = 1 - (distance / self.SPAWN_WARNING_DISTANCE)
-            pulse = (math.sin(self.time * (2 * math.pi / self.SPAWN_WARNING_PULSE_PERIOD)) + 1) / 2
             alpha = max(0, min(255, int(70 + 150 * proximity * (0.5 + 0.5 * pulse))))
             size = 7 + int(6 * proximity)
 
