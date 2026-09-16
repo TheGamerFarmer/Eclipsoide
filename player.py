@@ -2,6 +2,7 @@ import random
 import pygame as pg
 from projectile import Projectile
 from particle import Particle
+import settings
 
 class Player(pg.sprite.Sprite):
     size = (30, 26)
@@ -20,6 +21,10 @@ class Player(pg.sprite.Sprite):
     ]
     damage_images_set: bool = False
     damage_images: list[pg.Surface]
+
+    SHOOT_SOUND_PATH = 'audios/shoot-dragon.mp3'
+    shoot_sound_set: bool = False
+    shoot_sound: pg.mixer.Sound | None = None
 
     TRAIL_DELAY = 12  # ms entre deux particules de moteur
     TRAIL_COLOR_START = (255, 230, 140)
@@ -62,6 +67,14 @@ class Player(pg.sprite.Sprite):
             ]
             Player.damage_images_set = True
 
+        if not Player.shoot_sound_set:
+            # Le jeu doit rester jouable sans périphérique audio
+            try:
+                Player.shoot_sound = pg.mixer.Sound(Player.SHOOT_SOUND_PATH)
+            except (pg.error, FileNotFoundError) as e:
+                print(f"Impossible de charger le son de tir : {e}")
+            Player.shoot_sound_set = True
+
         self.image = Player.damage_images[0]
         self.rect = self.image.get_rect()
         self.rect.move_ip(screen.get_width() / 2 - self.size[0] / 2, screen.get_height() - 50)
@@ -101,8 +114,16 @@ class Player(pg.sprite.Sprite):
         if self.fire_timer <= 0:
             Projectile(pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), Player.image_shoot, (0, 255, 0), self.projectilsGroup)
             self.fire_timer = self.fire_delay
+            self._play_shoot_sound()
 
         self._emit_trail(dt, movement)
+
+    def _play_shoot_sound(self):
+        if Player.shoot_sound is None or not settings.OPTIONS["sfx"]:
+            return
+        # Volume relu à chaque tir pour suivre les changements du menu options
+        Player.shoot_sound.set_volume(settings.OPTIONS["volume"] / 100)
+        Player.shoot_sound.play()
 
     def _emit_trail(self, dt, movement: pg.Vector2):
         self.trail_timer -= dt
