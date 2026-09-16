@@ -27,7 +27,7 @@ class Eclipsoide:
 
     # Chance qu'un ennemi tué drop un bouclier (plus rare que les coeurs,
     # uniquement si le joueur n'en a pas déjà un actif)
-    SHIELD_DROP_CHANCE = 0.03
+    SHIELD_DROP_CHANCE = 0.01
     SHIELD_POPUP_COLOR = (150, 200, 255)
 
     # Nombres de dégâts flottants affichés sur les ennemis/le boss touchés

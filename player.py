@@ -62,7 +62,7 @@ class Player(pg.sprite.Sprite):
         self.invincible_timer = 0
         self.shield_timer = 0
 
-        self.coins = 0
+        self.coins = 99999
         self.score = 0
 
         self.fire_delay = 300
@@ -70,7 +70,6 @@ class Player(pg.sprite.Sprite):
 
         self.trail_timer = 0
 
-        self.coin_mult = 1
         self.double_shot = False
 
         if not Player.image_shoot_set:
@@ -242,5 +241,5 @@ class Player(pg.sprite.Sprite):
         return result
 
     def add_coins(self, amount: int):
-        self.coins += amount * self.coin_mult
+        self.coins += amount
         self.score += amount

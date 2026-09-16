@@ -1,6 +1,8 @@
 import os
 import pygame as pg
 
+from coin import Coin
+
 
 class Shop:
     def __init__(self, screen, player):
@@ -126,4 +128,4 @@ class Shop:
                 elif item['id'] == 'double':
                     self.player.double_shot = True
                 elif item['id'] == 'coin':
-                    self.player.coin_mult = 2
+                    Coin.value = 40
