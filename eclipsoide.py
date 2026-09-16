@@ -15,6 +15,7 @@ from player import Player
 from coin import Coin
 from explosion import Explosion
 from heart_pickup import HeartPickup
+from shield_pickup import ShieldPickup
 from hud import Hud
 
 # Définition du jeu Pong
@@ -37,6 +38,11 @@ class Eclipsoide:
     # Chance qu'un ennemi tué drop un coeur (uniquement si le joueur n'est pas déjà à vie max)
     HEART_DROP_CHANCE = 0.12
     HEART_POPUP_COLOR = (255, 90, 120)
+
+    # Chance qu'un ennemi tué drop un bouclier (plus rare que les coeurs,
+    # uniquement si le joueur n'en a pas déjà un actif)
+    SHIELD_DROP_CHANCE = 0.03
+    SHIELD_POPUP_COLOR = (150, 200, 255)
 
     # Nombres de dégâts flottants affichés sur les ennemis/le boss touchés
     DAMAGE_POPUP_COLOR = (255, 255, 255)
@@ -88,6 +94,7 @@ class Eclipsoide:
         self.particles_group = pg.sprite.Group()
         self.explosions_group = pg.sprite.Group()
         self.hearts_group = pg.sprite.Group()
+        self.shields_group = pg.sprite.Group()
         self.boss_group = pg.sprite.Group()
         self.boss = None
         # Palier courant : le boss revient de plus en plus fort après chaque victoire
@@ -200,8 +207,11 @@ class Eclipsoide:
         self.time += dt
 
         # Le joueur encaisse les coups (contact ennemi, tir ennemi, bombe du boss)
-        if self.player.check_hits(self.enemies_group, self.enemy_projectiles_group, self.boss):
+        hit_outcome = self.player.check_hits(self.enemies_group, self.enemy_projectiles_group, self.boss)
+        if hit_outcome == Player.HIT_TAKEN:
             self.hud.trigger_hit_flash()
+        elif hit_outcome == Player.HIT_SHIELDED:
+            self.hud.trigger_shield_pulse()
 
         # Les tirs du joueur entament la vie du boss
         if self.boss is not None:
@@ -218,6 +228,8 @@ class Eclipsoide:
                 Explosion(pg.Vector2(enemy.rect.center), self.explosions_group)
                 if self.player.lives < Player.MAX_LIVES and random.random() < self.HEART_DROP_CHANCE:
                     HeartPickup(pg.Vector2(enemy.rect.center), self.player, self.hearts_group)
+                if self.player.shield_timer <= 0 and random.random() < self.SHIELD_DROP_CHANCE:
+                    ShieldPickup(pg.Vector2(enemy.rect.center), self.player, self.shields_group)
 
         # Le joueur ramasse les pièces et les coeurs qu'il croise (aspirés
         # automatiquement vers lui) ; chaque classe gère sa propre collecte
@@ -226,6 +238,8 @@ class Eclipsoide:
 
         if HeartPickup.collect(self.player, self.hearts_group, self.popups_group, self.HEART_POPUP_COLOR):
             self.hud.trigger_heal_flash()
+
+        ShieldPickup.collect(self.player, self.shields_group, self.popups_group, self.SHIELD_POPUP_COLOR)
 
         if not self.player.is_alive:
             self.death_timer = self.DEATH_COOLDOWN
@@ -242,6 +256,7 @@ class Eclipsoide:
         self.enemy_projectiles_group.update(dt)
         self.coins_group.update(dt)
         self.hearts_group.update(dt)
+        self.shields_group.update(dt)
         self.popups_group.update(dt)
         self.particles_group.update(dt)
         self.explosions_group.update(dt)
@@ -316,10 +331,12 @@ class Eclipsoide:
         self.explosions_group.draw(self.screen)
         self.particles_group.draw(self.screen)
         self.player_group.draw(self.screen)
+        self.hud.draw_shield()
         self.projectiles_group.draw(self.screen)
         self.enemy_projectiles_group.draw(self.screen)
         self.coins_group.draw(self.screen)
         self.hearts_group.draw(self.screen)
+        self.shields_group.draw(self.screen)
         self.popups_group.draw(self.screen)
         self.boss_group.draw(self.screen)
 

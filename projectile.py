@@ -16,7 +16,12 @@ class Projectile(pg.sprite.Sprite):
     TRAIL_STEPS = 16
     DEFAULT_TRAIL_END_COLOR = (255, 255, 255)
 
-    def __init__(self, origin: Vector2, speed: float, direction: pg.Vector2, textures: list[pg.Surface], glow_color: tuple[int, int, int] = None, *groups, trail_end_color: tuple[int, int, int] = None):
+    # Bornes de glow_scale : le halo (taille + luminosité) peut grossir avec la
+    # puissance du tir (ex: dégâts améliorés), sans jamais disparaître ni exploser
+    GLOW_SCALE_MIN = 0.6
+    GLOW_SCALE_MAX = 2.2
+
+    def __init__(self, origin: Vector2, speed: float, direction: pg.Vector2, textures: list[pg.Surface], glow_color: tuple[int, int, int] = None, *groups, trail_end_color: tuple[int, int, int] = None, glow_scale: float = 1.0):
         super().__init__(*groups)
         self.all = all
         self.speed = speed
@@ -26,10 +31,14 @@ class Projectile(pg.sprite.Sprite):
         self.glow_color = glow_color
         self.trail_end_color = trail_end_color if trail_end_color else self.DEFAULT_TRAIL_END_COLOR
 
+        self.glow_scale = max(self.GLOW_SCALE_MIN, min(self.GLOW_SCALE_MAX, glow_scale))
+        self.glow_padding = self.GLOW_PADDING * self.glow_scale
+        self.glow_max_alpha = min(255, self.GLOW_MAX_ALPHA * (0.7 + 0.3 * self.glow_scale))
+
         self.trail_length = self._compute_trail_length()
         # Décalage entre le point d'origine du tir et le coin supérieur gauche
         # de l'image finale (glow + traînée inclus dans la surface)
-        self.anchor_offset = Vector2(self.GLOW_PADDING, self.GLOW_PADDING) + Vector2(self.trail_length, self.trail_length)
+        self.anchor_offset = Vector2(self.glow_padding, self.glow_padding) + Vector2(self.trail_length, self.trail_length)
 
         angle = pg.Vector2(0, -1).angle_to(direction)
         rotated_textures = [pg.transform.rotate(texture, -angle) for texture in textures]
@@ -54,17 +63,17 @@ class Projectile(pg.sprite.Sprite):
         if not self.glow_color:
             return texture
 
-        pad = self.GLOW_PADDING + self.trail_length
+        pad = int(self.glow_padding) + self.trail_length
         width = texture.get_width() + pad * 2
         height = texture.get_height() + pad * 2
         frame = pg.Surface((width, height), pg.SRCALPHA)
 
         # Le halo reste calé sur la taille de la texture, pas sur la traînée
         core_center = (pad + texture.get_width() // 2, pad + texture.get_height() // 2)
-        core_radius = max(texture.get_width(), texture.get_height()) // 2 + self.GLOW_PADDING
+        core_radius = max(texture.get_width(), texture.get_height()) // 2 + self.glow_padding
         for layer in range(self.GLOW_LAYERS, 0, -1):
             radius = int(core_radius * (layer / self.GLOW_LAYERS))
-            alpha = int(self.GLOW_MAX_ALPHA * (1 - layer / (self.GLOW_LAYERS + 1)))
+            alpha = int(self.glow_max_alpha * (1 - layer / (self.GLOW_LAYERS + 1)))
             glow_layer = pg.Surface((width, height), pg.SRCALPHA)
             pg.draw.circle(glow_layer, (*self.glow_color, alpha), core_center, radius)
             frame.blit(glow_layer, (0, 0), special_flags=pg.BLEND_RGBA_ADD)
@@ -78,7 +87,7 @@ class Projectile(pg.sprite.Sprite):
     def _draw_trail(self, frame: pg.Surface, attach_point: tuple[int, int], texture_width: int):
         start_color = pg.Color(*self.glow_color)
         end_color = pg.Color(*self.trail_end_color)
-        base_radius = max(3, texture_width * 0.5)
+        base_radius = max(3, texture_width * 0.5 * self.glow_scale)
 
         for step in range(self.TRAIL_STEPS, 0, -1):
             t = step / self.TRAIL_STEPS
@@ -86,7 +95,7 @@ class Projectile(pg.sprite.Sprite):
             pos = (int(attach_point[0] + offset.x), int(attach_point[1] + offset.y))
             radius = max(1, int(base_radius * (1 - t * 0.75)))
             color = start_color.lerp(end_color, t)
-            alpha = max(0, min(255, int(self.GLOW_MAX_ALPHA * 1.6 * (1 - t) ** 1.2)))
+            alpha = max(0, min(255, int(self.glow_max_alpha * 1.6 * (1 - t) ** 1.2)))
 
             segment = pg.Surface(frame.get_size(), pg.SRCALPHA)
             pg.draw.circle(segment, (color.r, color.g, color.b, alpha), pos, radius)
