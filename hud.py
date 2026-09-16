@@ -2,6 +2,8 @@ import os
 import math
 import pygame as pg
 
+import settings
+
 class Hud:
     """ Regroupe l'affichage d'état du joueur et les effets d'écran qui en
     découlent (soleil animé, flashs de dégâts/soin, vignette de vie basse,
@@ -48,6 +50,12 @@ class Hud:
     COIN_POP_DURATION = 220  # ms
     COIN_POP_AMPLITUDE = 0.45  # +45% de taille au pic
 
+    # Record affiché sous le compteur : gris tant qu'il n'est pas battu, vert ensuite
+    RECORD_COLOR = (200, 200, 210)
+    RECORD_BEATEN_COLOR = (80, 255, 140)
+    RECORD_Y = 40
+    HEARTS_Y = 64
+
     def __init__(self, screen: pg.Surface, player):
         self.screen = screen
         self.player = player
@@ -61,6 +69,9 @@ class Hud:
         self.time = 0.0
 
         self.coin_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 24)
+        self.record_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 14)
+        # Record figé au lancement de la partie : c'est lui que le joueur cherche à battre
+        self.record = settings.best_score()
         self.coin_icon = pg.transform.scale(pg.image.load('images/ui/Coins/coin_0.png'), (24, 24))
         self.heart_full_icon = pg.transform.scale(pg.image.load('images/ui/Hearts/heart_full.png'), (22, 22))
         self.heart_empty_icon = pg.transform.scale(pg.image.load('images/ui/Hearts/heart_empty.png'), (22, 22))
@@ -210,10 +221,16 @@ class Hud:
         self.screen.blit(icon_surface, icon_surface.get_rect(center=icon_rect.center))
         self.screen.blit(text_surface, text_surface.get_rect(center=text_rect.center))
 
+    def _draw_record(self):
+        beaten = self.player.score > self.record
+        color = self.RECORD_BEATEN_COLOR if beaten else self.RECORD_COLOR
+        record_text = self.record_font.render(f"RECORD : {self.record}", True, color)
+        self.screen.blit(record_text, (10, self.RECORD_Y))
+
     def _draw_hearts(self):
         for i in range(self.player.MAX_LIVES):
             icon = self.heart_full_icon if i < self.player.lives else self.heart_empty_icon
-            self.screen.blit(icon, (10 + i * 26, 44))
+            self.screen.blit(icon, (10 + i * 26, self.HEARTS_Y))
 
     def draw_overlay(self):
         """ Dessine, par-dessus le jeu, les flashs, la vignette de vie basse puis le HUD (pièces/vies) """
@@ -222,4 +239,5 @@ class Hud:
         self._draw_low_health_vignette()
 
         self._draw_coin_counter()
+        self._draw_record()
         self._draw_hearts()

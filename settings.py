@@ -39,6 +39,10 @@ def add_score(score: int):
     del scores[:-MAX_SCORES]
     save_settings()
 
+def best_score() -> int:
+    """ Retourne le meilleur score de l'historique (0 si aucune partie jouée) """
+    return max(OPTIONS.get("scores", []), default=0)
+
 def last_scores(count: int = 3) -> list[int]:
     """ Retourne les derniers scores joués, du plus récent au plus ancien """
     scores = OPTIONS.get("scores", [])
