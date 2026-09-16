@@ -34,7 +34,6 @@ class Player(pg.sprite.Sprite):
     TRAIL_COLOR_START = (255, 230, 140)
     TRAIL_COLOR_END = (255, 80, 20)
 
-    MAX_LIVES = 3
     INVINCIBILITY_DURATION = 1200  # ms d'invincibilité après un coup
     BLINK_INTERVAL = 100           # ms entre chaque clignotement pendant l'invincibilité
 
@@ -45,7 +44,8 @@ class Player(pg.sprite.Sprite):
         self.datas = datas
 
         self.is_alive = True
-        self.lives = Player.MAX_LIVES
+        self.max_lives = 1
+        self.lives = self.max_lives
         self.invincible_timer = 0
 
         self.coins = 0
@@ -156,7 +156,7 @@ class Player(pg.sprite.Sprite):
         Particle(spawn_pos, velocity, Player.TRAIL_COLOR_START, Player.TRAIL_COLOR_END, self.datas.particles_group)
 
     def _update_damage_texture(self):
-        ratio = self.lives / Player.MAX_LIVES
+        ratio = self.lives / self.max_lives
         for index, (threshold, _) in enumerate(Player.DAMAGE_TEXTURES):
             if ratio >= threshold:
                 self.image = Player.damage_images[index]

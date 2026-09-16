@@ -121,6 +121,7 @@ class Shop:
                 elif item['id'] == 'cadence':
                     self.player.fire_delay = 300 / (1 + 0.10 * item['lvl'])
                 elif item['id'] == 'health':
+                    self.player.max_lives += 1
                     self.player.lives += 1
                 elif item['id'] == 'double':
                     self.player.double_shot = True

@@ -161,7 +161,7 @@ class Hud:
         return pg.transform.smoothscale(small, (width, height))
 
     def _draw_low_health_vignette(self):
-        if self.player.lives > self.LOW_HEALTH_THRESHOLD:
+        if self.player.lives > self.LOW_HEALTH_THRESHOLD or self.player.max_lives <= 1:
             return
 
         pulse = (math.sin(self.time * (2 * math.pi / self.VIGNETTE_PULSE_PERIOD)) + 1) / 2
@@ -231,7 +231,7 @@ class Hud:
         self.screen.blit(record_text, (10, self.RECORD_Y))
 
     def _draw_hearts(self):
-        for i in range(self.player.MAX_LIVES):
+        for i in range(self.player.max_lives):
             icon = self.heart_full_icon if i < self.player.lives else self.heart_empty_icon
             self.screen.blit(icon, (10 + i * 26, self.HEARTS_Y))
 

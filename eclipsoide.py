@@ -132,7 +132,7 @@ class Eclipsoide:
             if died:
                 Coin(pg.Vector2(enemy.rect.center), self.player, self.datas.coins_group)
                 Explosion(pg.Vector2(enemy.rect.center), self.datas.explosions_group)
-                if self.player.lives < Player.MAX_LIVES and random.random() < self.HEART_DROP_CHANCE:
+                if self.player.lives < self.player.max_lives and random.random() < self.HEART_DROP_CHANCE:
                     HeartPickup(pg.Vector2(enemy.rect.center), self.player, self.datas.hearts_group)
 
         # Le joueur ramasse les pièces et les coeurs qu'il croise (aspirés

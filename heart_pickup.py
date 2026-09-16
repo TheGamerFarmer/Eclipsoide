@@ -41,7 +41,7 @@ class HeartPickup(pg.sprite.Sprite):
         collected = pg.sprite.spritecollide(player, datas.hearts_group, dokill=True)
         healed = False
         for heart in collected:
-            if player.lives < player.MAX_LIVES:
+            if player.lives < player.max_lives:
                 player.lives += 1
                 CoinPopup(pg.Vector2(heart.rect.center), 1, datas.popups_group, color=popup_color)
                 healed = True
