@@ -8,8 +8,11 @@ UI_BASE_PATH = "images/ui"
 
 class PauseMenu:
     def __init__(self, screen_width, screen_height):
-        self.font = pg.font.SysFont('ComicSans', 20)
-        self.titre_font = pg.font.SysFont('ComicSans', 50)
+
+        font_path = os.path.join(UI_BASE_PATH, "Font", "Kenney Future.ttf")
+        self.titre_font = pg.font.Font(font_path, 60)
+        self.font = pg.font.Font(font_path, 26)
+
 
         btn_width = 300
         btn_height = 75
@@ -23,12 +26,13 @@ class PauseMenu:
             "resume": ui_element.Button(center_x, 250, btn_width, btn_height, "Resume", self.font, btn_normal),
             "restart": ui_element.Button(center_x, 350, btn_width, btn_height, "Restart", self.font, btn_normal),
             "option": ui_element.Button(center_x, 450, btn_width, btn_height, "Option", self.font, btn_normal),
-            "quit": ui_element.Button(center_x, 550, btn_width, btn_height, "Quit", self.font, btn_quit)
+            "menu": ui_element.Button(center_x, 550, btn_width, btn_height, "Menu", self.font, btn_normal),
+            "quit": ui_element.Button(center_x, 650, btn_width, btn_height, "Quit", self.font, btn_quit)
         }
 
     def draw(self, surface):
         overlay = pg.Surface(surface.get_size(), pg.SRCALPHA)
-        overlay.fill((0, 0, 0, 160))
+        overlay.fill((50, 0, 50, 90))
         surface.blit(overlay, (0, 0))
 
         titre = self.titre_font.render("PAUSED", True, (255, 244, 255))

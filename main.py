@@ -4,6 +4,9 @@
 # Utilisation de pygame avec un préfixe plus simple
 import pygame as pg
 import sys
+
+from pygame.transform import flip
+
 import settings
 from Menu.menu_option import MenuOption
 from Menu.menu_credit import MenuCredit
@@ -36,7 +39,8 @@ def main():
     pg.display.set_caption("Eclipsoïde")
 
     start_menu = True
-    menu_pause =False
+    #menu_pause =False
+    game_over_running = False
     pause = PauseMenu(1024, 768)
     while True:
         # On s'assure de revenir au menu principal par défaut
@@ -89,10 +93,9 @@ def main():
                     pg.quit()
                     sys.exit()
 
+
             dt = clock.tick(60)
 
-            if Eclipsoide.pause:
-                menu_pause = True
 
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -103,6 +106,7 @@ def main():
                 pause.draw(screen)
                 pg.display.flip()
             while Eclipsoide.pause:
+                clock.tick(0)
                 for event in pg.event.get():
                     if event.type == pg.QUIT:
                         pg.quit()
@@ -117,16 +121,38 @@ def main():
                     elif action == "quit":
                         pg.quit()
                         sys.exit()
+                    elif action == "menu":
+                        start_menu = True
+                        Eclipsoide.pause = False
+                        eclipsoide.isEnded = True
+
                     elif action == "option":
                         active_menu = options_menu
-                        options_menu.draw(screen)
-
+                        while active_menu == options_menu:
+                            clock.tick(0)
+                            for evt in pg.event.get():
+                                if evt.type == pg.QUIT:
+                                    pg.quit()
+                                    sys.exit()
+                                sub_action = options_menu.handle_event(evt)
+                                if sub_action == "back":
+                                    print("test")
+                                    active_menu = pause
+                                # pleine écran
+                                elif sub_action == "toggle_fullscreen":
+                                    if settings.OPTIONS["fullscreen"]:
+                                        screen = pg.display.set_mode((1024, 768), pg.FULLSCREEN | pg.SCALED)
+                                    else:
+                                        screen = pg.display.set_mode((1024, 768), pg.RESIZABLE | pg.SCALED)
+                                print("test2")
+                                active_menu.draw(screen)
+                                pg.display.flip()
+                        eclipsoide.draw()
+                        pause.draw(screen)
+                        pg.display.flip()
                     elif event.type == pg.KEYDOWN:
                         if event.key == pg.K_ESCAPE:
                             Eclipsoide.pause = not Eclipsoide.pause
-
-
-
 
             # Met à jour le jeu sachant que dt millisecondes se sont écoulées
             eclipsoide.update(dt)
@@ -135,7 +161,9 @@ def main():
             eclipsoide.draw()
             pg.display.flip()
 
-        game_over_running = True
+
+        if start_menu == False:
+            game_over_running = True
         while game_over_running:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
