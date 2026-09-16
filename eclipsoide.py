@@ -74,6 +74,7 @@ class Eclipsoide:
             return False
 
         for event in pg.event.get():
+            self.hud.handle_event(event)
             match event.type:
                 case pg.QUIT:
                     # On ferme la fenêtre

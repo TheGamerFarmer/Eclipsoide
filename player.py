@@ -56,6 +56,9 @@ class Player(pg.sprite.Sprite):
 
         self.trail_timer = 0
 
+        self.coin_mult = 1
+        self.double_shot = False
+
         if not Player.image_shoot_set:
             Player.image_shoot = [pg.image.load(f'images/laser/player/laser_player_{i}.png') for i in range(4)]
             Player.image_shoot = [pg.transform.scale(image, (6, 16)) for image in Player.image_shoot]
@@ -78,7 +81,7 @@ class Player(pg.sprite.Sprite):
 
         self.image = Player.damage_images[0]
         self.rect = self.image.get_rect()
-        self.rect.move_ip(datas.screen.get_width() / 2 - self.size[0] / 2, datas.screen.get_height() - 50)
+        self.rect.move_ip(datas.screen.get_width() / 2 - self.size[0] / 2, datas.screen.get_height() - 110)
 
         self.hitbox = pg.Rect(0, 0, self.hitbox_size[0], self.hitbox_size[1])
         self.hitbox.center = self.rect.center
@@ -113,7 +116,15 @@ class Player(pg.sprite.Sprite):
         self.fire_timer -= dt
 
         if self.fire_timer <= 0:
-            Projectile(pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), Player.image_shoot, (0, 255, 0), self.datas.projectiles_group)
+            if self.double_shot:
+                Projectile(pg.Vector2(self.rect.centerx - 10, self.rect.centery), 0.4, pg.Vector2(0, -1),
+                           Player.image_shoot, (0, 255, 0), self.datas.projectiles_group)
+                Projectile(pg.Vector2(self.rect.centerx + 10, self.rect.centery), 0.4, pg.Vector2(0, -1),
+                           Player.image_shoot, (0, 255, 0), self.datas.projectiles_group)
+            else:
+                Projectile(pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), Player.image_shoot, (0, 255, 0),
+                           self.datas.projectiles_group)
+
             self.fire_timer = self.fire_delay
             self._play_shoot_sound()
 
@@ -204,5 +215,5 @@ class Player(pg.sprite.Sprite):
         return hit
 
     def add_coins(self, amount: int):
-        self.coins += amount
+        self.coins += amount * self.coin_mult
         self.score += amount
