@@ -160,12 +160,24 @@ class Boss(Box):
 
         pg.draw.rect(surface, self.BAR_BORDER_COLOR, contour, 2)
 
+    def _mouth(self) -> tuple[int, int]:
+        """
+        Point d'où sortent les bombes : le bas de la silhouette du boss.
+        On descend la colonne centrale du masque jusqu'au dernier pixel plein,
+        sinon les bombes apparaîtraient sous le rect, dans le vide.
+        """
+        cx = self.image.get_width() // 2
+        for y in range(self.image.get_height() - 1, -1, -1):
+            if self.mask.get_at((cx, y)):
+                return self.rect.x + cx, self.rect.y + y
+        return self.rect.midbottom
+
     def drop_bomb(self) -> Bomb | None:
-        """Lâche une bombe sous le boss, si la limite n'est pas atteinte."""
+        """Lâche une bombe depuis le bas du boss, si la limite n'est pas atteinte."""
         active = [b for b in self.bombs if not b.exploding]
         if len(active) >= self.MAX_BOMBS:
             return None
-        return Bomb(self.rect.midbottom, self.bounds, self.bombs)
+        return Bomb(self._mouth(), self.bounds, self.bombs)
 
     def detonate(self) -> None:
         """Fait exploser toutes les bombes lâchées par ce boss."""

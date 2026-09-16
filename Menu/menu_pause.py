@@ -12,6 +12,10 @@ class PauseMenu:
         font_path = os.path.join(UI_BASE_PATH, "Font", "Kenney Future.ttf")
         self.titre_font = pg.font.Font(font_path, 60)
         self.font = pg.font.Font(font_path, 26)
+        self.score_font = pg.font.Font(font_path, 30)
+
+        # Score en cours, renseigné par le jeu à chaque mise en pause
+        self.score = 0
 
 
         btn_width = 300
@@ -30,13 +34,21 @@ class PauseMenu:
             "quit": ui_element.Button(center_x, 650, btn_width, btn_height, "Quit", self.font, btn_quit)
         }
 
+    def set_score(self, score):
+        """ Renseigne le score de la partie en cours """
+        self.score = score
+
     def draw(self, surface):
         overlay = pg.Surface(surface.get_size(), pg.SRCALPHA)
         overlay.fill((50, 0, 50, 90))
         surface.blit(overlay, (0, 0))
 
         titre = self.titre_font.render("PAUSED", True, (255, 244, 255))
-        surface.blit(titre, titre.get_rect(center=(surface.get_width() // 2, 120)))
+        surface.blit(titre, titre.get_rect(center=(surface.get_width() // 2, 80)))
+
+        # Score en cours, juste sous le titre
+        score = self.score_font.render(f"SCORE : {self.score}", True, (255, 220, 80))
+        surface.blit(score, score.get_rect(center=(surface.get_width() // 2, 190)))
 
         for button in self.buttons.values():
             button.draw(surface)

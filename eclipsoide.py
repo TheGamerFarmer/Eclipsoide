@@ -245,7 +245,7 @@ class Eclipsoide:
         if HeartPickup.collect(self.player, self.hearts_group, self.popups_group, self.HEART_POPUP_COLOR):
             self.hud.trigger_heal_flash()
 
-        if self.player.is_alive == False:
+        if not self.player.is_alive:
             self.death_timer = self.DEATH_COOLDOWN
             Explosion(pg.Vector2(self.player.rect.center), self.explosions_group)
             # L'historique est lu avant l'ajout : il ne contient que les parties précédentes
