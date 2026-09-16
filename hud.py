@@ -25,10 +25,14 @@ class Hud:
     HIT_FLASH_COLOR = (255, 30, 30)
     HIT_FLASH_MAX_ALPHA = 130
 
-    # Même principe mais en vert, au moment où une vie est récupérée
-    HEAL_FLASH_DURATION = 180  # ms
-    HEAL_FLASH_COLOR = (40, 255, 90)
-    HEAL_FLASH_MAX_ALPHA = 130
+    # Au moment où une vie est récupérée : une aura qui irradie doucement
+    # depuis le vaisseau (volontairement différente du flash de dégâts, plus
+    # lente et localisée, pour ne pas donner l'impression d'un coup encaissé)
+    HEAL_FLASH_DURATION = 500  # ms
+    HEAL_FLASH_COLOR = (80, 255, 140)
+    HEAL_GLOW_MAX_RADIUS = 150
+    HEAL_GLOW_MAX_ALPHA = 150
+    HEAL_GLOW_LAYERS = 4
 
     # Fondu rouge sur les bords quand il ne reste plus qu'un coeur
     LOW_HEALTH_THRESHOLD = 1
@@ -161,6 +165,32 @@ class Hud:
         flash.fill((*color, alpha))
         self.screen.blit(flash, (0, 0))
 
+    def _draw_heal_glow(self):
+        if self.heal_flash_timer <= 0:
+            return
+
+        # 0 au déclenchement -> 1 en fin d'effet
+        elapsed = 1 - (self.heal_flash_timer / self.HEAL_FLASH_DURATION)
+        # L'aura s'étend vite puis ralentit (ease-out) et s'estompe en s'étirant
+        radius = int(self.HEAL_GLOW_MAX_RADIUS * math.sin(elapsed * math.pi / 2))
+        fade = (1 - elapsed) ** 1.5
+        if radius <= 0 or fade <= 0:
+            return
+
+        size = radius * 2
+        glow_surface = pg.Surface((size, size), pg.SRCALPHA)
+        glow_center = (radius, radius)
+
+        for layer in range(self.HEAL_GLOW_LAYERS, 0, -1):
+            layer_radius = int(radius * (layer / self.HEAL_GLOW_LAYERS))
+            alpha = int(self.HEAL_GLOW_MAX_ALPHA * fade * (1 - layer / (self.HEAL_GLOW_LAYERS + 1)))
+            alpha = max(0, min(255, alpha))
+            layer_surface = pg.Surface((size, size), pg.SRCALPHA)
+            pg.draw.circle(layer_surface, (*self.HEAL_FLASH_COLOR, alpha), glow_center, layer_radius)
+            glow_surface.blit(layer_surface, (0, 0), special_flags=pg.BLEND_RGBA_ADD)
+
+        self.screen.blit(glow_surface, glow_surface.get_rect(center=self.player.rect.center))
+
     def _draw_coin_counter(self):
         icon_rect = self.coin_icon.get_rect(topleft=(10, 10))
         coin_text = self.coin_font.render(str(self.player.coins), True, (255, 220, 80))
@@ -188,7 +218,7 @@ class Hud:
     def draw_overlay(self):
         """ Dessine, par-dessus le jeu, les flashs, la vignette de vie basse puis le HUD (pièces/vies) """
         self._draw_full_screen_flash(self.hit_flash_timer, self.HIT_FLASH_DURATION, self.HIT_FLASH_COLOR, self.HIT_FLASH_MAX_ALPHA)
-        self._draw_full_screen_flash(self.heal_flash_timer, self.HEAL_FLASH_DURATION, self.HEAL_FLASH_COLOR, self.HEAL_FLASH_MAX_ALPHA)
+        self._draw_heal_glow()
         self._draw_low_health_vignette()
 
         self._draw_coin_counter()
