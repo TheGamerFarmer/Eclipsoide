@@ -103,6 +103,8 @@ def main():
                     sys.exit()
 
             if Eclipsoide.pause:
+                # Le menu affiche le score de la partie en cours
+                pause.set_score(eclipsoide.player.coins)
                 pause.draw(screen)
                 pg.display.flip()
             while Eclipsoide.pause:

@@ -28,7 +28,11 @@ class Boss(Box):
     SPEED = 0.1  # pixels par milliseconde
     FRAME_DURATION = 100  # millisecondes par image d'animation
 
-    LIFE = 1000  # points de vie (soit 25 tirs du joueur à 40 de dégâts)
+    # Le boss a LIVES "vies" (les crans de la barre). Au premier palier chacune
+    # encaisse LIFE_PER_SEGMENT points, soit 3 à 4 tirs du joueur (40 par tir).
+    LIFE_PER_SEGMENT = 140
+    LIVES = 20
+    LIFE = LIVES * LIFE_PER_SEGMENT  # 2800 pv, environ 70 tirs
 
     # Barre de vie affichée en haut de l'écran
     BAR_WIDTH_RATIO = 0.6  # proportion de la largeur de l'écran
@@ -37,6 +41,7 @@ class Boss(Box):
     BAR_BACK_COLOR = (60, 20, 30)
     BAR_FILL_COLOR = (230, 70, 70)
     BAR_BORDER_COLOR = (255, 255, 255)
+    BAR_MIN_SEGMENT = 6  # en dessous, on n'affiche plus les séparations
 
     def __init__(
             self,
@@ -70,6 +75,9 @@ class Boss(Box):
         # Vie du boss : LIFE par défaut, sinon celle demandée (paliers successifs)
         self.max_life = self.LIFE if life is None else int(life)
         self.life = self.max_life
+        # Toujours le même nombre de crans : aux paliers suivants, chaque vie
+        # coûte simplement plus de tirs
+        self.lives = self.LIVES
         super().__init__(x, y, color, *groups)
 
     @staticmethod
@@ -129,23 +137,47 @@ class Boss(Box):
         self.life = max(0, self.life - damage)
 
     def draw_life_bar(self, surface: pg.Surface) -> None:
-        """Dessine la barre de vie du boss en haut de la surface (à appeler avec le HUD)."""
+        """
+        Dessine la barre de vie du boss en haut de la surface (à appeler avec le HUD).
+        La barre est découpée en autant de crans que le boss a de vies.
+        """
         width = int(surface.get_width() * self.BAR_WIDTH_RATIO)
         x = (surface.get_width() - width) // 2
-        contour = pg.Rect(x, self.BAR_MARGIN, width, self.BAR_HEIGHT)
+        y = self.BAR_MARGIN
+        contour = pg.Rect(x, y, width, self.BAR_HEIGHT)
 
         pg.draw.rect(surface, self.BAR_BACK_COLOR, contour)
         remplissage = int(width * self.life / self.max_life)
         if remplissage > 0:
-            pg.draw.rect(surface, self.BAR_FILL_COLOR, pg.Rect(x, self.BAR_MARGIN, remplissage, self.BAR_HEIGHT))
+            pg.draw.rect(surface, self.BAR_FILL_COLOR, pg.Rect(x, y, remplissage, self.BAR_HEIGHT))
+
+        # Séparations entre les vies, tant qu'elles restent lisibles
+        pas = width / self.lives
+        if pas >= self.BAR_MIN_SEGMENT:
+            for i in range(1, self.lives):
+                sep_x = x + int(i * pas)
+                pg.draw.line(surface, self.BAR_BORDER_COLOR, (sep_x, y), (sep_x, y + self.BAR_HEIGHT - 1))
+
         pg.draw.rect(surface, self.BAR_BORDER_COLOR, contour, 2)
 
+    def _mouth(self) -> tuple[int, int]:
+        """
+        Point d'où sortent les bombes : le bas de la silhouette du boss.
+        On descend la colonne centrale du masque jusqu'au dernier pixel plein,
+        sinon les bombes apparaîtraient sous le rect, dans le vide.
+        """
+        cx = self.image.get_width() // 2
+        for y in range(self.image.get_height() - 1, -1, -1):
+            if self.mask.get_at((cx, y)):
+                return self.rect.x + cx, self.rect.y + y
+        return self.rect.midbottom
+
     def drop_bomb(self) -> Bomb | None:
-        """Lâche une bombe sous le boss, si la limite n'est pas atteinte."""
+        """Lâche une bombe depuis le bas du boss, si la limite n'est pas atteinte."""
         active = [b for b in self.bombs if not b.exploding]
         if len(active) >= self.MAX_BOMBS:
             return None
-        return Bomb(self.rect.midbottom, self.bounds, self.bombs)
+        return Bomb(self._mouth(), self.bounds, self.bombs)
 
     def detonate(self) -> None:
         """Fait exploser toutes les bombes lâchées par ce boss."""
