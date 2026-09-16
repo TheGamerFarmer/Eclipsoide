@@ -1,4 +1,6 @@
 import os
+import sys
+
 import math
 # Utilisation de pygame avec un préfixe plus simple
 import pygame as pg
@@ -22,6 +24,21 @@ class Eclipsoide:
     TIME_BETWEEN_WAVE = 5000
     VITESSE_BOSS = 0.1  # pixels par milliseconde
     SUN_SIZE = 200
+    TIME_BEFORE_BOSS = 300000
+    BOSS_SIZE = 70
+    GROW_DURATION = 2000
+    BOSS_MAX_SIZE = 620
+
+    # Rotation lente + légère pulsation/glow du soleil
+    SUN_ROTATION_SPEED = 0.006  # degrés par milliseconde (~1 tour par minute)
+    SUN_PULSE_PERIOD = 3000     # ms pour un cycle complet de pulsation
+    SUN_PULSE_AMPLITUDE = 0.035 # variation de taille (+/- 3.5%)
+    SUN_GLOW_COLOR = (255, 170, 60)
+    SUN_GLOW_LAYERS = 3
+    SUN_GLOW_PADDING = 25
+    SUN_GLOW_MAX_ALPHA = 55
+    SUN_GLOW_PULSE_RADIUS = 10
+    SUN_GLOW_PULSE_ALPHA = 20
 
     # Rotation lente + légère pulsation/glow du soleil
     SUN_ROTATION_SPEED = 0.006  # degrés par milliseconde (~1 tour par minute)
@@ -51,13 +68,18 @@ class Eclipsoide:
         # Conserve le lien vers l'objet surface ecran du jeux
         self.screen = screen
 
-        self.bg_image = pg.image.load('images/background1.png')
-        self.bg_image = pg.transform.scale(self.bg_image, (screen.get_width(), screen.get_height()))
+        self.bg_image1 = pg.image.load('images/backgroundGame1.png')
+        self.bg_image1 = pg.transform.scale(self.bg_image1, (screen.get_width(), screen.get_height()))
+        self.bg_image2 = pg.image.load('images/backgroundGame2.png')
+        self.bg_image2 = pg.transform.scale(self.bg_image2, (screen.get_width(), screen.get_height()))
 
         self.sun_image = pg.image.load('images/sun.png')
         self.sun_image = pg.transform.scale(self.sun_image, (self.SUN_SIZE, self.SUN_SIZE))
         self.sun_angle = 0.0
         self.sun_center = (screen.get_width() / 2, self.SUN_SIZE * 0.75)
+
+        self.boss_image = pg.image.load('images/boss1.png')
+        self.boss_image = pg.transform.scale(self.boss_image, (self.BOSS_SIZE, self.BOSS_SIZE))
 
         # Objet sous groupe pour avoir la liste des sprites et automatiser la mise à jour par update()
         # Automatise aussi l'affichage : draw() par défaut affiche dans l'écran image à la position rect
@@ -92,7 +114,9 @@ class Eclipsoide:
             match event.type:
                 case pg.QUIT:
                     # On ferme la fenêtre
-                    return False
+                    pg.quit()
+                    sys.exit(0)
+
                 # Un appui sur une touche
                 case pg.KEYDOWN:
                     match event.key:
@@ -114,11 +138,14 @@ class Eclipsoide:
             return
 
         self.sun_angle = (self.sun_angle + self.SUN_ROTATION_SPEED * dt) % 360
-
-        if (self.time + dt) % self.TIME_BETWEEN_WAVE < dt:
-            nbEnemies: int = int(self.time / self.TIME_BETWEEN_WAVE)
-            for i in range(0, nbEnemies):
+        
+        if (self.time + dt) % self.TIME_BETWEEN_WAVE < dt and self.time < self.TIME_BEFORE_BOSS:
+            nbEnemies: int = int(self.time / self.TIME_BETWEEN_WAVE / 2)
+            for i in range(-2, nbEnemies):
                 Enemy(self.screen, self.player, self.enemy_projectiles_group, self.enemies_group)
+
+        self.sun_angle = (self.sun_angle + self.SUN_ROTATION_SPEED * dt) % 360
+
 
         self.time += dt
 
@@ -193,7 +220,33 @@ class Eclipsoide:
     def draw(self):
         """ Dessine le nouvel état du jeu """
         # Redessine le fond entier
-        self.screen.blit(self.bg_image, (0, 0))
+
+        initPos = self.screen.get_width() + self.BOSS_SIZE
+        finalPos = self.screen.get_width() / 2 - self.SUN_SIZE / 2
+
+        currentPos = initPos - ((initPos - finalPos) / self.TIME_BEFORE_BOSS * self.time)
+
+        # Croissance après l'arrivée
+        grow_time = min(max(self.time - self.TIME_BEFORE_BOSS, 0), self.GROW_DURATION)
+        grow_ratio = grow_time / self.GROW_DURATION
+        current_size = int(self.BOSS_SIZE + (self.BOSS_MAX_SIZE - self.BOSS_SIZE) * grow_ratio)
+        scaled_boss = pg.transform.scale(self.boss_image, (current_size, current_size))
+
+
+        bossX = max(self.screen.get_width() / 2 - current_size / 2, currentPos)
+
+        if self.time > self.TIME_BEFORE_BOSS:
+            bossX = self.screen.get_width() / 2 - current_size / 2
+
+        self.screen.blit(self.bg_image1, (0, 0))
+
+        self.bg_image2.set_alpha(int(grow_ratio * 255))
+        self.screen.blit(self.bg_image2, (0, 0))
+
+        self.screen.blit(self.sun_image, (self.screen.get_width() / 2 - self.SUN_SIZE / 2, self.SUN_SIZE / 4))
+
+        self.screen.blit(scaled_boss, (bossX, (self.SUN_SIZE / 4) + (self.SUN_SIZE / 2) - (current_size / 2)))
+
         self._draw_sun()
         # Dessine tous les sprites dans la surface de l'écran
         self.enemies_group.draw(self.screen)

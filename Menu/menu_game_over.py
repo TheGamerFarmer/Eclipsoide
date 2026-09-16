@@ -1,17 +1,27 @@
 import pygame as pg
 from . import ui_element
+import os
+
+UI_BASE_PATH = "images/ui"
 
 class GameOver:
     def __init__(self, screen_width, screen_height):
         self.font = pg.font.SysFont('ComicSans', 20)
         self.titre_font = pg.font.SysFont('ComicSans', 50)
 
-        center_x = screen_height // 2 - 100
+        btn_width = 300
+        btn_height = 75
+
+        center_x = screen_width // 2 - (btn_width // 2)
+
+        btn_normal = os.path.join(UI_BASE_PATH, "PNG", "Blue", "Default", "button_rectangle_depth_flat.png")
+        btn_quit = os.path.join(UI_BASE_PATH, "PNG", "Red", "Default", "button_rectangle_depth_flat.png")
 
         self.buttons = {
-            "retry": ui_element.Button(center_x, 250, 200, 50, "Retry", self.font),
-            "menu": ui_element.Button(center_x, 350, 200, 50, "Menu", self.font),
-            "quit": ui_element.Button(center_x, 450, 200, 50, "Quit", self.font)
+            "retry": ui_element.Button(center_x, 250, btn_width, btn_height, "Retry", self.font,btn_normal),
+            "menu": ui_element.Button(center_x, 350, btn_width, btn_height, "Menu", self.font,btn_normal),
+            "quit": ui_element.Button(center_x, 450, btn_width, btn_height, "Quit", self.font,btn_quit)
+
         }
 
     def draw(self, surface):
