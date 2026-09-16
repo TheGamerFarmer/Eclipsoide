@@ -100,7 +100,7 @@ def main():
                 if action == "retry":
                     game_over_running = False
                     del eclipsoide
-                    eclipsoide = Eclipsoide(game_surface)
+                    eclipsoide = Eclipsoide(screen)
                 elif action == "menu":
                     start_menu = True
                     game_over_running = False
