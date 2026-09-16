@@ -31,7 +31,7 @@ class MenuLeaderboard:
                                           btn_normal)
 
     def updatescore(self):
-        self.scores = settings.scores(99)
+        self.scores = settings.scores()
         self.scores.sort(reverse=True)
 
 
