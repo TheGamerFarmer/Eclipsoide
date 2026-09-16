@@ -106,7 +106,7 @@ class Enemy(pg.sprite.Sprite):
             playerRect = self.player.rect
             direction = pg.Vector2(playerRect.center) - oldPos
             if direction.length() > 0:
-                Projectile(oldPos, 0.15, direction.normalize(), Enemy.image_shoot, (255, 0, 0), self.datas.projectiles_group, trail_end_color=(255, 60, 20))
+                Projectile(oldPos, 0.15, direction.normalize(), Enemy.image_shoot, (255, 0, 0), self.datas.enemy_projectiles_group, trail_end_color=(255, 60, 20))
 
         # Déplace la position de la raquette en fonction du veteur de mouvement
         # Calcule le vecteur déplacement
