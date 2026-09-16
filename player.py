@@ -13,7 +13,7 @@ class Player(pg.sprite.Sprite):
     image_shoot: list[pg.Surface]
     image: pg.Surface
     rect: pg.Rect
-    damage: int = 20
+    damage: float = 20.0
     # Référence pour le halo des tirs : au-dessus de ce seuil de dégâts (ex.
     # améliorations), le halo grossit ; en dessous, il rétrécit
     BASE_DAMAGE = 20
@@ -70,7 +70,6 @@ class Player(pg.sprite.Sprite):
 
         self.trail_timer = 0
 
-        self.coin_mult = 1
         self.double_shot = False
 
         if not Player.image_shoot_set:
@@ -242,5 +241,5 @@ class Player(pg.sprite.Sprite):
         return result
 
     def add_coins(self, amount: int):
-        self.coins += amount * self.coin_mult
+        self.coins += amount
         self.score += amount

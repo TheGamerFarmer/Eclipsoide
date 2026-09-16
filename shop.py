@@ -1,6 +1,8 @@
 import os
 import pygame as pg
 
+from coin import Coin
+
 
 class Shop:
     def __init__(self, screen, player):
@@ -117,7 +119,7 @@ class Shop:
                 item['price'] = nouveau_prix
 
                 if item['id'] == 'damage':
-                    self.player.damage = 40 * (1 + 0.10 * item['lvl'])
+                    self.player.damage = 20 * (1 + 0.10 * item['lvl'])
                 elif item['id'] == 'cadence':
                     self.player.fire_delay = 300 / (1 + 0.10 * item['lvl'])
                 elif item['id'] == 'health':
@@ -126,4 +128,4 @@ class Shop:
                 elif item['id'] == 'double':
                     self.player.double_shot = True
                 elif item['id'] == 'coin':
-                    self.player.coin_mult = 2
+                    Coin.value = 40

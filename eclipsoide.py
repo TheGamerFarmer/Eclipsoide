@@ -22,12 +22,12 @@ from hud import Hud
 # Définition du jeu Pong
 class Eclipsoide:
     # Chance qu'un ennemi tué drop un coeur (uniquement si le joueur n'est pas déjà à vie max)
-    HEART_DROP_CHANCE = 0.12
+    HEART_DROP_CHANCE = 0.06
     HEART_POPUP_COLOR = (255, 90, 120)
 
     # Chance qu'un ennemi tué drop un bouclier (plus rare que les coeurs,
     # uniquement si le joueur n'en a pas déjà un actif)
-    SHIELD_DROP_CHANCE = 0.03
+    SHIELD_DROP_CHANCE = 0.01
     SHIELD_POPUP_COLOR = (150, 200, 255)
 
     # Nombres de dégâts flottants affichés sur les ennemis/le boss touchés
@@ -152,7 +152,7 @@ class Eclipsoide:
 
         # Collisions entre les projectiles du joueur et les ennemies
         for enemy, died in Enemy.check_hits(self.datas, self.player.damage):
-            CoinPopup(pg.Vector2(enemy.rect.center), self.player.damage, self.datas.popups_group, color=self.DAMAGE_POPUP_COLOR, prefix="-")
+            CoinPopup(pg.Vector2(enemy.rect.center), round(self.player.damage, 0), self.datas.popups_group, color=self.DAMAGE_POPUP_COLOR, prefix="-")
             if died:
                 Coin(pg.Vector2(enemy.rect.center), self.player, self.datas.coins_group)
                 Explosion(pg.Vector2(enemy.rect.center), self.datas.explosions_group)

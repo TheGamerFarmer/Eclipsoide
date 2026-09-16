@@ -6,7 +6,6 @@ from datas import Datas
 class Coin(pg.sprite.Sprite):
     SIZE = (16, 16)
     FRAME_SPEED = 0.006
-    VALUE = 20
 
     MIN_SPEED = 0.05       # pixels/ms au moment du drop
     MAX_SPEED = 0.9        # pixels/ms vitesse d'aspiration max
@@ -14,6 +13,7 @@ class Coin(pg.sprite.Sprite):
 
     images_set: bool = False
     images: list[pg.Surface]
+    value = 20
 
     def __init__(self, position: pg.Vector2, player, *groups):
         super().__init__(*groups)
@@ -51,7 +51,7 @@ class Coin(pg.sprite.Sprite):
         if not collected:
             return False
 
-        player.add_coins(len(collected) * cls.VALUE)
+        player.add_coins(len(collected) * cls.value)
         for coin in collected:
-            CoinPopup(pg.Vector2(coin.rect.center), cls.VALUE, datas.popups_group)
+            CoinPopup(pg.Vector2(coin.rect.center), cls.value, datas.popups_group)
         return True
