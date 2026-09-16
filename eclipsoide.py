@@ -51,6 +51,9 @@ class Eclipsoide:
     HEART_DROP_CHANCE = 0.12
     HEART_POPUP_COLOR = (255, 90, 120)
 
+    # Nombres de dégâts flottants affichés sur les ennemis/le boss touchés
+    DAMAGE_POPUP_COLOR = (255, 255, 255)
+
     # Simulation de collision : une cible automatique qui patrouille en bas
     VITESSE_CIBLE = 0.25  # pixels par milliseconde
     VIE_CIBLE = 100
@@ -219,8 +222,9 @@ class Eclipsoide:
         # Les tirs du joueur entament la vie du boss
         if self.boss is not None:
             touches = pg.sprite.spritecollide(self.boss, self.projectiles_group, dokill=True, collided=collide_boss)
-            for _ in touches:
-                self.boss.hited(40)
+            for touch in touches:
+                self.boss.hited(self.player.damage)
+                CoinPopup(pg.Vector2(touch.rect.center), self.player.damage, self.popups_group, color=self.DAMAGE_POPUP_COLOR, prefix="-")
             if not self.boss.is_alive:
                 self._boss_vaincu()
 
@@ -231,7 +235,8 @@ class Eclipsoide:
                 for enemy in enemies:
                     if type(enemy) == Enemy:
                         was_alive = enemy.life > 0
-                        enemy.hited(40)
+                        enemy.hited(self.player.damage)
+                        CoinPopup(pg.Vector2(enemy.rect.center), self.player.damage, self.popups_group, color=self.DAMAGE_POPUP_COLOR, prefix="-")
                         if was_alive and enemy.life <= 0:
                             Coin(pg.Vector2(enemy.rect.center), self.player, self.coins_group)
                             Explosion(pg.Vector2(enemy.rect.center), self.explosions_group)

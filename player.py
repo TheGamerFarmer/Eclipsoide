@@ -8,6 +8,7 @@ class Player(pg.sprite.Sprite):
     hitbox_size = (10, 9)
     image_shoot_set: bool = False
     image_shoot: list[pg.Surface]
+    damage: int = 20
 
     # Texture du vaisseau selon le pourcentage de vie restant : le premier
     # seuil (proportion minimale) dont on est au-dessus ou égal s'applique
