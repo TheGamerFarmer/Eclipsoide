@@ -81,7 +81,7 @@ class Player(pg.sprite.Sprite):
 
         self.image = Player.damage_images[0]
         self.rect = self.image.get_rect()
-        self.rect.move_ip(datas.screen.get_width() / 2 - self.size[0] / 2, datas.screen.get_height() - 50)
+        self.rect.move_ip(datas.screen.get_width() / 2 - self.size[0] / 2, datas.screen.get_height() - 110)
 
         self.hitbox = pg.Rect(0, 0, self.hitbox_size[0], self.hitbox_size[1])
         self.hitbox.center = self.rect.center
