@@ -96,7 +96,7 @@ def main():
 
             dt = clock.tick(60)
 
-
+            pause.set_score(eclipsoide.player.score)
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     pg.quit()
