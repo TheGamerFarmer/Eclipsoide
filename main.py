@@ -10,6 +10,7 @@ import audio
 import settings
 from Menu.main_menu import MainMenu as main_menu
 from Menu.menu_credit import MenuCredit
+from Menu.menu_leaderboard import MenuLeaderboard
 from Menu.menu_option import MenuOption
 from Menu.menu_pause import PauseMenu
 from eclipsoide import Eclipsoide
@@ -38,6 +39,7 @@ def main():
     #menu_pause =False
     game_over_running = False
     pause = PauseMenu(1024, 768)
+    leaderboard = MenuLeaderboard(1024, 768)
     while True:
         # On s'assure de revenir au menu principal par défaut
         active_menu = menu
@@ -72,6 +74,8 @@ def main():
                     active_menu = options_menu
                 elif action == "credit":
                     active_menu = credit_menu
+                elif action == "leaderboard":
+                    active_menu = leaderboard
                 elif action == "back":
                     active_menu = menu
                     audio.apply_settings()
