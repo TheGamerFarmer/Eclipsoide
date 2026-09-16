@@ -56,6 +56,16 @@ class Hud:
     RECORD_BEATEN_COLOR = (80, 255, 140)
     RECORD_Y = 40
     HEARTS_Y = 64
+    # Animation du bouclier (images/shield/) autour du vaisseau tant qu'il est
+    # actif, avec un pic de taille bref quand un coup est bloqué et un
+    # clignotement d'avertissement juste avant qu'il ne s'éteigne
+    SHIELD_FRAME_COUNT = 12
+    SHIELD_SIZE = (56, 56)
+    SHIELD_FRAME_DELAY = 45  # ms entre deux frames de l'animation
+    SHIELD_PULSE_DURATION = 250  # ms
+    SHIELD_PULSE_SCALE = 0.25  # +25% de taille au pic
+    SHIELD_WARNING_THRESHOLD = 1200  # ms restantes à partir desquelles ça clignote
+    SHIELD_WARNING_BLINK_INTERVAL = 120  # ms entre chaque clignotement
 
     def __init__(self, screen: pg.Surface, player):
         self.screen = screen
@@ -76,12 +86,17 @@ class Hud:
         self.coin_icon = pg.transform.scale(pg.image.load('images/ui/Coins/coin_0.png'), (24, 24))
         self.heart_full_icon = pg.transform.scale(pg.image.load('images/ui/Hearts/heart_full.png'), (22, 22))
         self.heart_empty_icon = pg.transform.scale(pg.image.load('images/ui/Hearts/heart_empty.png'), (22, 22))
+        self.shield_images = [
+            pg.transform.scale(pg.image.load(f'images/shield/shield_{i}.png'), self.SHIELD_SIZE)
+            for i in range(self.SHIELD_FRAME_COUNT)
+        ]
 
         self.vignette_surface = self._build_vignette(self.VIGNETTE_COLOR)
 
         self.hit_flash_timer = 0
         self.heal_flash_timer = 0
         self.coin_pop_timer = 0
+        self.shield_pulse_timer = 0
 
         self.shop = Shop(self.screen, self.player)
 
@@ -96,6 +111,9 @@ class Hud:
     def trigger_coin_pop(self):
         self.coin_pop_timer = self.COIN_POP_DURATION
 
+    def trigger_shield_pulse(self):
+        self.shield_pulse_timer = self.SHIELD_PULSE_DURATION
+
     # --- Mise à jour ---
 
     def update_timers(self, dt):
@@ -104,6 +122,7 @@ class Hud:
         self.hit_flash_timer = max(0, self.hit_flash_timer - dt)
         self.heal_flash_timer = max(0, self.heal_flash_timer - dt)
         self.coin_pop_timer = max(0, self.coin_pop_timer - dt)
+        self.shield_pulse_timer = max(0, self.shield_pulse_timer - dt)
 
     def advance(self, dt):
         """ Fait avancer l'horloge du soleil (rotation + pulsation) : à n'appeler
@@ -204,6 +223,30 @@ class Hud:
             glow_surface.blit(layer_surface, (0, 0), special_flags=pg.BLEND_RGBA_ADD)
 
         self.screen.blit(glow_surface, glow_surface.get_rect(center=self.player.rect.center))
+
+    def draw_shield(self):
+        """ Anime le bouclier (images/shield/) autour du vaisseau tant qu'il est
+        actif : grossit brièvement quand un coup est bloqué, clignote juste avant
+        de s'éteindre. À dessiner par-dessus le vaisseau, pas dans l'overlay HUD """
+        if self.player.shield_timer <= 0:
+            return
+
+        frame_index = int(self.time / self.SHIELD_FRAME_DELAY) % self.SHIELD_FRAME_COUNT
+        frame = self.shield_images[frame_index]
+
+        pulse = self.shield_pulse_timer / self.SHIELD_PULSE_DURATION if self.shield_pulse_timer > 0 else 0
+        scale = 1 + self.SHIELD_PULSE_SCALE * pulse
+        if scale != 1.0:
+            size = (max(1, int(self.SHIELD_SIZE[0] * scale)), max(1, int(self.SHIELD_SIZE[1] * scale)))
+            frame = pg.transform.smoothscale(frame, size)
+
+        if self.player.shield_timer <= self.SHIELD_WARNING_THRESHOLD:
+            blinking_off = (int(self.player.shield_timer) // self.SHIELD_WARNING_BLINK_INTERVAL) % 2 == 0
+            if blinking_off:
+                frame = frame.copy()
+                frame.set_alpha(90)
+
+        self.screen.blit(frame, frame.get_rect(center=self.player.rect.center))
 
     def _draw_coin_counter(self):
         icon_rect = self.coin_icon.get_rect(topleft=(10, 10))

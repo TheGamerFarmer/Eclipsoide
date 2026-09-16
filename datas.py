@@ -4,7 +4,7 @@ class Datas(object):
     #The time between two wave in millisecond
     TIME_BETWEEN_WAVE = 5000
     #The time before the boss spawn in millisecond
-    TIME_BEFORE_BOSS = 10000
+    TIME_BEFORE_BOSS = 300000
 
     # Délai (explosion du joueur) avant d'afficher l'écran de game over
     DEATH_COOLDOWN = 1300 # ms
@@ -12,7 +12,7 @@ class Datas(object):
     def __init__(self, screen: pg.Surface) -> None:
         self.screen = screen
 
-        self.groups = [pg.sprite.Group() for _ in range(11)]
+        self.groups = [pg.sprite.Group() for _ in range(12)]
 
         self.enemies_group = self.groups[0]
         self.player_group = self.groups[1]
@@ -25,6 +25,7 @@ class Datas(object):
         self.hearts_group = self.groups[8]
         self.boss_group = self.groups[9]
         self.bombs_group = self.groups[10]
+        self.shields_group = self.groups[11]
 
         self.stage = 1
         self.time = 0

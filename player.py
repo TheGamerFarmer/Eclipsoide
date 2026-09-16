@@ -14,6 +14,9 @@ class Player(pg.sprite.Sprite):
     image: pg.Surface
     rect: pg.Rect
     damage: int = 20
+    # Référence pour le halo des tirs : au-dessus de ce seuil de dégâts (ex.
+    # améliorations), le halo grossit ; en dessous, il rétrécit
+    BASE_DAMAGE = 20
 
     # Texture du vaisseau selon le pourcentage de vie restant : le premier
     # seuil (proportion minimale) dont on est au-dessus ou égal s'applique
@@ -37,6 +40,16 @@ class Player(pg.sprite.Sprite):
     INVINCIBILITY_DURATION = 1200  # ms d'invincibilité après un coup
     BLINK_INTERVAL = 100           # ms entre chaque clignotement pendant l'invincibilité
 
+    # Bouclier : bloque tous les coups pendant sa durée (ne se cumule pas -
+    # en ramasser un autre pendant qu'il est actif relance juste le minuteur)
+    SHIELD_DURATION = 6000  # ms
+
+    # Résultat de on_hit()/check_hits() : distingue un coup ignoré (invincibilité),
+    # bloqué par le bouclier, ou réellement encaissé (perte de vie)
+    HIT_IGNORED = 'ignored'
+    HIT_SHIELDED = 'shielded'
+    HIT_TAKEN = 'hit'
+
     def __init__(self, speed: float, datas: Datas, *groups):
         super().__init__(*groups)
 
@@ -47,6 +60,7 @@ class Player(pg.sprite.Sprite):
         self.max_lives = 1
         self.lives = self.max_lives
         self.invincible_timer = 0
+        self.shield_timer = 0
 
         self.coins = 0
         self.score = 0
@@ -91,6 +105,7 @@ class Player(pg.sprite.Sprite):
     def update(self, dt):
         self._update_damage_texture()
         self._update_invincibility(dt)
+        self.shield_timer = max(0, self.shield_timer - dt)
 
         keystate = pg.key.get_pressed()
         movement = pg.Vector2()
@@ -116,14 +131,15 @@ class Player(pg.sprite.Sprite):
         self.fire_timer -= dt
 
         if self.fire_timer <= 0:
+            glow_scale = self.damage / Player.BASE_DAMAGE
             if self.double_shot:
                 Projectile(pg.Vector2(self.rect.centerx - 10, self.rect.centery), 0.4, pg.Vector2(0, -1),
-                           Player.image_shoot, (0, 255, 0), self.datas.projectiles_group)
+                           Player.image_shoot, (0, 255, 0), self.datas.projectiles_group, glow_scale=glow_scale)
                 Projectile(pg.Vector2(self.rect.centerx + 10, self.rect.centery), 0.4, pg.Vector2(0, -1),
-                           Player.image_shoot, (0, 255, 0), self.datas.projectiles_group)
+                           Player.image_shoot, (0, 255, 0), self.datas.projectiles_group, glow_scale=glow_scale)
             else:
                 Projectile(pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), Player.image_shoot, (0, 255, 0),
-                           self.datas.projectiles_group)
+                           self.datas.projectiles_group, glow_scale=glow_scale)
 
             self.fire_timer = self.fire_delay
             self._play_shoot_sound()
@@ -176,43 +192,54 @@ class Player(pg.sprite.Sprite):
         else:
             self.image.set_alpha(255)
 
-    def on_hit(self) -> bool:
-        """ Retourne True si le coup a réellement été encaissé (pour déclencher
-        un feedback comme un flash d'écran), False s'il a été ignoré (invincibilité) """
+    def on_hit(self) -> str:
+        """ Retourne HIT_IGNORED (invincibilité en cours), HIT_SHIELDED (bouclier
+        actif, coup bloqué) ou HIT_TAKEN (vie perdue) """
+        # Le bouclier bloque tout, sans consommer l'invincibilité : un contact
+        # prolongé pendant sa durée n'a donc aucun effet secondaire à gérer
+        if self.shield_timer > 0:
+            return Player.HIT_SHIELDED
+
         # Pendant l'invincibilité qui suit un coup, on ignore les collisions
         # supplémentaires (sinon rester au contact d'un ennemi vide toutes
         # les vies en un seul passage)
         if self.invincible_timer > 0:
-            return False
+            return Player.HIT_IGNORED
 
-        self.lives -= 1
         self.invincible_timer = Player.INVINCIBILITY_DURATION
 
+        self.lives -= 1
         if self.lives <= 0:
             self.is_alive = False
             self.kill()
 
-        return True
+        return Player.HIT_TAKEN
 
-    def check_hits(self, enemies_group, enemy_projectiles_group, boss, collided=Projectile.collide) -> bool:
+    def check_hits(self, enemies_group, enemy_projectiles_group, boss, collided=Projectile.collide) -> str:
         """ Vérifie les collisions qui blessent le joueur (contact ennemi, tir
-        ennemi, bombe du boss). Retourne True si un coup a réellement été encaissé
-        (pour déclencher un feedback comme un flash d'écran) """
-        hit = False
-        # noinspection bad-argument-type
+        ennemi, bombe du boss). Retourne le résultat du premier coup réellement
+        encaissé (HIT_TAKEN/HIT_SHIELDED), ou HIT_IGNORED si aucun """
+        result = Player.HIT_IGNORED
+
         if pg.sprite.spritecollide(self, enemies_group, dokill=False):
-            hit = self.on_hit() or hit
+            outcome = self.on_hit()
+            if outcome != Player.HIT_IGNORED:
+                result = outcome
 
         # (on collisionne sur la hitbox du tir, pas sur son rect visuel qui
         # inclut le halo et la traînée)
         # noinspection bad-argument-type
         if pg.sprite.spritecollide(self, enemy_projectiles_group, dokill=True, collided=collided):
-            hit = self.on_hit() or hit
+            outcome = self.on_hit()
+            if outcome != Player.HIT_IGNORED:
+                result = outcome
 
         if boss is not None and boss.bombs_hitting(self):
-            hit = self.on_hit() or hit
+            outcome = self.on_hit()
+            if outcome != Player.HIT_IGNORED:
+                result = outcome
 
-        return hit
+        return result
 
     def add_coins(self, amount: int):
         self.coins += amount * self.coin_mult
