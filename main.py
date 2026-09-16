@@ -88,19 +88,9 @@ def main():
 
         # Boucle de jeu
         while eclipsoide.isRunning():
-            for event in pg.event.get():
-                if event.type == pg.QUIT:
-                    pg.quit()
-                    sys.exit()
-
-
+            # Pas de pg.event.get() ici : isRunning() consomme déjà la file
+            # (QUIT compris). En lire une seconde fois volerait les touches.
             dt = clock.tick(60)
-
-            pause.set_score(eclipsoide.player.score)
-            for event in pg.event.get():
-                if event.type == pg.QUIT:
-                    pg.quit()
-                    sys.exit()
 
             if Eclipsoide.pause:
                 # Le menu affiche le score de la partie en cours
@@ -127,6 +117,7 @@ def main():
                         start_menu = True
                         Eclipsoide.pause = False
                         eclipsoide.isEnded = True
+
                     elif action == "option":
                         active_menu = options_menu
                         while active_menu == options_menu:
@@ -137,6 +128,7 @@ def main():
                                     sys.exit()
                                 sub_action = options_menu.handle_event(evt)
                                 if sub_action == "back":
+                                    print("test")
                                     active_menu = pause
                                 # pleine écran
                                 elif sub_action == "toggle_fullscreen":
@@ -144,14 +136,17 @@ def main():
                                         screen = pg.display.set_mode((1024, 768), pg.FULLSCREEN | pg.SCALED)
                                     else:
                                         screen = pg.display.set_mode((1024, 768), pg.RESIZABLE | pg.SCALED)
+                                print("test2")
                                 active_menu.draw(screen)
                                 pg.display.flip()
                         eclipsoide.draw()
                         pause.draw(screen)
                         pg.display.flip()
                     elif event.type == pg.KEYDOWN:
-                        if event.key == pg.K_ESCAPE or event.key == pg.K_p:
-                            Eclipsoide.pause = not Eclipsoide.pause
+                        # Les deux touches de pause reprennent aussi la partie
+                        if event.key in (pg.K_ESCAPE, pg.K_p):
+                            Eclipsoide.pause = False
+                            eclipsoide.draw()
 
             # Met à jour le jeu sachant que dt millisecondes se sont écoulées
             eclipsoide.update(dt)
