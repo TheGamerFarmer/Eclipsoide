@@ -11,6 +11,7 @@ class Bomb(pg.sprite.Sprite):
     SPEED_Y = 0.15  # pixels par milliseconde
     EXPLOSION_RADIUS = 60
     EXPLOSION_DURATION = 300  # millisecondes
+    FUSE_TIME = 2500  # millisecondes avant explosion automatique
     COLOR = (40, 40, 40)
     EXPLOSION_COLOR = (255, 160, 0)
 
@@ -20,6 +21,7 @@ class Bomb(pg.sprite.Sprite):
         self.pos = pg.Vector2(center)
         self.exploding = False
         self.explosion_time = 0
+        self.fuse_time = 0
         self.image = self._build_bomb_image()
         self.rect = self.image.get_rect(center=center)
 
@@ -55,6 +57,12 @@ class Bomb(pg.sprite.Sprite):
             radius = int(self.RADIUS + (self.EXPLOSION_RADIUS - self.RADIUS) * progress)
             self.image = self._build_explosion_image(radius)
             self.rect = self.image.get_rect(center=(int(self.pos.x), int(self.pos.y)))
+            return
+
+        # Explose toute seule une fois la mèche consumée
+        self.fuse_time += dt
+        if self.fuse_time >= self.FUSE_TIME:
+            self.explode()
             return
 
         self.pos.y += self.SPEED_Y * dt
