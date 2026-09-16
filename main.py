@@ -21,7 +21,6 @@ def main():
 
     # Initialisation du package pygame
     pg.init()
-
     # Mode plein écran initial au démarrage si sauvegardé
     if settings.OPTIONS["fullscreen"]:
         screen = pg.display.set_mode((1024, 768), pg.FULLSCREEN | pg.SCALED)
