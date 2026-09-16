@@ -35,7 +35,7 @@ class Eclipsoide:
     # time between wave in milliseconds
     TIME_BETWEEN_WAVE = 5000
     VITESSE_BOSS = 0.1  # pixels par milliseconde
-    TIME_BEFORE_BOSS = 10000
+    TIME_BEFORE_BOSS = 300000
     BOSS_SIZE = 70
     GROW_DURATION = 2000
     BOSS_MAX_SIZE = 620
