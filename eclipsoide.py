@@ -41,6 +41,8 @@ class Eclipsoide:
     BOSS_MAX_SIZE = 620
     # Chaque boss vaincu rend le suivant 1,5 fois plus résistant
     BOSS_LIFE_GROWTH = 1.5
+    # Points gagnés en tuant un boss, multipliés par son palier
+    BOSS_REWARD = 100
 
     # Rotation lente + légère pulsation/glow du soleil
     SUN_ROTATION_SPEED = 0.006  # degrés par milliseconde (~1 tour par minute)
@@ -150,6 +152,11 @@ class Eclipsoide:
 
     def _boss_vaincu(self):
         """ Le boss explose, le palier suivant démarre : les vagues reprennent """
+        centre = pg.Vector2(self.boss.rect.center)
+        # Récompense : 100 points par palier du boss vaincu
+        gain = self.BOSS_REWARD * self.boss_level
+        self.player.add_coins(gain)
+        CoinPopup(centre, gain, self.popups_group)
         Explosion(pg.Vector2(self.boss.rect.center), self.explosions_group)
         self.boss.bombs.empty()
         self.boss.kill()
