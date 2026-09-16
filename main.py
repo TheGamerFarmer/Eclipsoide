@@ -97,6 +97,7 @@ def main():
             dt = clock.tick(60)
 
             if Eclipsoide.pause:
+                audio.set_paused(True)
                 # Le menu affiche le score de la partie en cours
                 pause.set_score(eclipsoide.player.coins)
                 pause.draw(screen)
@@ -150,6 +151,9 @@ def main():
                         if event.key in (pg.K_ESCAPE, pg.K_p):
                             Eclipsoide.pause = False
                             eclipsoide.draw()
+
+            # Sortie de pause (reprise, restart ou retour menu)
+            audio.set_paused(False)
 
             # Met à jour le jeu sachant que dt millisecondes se sont écoulées
             eclipsoide.update(dt)

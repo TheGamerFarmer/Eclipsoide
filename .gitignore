@@ -4,3 +4,4 @@ Eclipsoide.egg-info/
 __pycache__/
 /uv.lock
 /settings.json
+**.DS_Store

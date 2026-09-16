@@ -71,7 +71,7 @@ class Slider:
         self.rect = pg.Rect(x, y, width, 20)
         self.min_val = min_val
         self.max_val = max_val
-        self.val = start_val
+        self.val = round(max(min_val, min(start_val, max_val)))
         self.is_dragging = False
 
         self.img_track = pg.image.load(img_track_path).convert_alpha()
@@ -83,8 +83,10 @@ class Slider:
     def draw(self, surface):
         surface.blit(self.img_track, self.rect)
 
+        # Le curseur reste entièrement sur la barre : à max_val son bord droit
+        # touche le bout de la barre au lieu de déborder de moitié
         ratio = (self.val - self.min_val) / (self.max_val - self.min_val)
-        handle_x = self.rect.x + (self.rect.width * ratio) - (self.img_handle.get_width() // 2)
+        handle_x = self.rect.x + self._travel() * ratio
         handle_y = self.rect.centery - (self.img_handle.get_height() // 2)
 
         surface.blit(self.img_handle, (handle_x, handle_y))
@@ -102,10 +104,15 @@ class Slider:
         elif event.type == pg.MOUSEMOTION and self.is_dragging:
             self._update_val(event.pos[0])
 
+    def _travel(self):
+        """ Distance parcourue par le bord gauche du curseur entre min et max """
+        return self.rect.width - self.img_handle.get_width()
+
     def _update_val(self, mouse_x):
-        rel_x = max(0, min(mouse_x - self.rect.x, self.rect.width))
-        ratio = rel_x / self.rect.width
-        self.val = self.min_val + ratio * (self.max_val - self.min_val)
+        # On vise le centre du curseur sur la souris
+        rel_x = mouse_x - self.rect.x - self.img_handle.get_width() / 2
+        ratio = max(0.0, min(rel_x / self._travel(), 1.0))
+        self.val = round(self.min_val + ratio * (self.max_val - self.min_val))
 
 
 class Stat:
