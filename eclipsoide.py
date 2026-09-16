@@ -11,7 +11,6 @@ from boss import Boss
 from enemy import Enemy
 from player import Player
 from coin import Coin
-from coin_popup import CoinPopup
 from explosion import Explosion
 from heart_pickup import HeartPickup
 from hud import Hud
@@ -35,7 +34,7 @@ class Eclipsoide:
     # time between wave in milliseconds
     TIME_BETWEEN_WAVE = 5000
     VITESSE_BOSS = 0.1  # pixels par milliseconde
-    TIME_BEFORE_BOSS = 300000
+    TIME_BEFORE_BOSS = 10000
     BOSS_SIZE = 70
     GROW_DURATION = 2000
     BOSS_MAX_SIZE = 620
@@ -77,7 +76,6 @@ class Eclipsoide:
         self.bg_image2 = pg.transform.scale(self.bg_image2, (screen.get_width(), screen.get_height()))
 
         self.boss_image = pg.image.load('images/boss1.png')
-        self.boss_image = pg.transform.scale(self.boss_image, (self.BOSS_SIZE, self.BOSS_SIZE))
 
         # Objet sous groupe pour avoir la liste des sprites et automatiser la mise à jour par update()
         # Automatise aussi l'affichage : draw() par défaut affiche dans l'écran image à la position rect
@@ -239,21 +237,13 @@ class Eclipsoide:
                             if self.player.lives < Player.MAX_LIVES and random.random() < self.HEART_DROP_CHANCE:
                                 HeartPickup(pg.Vector2(enemy.rect.center), self.player, self.hearts_group)
 
-        # Le joueur ramasse les pièces qu'il croise (aspirées automatiquement vers lui)
-        collected_coins = pg.sprite.spritecollide(self.player, self.coins_group, dokill=True)
-        if collected_coins:
-            self.player.add_coins(len(collected_coins) * Coin.VALUE)
+        # Le joueur ramasse les pièces et les coeurs qu'il croise (aspirés
+        # automatiquement vers lui) ; chaque classe gère sa propre collecte
+        if Coin.collect(self.player, self.coins_group, self.popups_group):
             self.hud.trigger_coin_pop()
-            for coin in collected_coins:
-                CoinPopup(pg.Vector2(coin.rect.center), Coin.VALUE, self.popups_group)
 
-        # Le joueur ramasse les coeurs qu'il croise (une vie de plus, plafonnée au max)
-        collected_hearts = pg.sprite.spritecollide(self.player, self.hearts_group, dokill=True)
-        for heart in collected_hearts:
-            if self.player.lives < Player.MAX_LIVES:
-                self.player.lives += 1
-                CoinPopup(pg.Vector2(heart.rect.center), 1, self.popups_group, color=self.HEART_POPUP_COLOR)
-                self.hud.trigger_heal_flash()
+        if HeartPickup.collect(self.player, self.hearts_group, self.popups_group, self.HEART_POPUP_COLOR):
+            self.hud.trigger_heal_flash()
 
         if not self.player.is_alive:
             self.death_timer = self.DEATH_COOLDOWN
