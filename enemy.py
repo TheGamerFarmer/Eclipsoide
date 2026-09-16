@@ -1,4 +1,6 @@
 # Utilisation de pygame avec un préfixe plus simple
+from typing import Any
+
 import pygame as pg
 # Accès à la classe Random
 import random
@@ -31,7 +33,7 @@ class Enemy(pg.sprite.Sprite):
     size = (ASTEROID_SIZE,ASTEROID_SIZE)
 
     def __init__(self,screen: pg.Surface, player: Player, projectiles_group: pg.sprite.AbstractGroup,
-                 *groups, particles_group: pg.sprite.AbstractGroup = None):
+                 *groups, particles_group: pg.sprite.AbstractGroup =  Any):
         # Appel du constructeur la super classe
         pg.sprite.Sprite.__init__(self, *groups)
 

@@ -63,7 +63,8 @@ class Eclipsoide:
     time = 0
 
     def __del__(self):
-        print("new Eclipsoide")
+      # print("new Eclipsoide")
+      pass
 
     def __init__(self,screen: pg.Surface):
         """ Création des attribut du jeux """
@@ -79,16 +80,16 @@ class Eclipsoide:
 
         # Objet sous groupe pour avoir la liste des sprites et automatiser la mise à jour par update()
         # Automatise aussi l'affichage : draw() par défaut affiche dans l'écran image à la position rect
-        self.enemies_group = pg.sprite.Group()
-        self.player_group = pg.sprite.Group()
-        self.projectiles_group = pg.sprite.Group()
-        self.enemy_projectiles_group = pg.sprite.Group()
-        self.coins_group = pg.sprite.Group()
-        self.popups_group = pg.sprite.Group()
-        self.particles_group = pg.sprite.Group()
-        self.explosions_group = pg.sprite.Group()
-        self.hearts_group = pg.sprite.Group()
-        self.boss_group = pg.sprite.Group()
+        self.enemies_group : pg.sprite.Group = pg.sprite.Group()
+        self.player_group : pg.sprite.Group = pg.sprite.Group()
+        self.projectiles_group : pg.sprite.Group = pg.sprite.Group()
+        self.enemy_projectiles_group : pg.sprite.Group = pg.sprite.Group()
+        self.coins_group : pg.sprite.Group = pg.sprite.Group()
+        self.popups_group : pg.sprite.Group = pg.sprite.Group()
+        self.particles_group : pg.sprite.Group = pg.sprite.Group()
+        self.explosions_group : pg.sprite.Group = pg.sprite.Group()
+        self.hearts_group : pg.sprite.Group = pg.sprite.Group()
+        self.boss_group : pg.sprite.Group = pg.sprite.Group()
         self.boss = None
         # Palier courant : le boss revient de plus en plus fort après chaque victoire
         self.boss_level = 1
@@ -103,9 +104,9 @@ class Eclipsoide:
         self.menu_game_over = GameOver(self.screen.get_width(), self.screen.get_height())
 
         # Vrai si le jeu est fini
-        self.isEnded = False
+        self.isEnded  = False
         # None tant que le joueur est vivant ; sinon, ms restantes avant le game over
-        self.death_timer = None
+        self.death_timer : int | None = None
 
     def isRunning(self):
         """
@@ -228,7 +229,7 @@ class Eclipsoide:
             self.hud.trigger_heal_flash()
 
         if not self.player.is_alive:
-            self.death_timer = self.DEATH_COOLDOWN
+            self.death_timer  = self.DEATH_COOLDOWN
             Explosion(pg.Vector2(self.player.rect.center), self.explosions_group)
             # L'historique est lu avant l'ajout : il ne contient que les parties précédentes
             historique = settings.last_scores(3)
