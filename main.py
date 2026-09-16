@@ -128,7 +128,6 @@ def main():
                                     sys.exit()
                                 sub_action = options_menu.handle_event(evt)
                                 if sub_action == "back":
-                                    print("test")
                                     active_menu = pause
                                 # pleine écran
                                 elif sub_action == "toggle_fullscreen":
@@ -136,7 +135,6 @@ def main():
                                         screen = pg.display.set_mode((1024, 768), pg.FULLSCREEN | pg.SCALED)
                                     else:
                                         screen = pg.display.set_mode((1024, 768), pg.RESIZABLE | pg.SCALED)
-                                print("test2")
                                 active_menu.draw(screen)
                                 pg.display.flip()
                         eclipsoide.draw()
