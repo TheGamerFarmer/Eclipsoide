@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 # Pour lancer directement l'exécution à partir du sell si le fichier a les droits d'exécution
 
-# Utilisation de pygame avec un préfixe plus simple
-import pygame as pg
 import sys
 
-from pygame.transform import flip
+# Utilisation de pygame avec un préfixe plus simple
+import pygame as pg
 
 import settings
-from Menu.menu_option import MenuOption
-from Menu.menu_credit import MenuCredit
 from Menu.main_menu import MainMenu as main_menu
+from Menu.menu_credit import MenuCredit
+from Menu.menu_option import MenuOption
 from Menu.menu_pause import PauseMenu
 from eclipsoide import Eclipsoide
 
