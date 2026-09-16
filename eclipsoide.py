@@ -251,8 +251,8 @@ class Eclipsoide:
             Explosion(pg.Vector2(self.player.rect.center), self.explosions_group)
             # L'historique est lu avant l'ajout : il ne contient que les parties précédentes
             historique = settings.last_scores(3)
-            settings.add_score(self.player.coins)
-            self.menu_game_over.set_score(self.player.coins, historique)
+            settings.add_score(self.player.score)
+            self.menu_game_over.set_score(self.player.score, historique)
 
         # Met à jours tous les sprites en fonction du temps qui a passé
         self.enemies_group.update(dt)

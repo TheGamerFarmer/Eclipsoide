@@ -42,6 +42,7 @@ class Player(pg.sprite.Sprite):
         self.invincible_timer = 0
 
         self.coins = 0
+        self.score = 0
 
         self.fire_delay = 300
         self.fire_timer = 0
@@ -161,3 +162,4 @@ class Player(pg.sprite.Sprite):
 
     def add_coins(self, amount: int):
         self.coins += amount
+        self.score += amount
