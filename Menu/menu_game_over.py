@@ -6,8 +6,17 @@ UI_BASE_PATH = "images/ui"
 
 class GameOver:
     def __init__(self, screen_width, screen_height):
-        self.font = pg.font.SysFont('ComicSans', 20)
-        self.titre_font = pg.font.SysFont('ComicSans', 50)
+        self.bg_image = pg.image.load('images/backgroundGameOver.png').convert()
+        self.bg_image = pg.transform.scale(self.bg_image, (screen_width, screen_height))
+        font_path = os.path.join(UI_BASE_PATH, "Font", "Kenney Future.ttf")
+        self.titre_font = pg.font.Font(font_path, 60)
+        self.font = pg.font.Font(font_path, 26)
+        self.score_font = pg.font.SysFont('ComicSans', 30)
+
+        # Score de la partie et historique, renseignés par le jeu au game over
+        self.score = 0
+        self.history = []
+
 
         btn_width = 300
         btn_height = 75
@@ -24,11 +33,26 @@ class GameOver:
 
         }
 
+    def set_score(self, score, history=()):
+        """ Renseigne le score de la partie et l'historique à afficher """
+        self.score = score
+        self.history = list(history)
+
     def draw(self, surface):
 
-        surface.fill((20,20,30))
+        surface.blit(self.bg_image, (0, 0))
         titre = self.titre_font.render("GAME OVER", True, (255, 244, 255))
         surface.blit(titre, titre.get_rect(center=(surface.get_width() // 2, 120)))
+
+        # Score de la partie, juste sous le titre
+        score = self.score_font.render(f"Score : {self.score}", True, (255, 220, 80))
+        surface.blit(score, score.get_rect(center=(surface.get_width() // 2, 180)))
+
+        # Les 3 parties précédentes, de la plus récente à la plus ancienne
+        if self.history:
+            resume = "  ·  ".join(str(s) for s in self.history)
+            historique = self.font.render(f"Parties precedentes : {resume}", True, (170, 170, 190))
+            surface.blit(historique, historique.get_rect(center=(surface.get_width() // 2, 215)))
 
         for button in self.buttons.values():
             button.draw(surface)

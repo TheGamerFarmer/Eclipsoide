@@ -8,7 +8,7 @@ class CoinPopup(pg.sprite.Sprite):
     font_set: bool = False
     font: pg.font.Font
 
-    def __init__(self, position: pg.Vector2, amount: int, *groups):
+    def __init__(self, position: pg.Vector2, amount: int, *groups, color: tuple[int, int, int] = (255, 220, 80), prefix: str = "+"):
         super().__init__(*groups)
 
         if not CoinPopup.font_set:
@@ -19,7 +19,7 @@ class CoinPopup(pg.sprite.Sprite):
         self.position = pg.Vector2(position)
         self.time = 0
 
-        self.base_image = CoinPopup.font.render(f"+{amount}", True, (255, 220, 80))
+        self.base_image = CoinPopup.font.render(f"{prefix}{amount}", True, color)
         self.image = self.base_image
         self.rect = self.image.get_rect(center=self.position)
 

@@ -5,6 +5,7 @@ import random
 
 from player import Player
 from projectile import Projectile
+from particle import Particle
 
 # Une balle qui rebondie sur les bords et des paddles
 class Enemy(pg.sprite.Sprite):
@@ -17,6 +18,11 @@ class Enemy(pg.sprite.Sprite):
     TIME_BETWEEN_SHOOT = 2000
     HIT_FLASH_DURATION = 90  # ms de flash blanc quand touché
 
+    # Traînée de débris derrière l'astéroïde en chute (poussière de roche)
+    DEBRIS_DELAY = 90  # ms entre deux particules de débris
+    DEBRIS_COLOR_START = (180, 140, 90)
+    DEBRIS_COLOR_END = (80, 60, 40)
+
     image_set: bool = False
     image: pg.Surface
     image_shoot_set: bool = False
@@ -24,14 +30,19 @@ class Enemy(pg.sprite.Sprite):
 
     size = (ASTEROID_SIZE,ASTEROID_SIZE)
 
-    def __init__(self,screen: pg.Surface, player: Player, projectiles_group: pg.sprite.AbstractGroup, *groups):
+    def __init__(self,screen: pg.Surface, player: Player, projectiles_group: pg.sprite.AbstractGroup,
+                 *groups, particles_group: pg.sprite.AbstractGroup = None):
         # Appel du constructeur la super classe
         pg.sprite.Sprite.__init__(self, *groups)
 
         self.projectiles_group = projectiles_group
+        self.particles_group = particles_group
+        # Décalage aléatoire pour que les astéroïdes n'émettent pas leurs
+        # débris tous en même temps
+        self.debris_timer = random.uniform(0, Enemy.DEBRIS_DELAY)
 
         # Points de vie de l'ennemie
-        self.life = 100
+        self.life = 60
 
         self.time = 0
 
@@ -110,8 +121,44 @@ class Enemy(pg.sprite.Sprite):
         self.rect.x = int(newPos.x)
         self.rect.y = int(newPos.y)
 
+        self._emit_debris(dt)
+
+    def _emit_debris(self, dt):
+        if self.particles_group is None:
+            return
+
+        self.debris_timer -= dt
+        if self.debris_timer > 0:
+            return
+        self.debris_timer = Enemy.DEBRIS_DELAY
+
+        # Émis sur le bord arrière de l'astéroïde (à l'opposé de sa direction),
+        # avec une légère dérive dans ce même sens pour qu'il reste "en retard"
+        direction = -self.movement.normalize() if self.movement.length_squared() > 0 else pg.Vector2(0, -1)
+        spawn_pos = pg.Vector2(self.rect.center) + direction * (Enemy.ASTEROID_SIZE * random.uniform(0.25, 0.45))
+        spawn_pos += pg.Vector2(random.uniform(-6, 6), random.uniform(-6, 6))
+
+        velocity = direction * random.uniform(0.015, 0.04)
+
+        Particle(spawn_pos, velocity, Enemy.DEBRIS_COLOR_START, Enemy.DEBRIS_COLOR_END, self.particles_group)
+
     def hited(self, damage: int):
         self.life -= damage
         self.hit_flash_timer = Enemy.HIT_FLASH_DURATION
         if self.life <= 0:
             self.kill()
+
+    @classmethod
+    def check_hits(cls, projectiles_group, enemies_group, damage: int, collided=Projectile.collide) -> list[tuple["Enemy", bool]]:
+        """ Applique les dégâts des tirs du joueur touchant des ennemis.
+        Retourne la liste des (ennemi, vient_de_mourir) pour chaque impact,
+        pour laisser l'appelant gérer les récompenses (pièces, coeurs, etc.) """
+        hits = []
+        collisions = pg.sprite.groupcollide(projectiles_group, enemies_group, dokilla=True, dokillb=False, collided=collided)
+        for enemies in collisions.values():
+            for enemy in enemies:
+                if type(enemy) == cls:
+                    was_alive = enemy.life > 0
+                    enemy.hited(damage)
+                    hits.append((enemy, was_alive and enemy.life <= 0))
+        return hits
