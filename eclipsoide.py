@@ -195,7 +195,7 @@ class Eclipsoide:
         if (self.time + dt) % self.TIME_BETWEEN_WAVE < dt and self.time < self.TIME_BEFORE_BOSS:
             nbEnemies: int = int(self.time / self.TIME_BETWEEN_WAVE / 2)
             for i in range(-2, nbEnemies):
-                Enemy(self.screen, self.player, self.enemy_projectiles_group, self.enemies_group)
+                Enemy(self.screen, self.player, self.enemy_projectiles_group, self.enemies_group, particles_group=self.particles_group)
 
         self.time += dt
 
