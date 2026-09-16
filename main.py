@@ -20,10 +20,9 @@ def main():
 
     # Mode plein écran initial au démarrage si sauvegardé
     if settings.OPTIONS["fullscreen"]:
-        screen = pg.display.set_mode((1024, 768), pg.FULLSCREEN)
+        screen = pg.display.set_mode((1024, 768), pg.FULLSCREEN | pg.SCALED)
     else:
-        # On initialise en mode RESIZABLE pour éviter les micro-coupures de fenêtrage
-        screen = pg.display.set_mode((1024, 768), pg.RESIZABLE)
+        screen = pg.display.set_mode((1024, 768), pg.RESIZABLE | pg.SCALED)
 
     menu = main_menu(1024, 768)
     options_menu = MenuOption(1024, 768)
@@ -32,15 +31,6 @@ def main():
     pg.font.init()
     # Donne un nom à la fenêtre
     pg.display.set_caption("Eclipsoïde")
-
-    # Ratio du moniteur (ex: 16/9)
-    monitor = pg.display.Info()
-    aspect_ratio = monitor.current_w / monitor.current_h
-
-    # Résolution fixe du jeu (ratio moniteur)
-    GAME_W = 1024
-    GAME_H = int(GAME_W / aspect_ratio)
-    game_surface = pg.Surface((GAME_W, GAME_H))
 
     start_menu = True
 
@@ -63,7 +53,7 @@ def main():
 
                     # On ne recrée pas la fenêtre ici pour garder une transition ultra-fluide
                     clock = pg.time.Clock()
-                    eclipsoide = Eclipsoide(game_surface)
+                    eclipsoide = Eclipsoide(screen)
 
                 elif action == "quit":
                     pg.quit()
@@ -78,9 +68,9 @@ def main():
                 # pleine écran
                 elif action == "toggle_fullscreen":
                     if settings.OPTIONS["fullscreen"]:
-                        screen = pg.display.set_mode((1024, 768), pg.FULLSCREEN)
+                        screen = pg.display.set_mode((1024, 768), pg.FULLSCREEN | pg.SCALED)
                     else:
-                        screen = pg.display.set_mode((1024, 768), pg.RESIZABLE)
+                        screen = pg.display.set_mode((1024, 768), pg.RESIZABLE | pg.SCALED)
 
             # On dessine le menu actif
             active_menu.draw(screen)
@@ -88,29 +78,16 @@ def main():
 
         # Boucle de jeu
         while eclipsoide.isRunning():
-            # Limite la vitesse à 60 images max par secondes
-            # Calcule le temps réel entre deux images en millisecondes
-            dt = clock.tick(60)
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
+                    sys.exit()
 
-            # Met à jour le jeu sachant que dt millisecondes se sont écoulées
+            dt = clock.tick(60)
             eclipsoide.update(dt)
 
-            # Demande au jeu d'afficher sur la surface de rendu son nouvel état
-            eclipsoide.draw()
-
-            # Scale la surface de rendu pour remplir la fenêtre en gardant le ratio
-            win_w, win_h = screen.get_size()
-            scale_w = win_w
-            scale_h = int(win_w / aspect_ratio)
-            if scale_h > win_h:
-                scale_h = win_h
-                scale_w = int(win_h * aspect_ratio)
-
-            scaled = pg.transform.scale(game_surface, (scale_w, scale_h))
             screen.fill((0, 0, 0))
-            screen.blit(scaled, ((win_w - scale_w) // 2, (win_h - scale_h) // 2))
-
-            # Bascule le nouvel état de l'écran
+            eclipsoide.draw()
             pg.display.flip()
 
         game_over_running = True
