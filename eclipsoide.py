@@ -21,6 +21,14 @@ def collide_projectile(a: pg.sprite.Sprite, b: pg.sprite.Sprite) -> bool:
     rect_b = getattr(b, 'hitbox', b.rect)
     return rect_a.colliderect(rect_b)
 
+def collide_boss(boss: pg.sprite.Sprite, projectile: pg.sprite.Sprite) -> bool:
+    """ Collision tir -> boss : hitbox du tir contre la forme réelle du boss (son masque) """
+    rect = getattr(projectile, 'hitbox', projectile.rect)
+    if not boss.rect.colliderect(rect):
+        return False
+    offset = (rect.x - boss.rect.x, rect.y - boss.rect.y)
+    return boss.mask.overlap(pg.Mask(rect.size, fill=True), offset) is not None
+
 # Définition du jeu Pong
 class Eclipsoide:
     # time between wave in milliseconds
@@ -31,6 +39,8 @@ class Eclipsoide:
     BOSS_SIZE = 70
     GROW_DURATION = 2000
     BOSS_MAX_SIZE = 620
+    # Chaque boss vaincu rend le suivant 1,5 fois plus résistant
+    BOSS_LIFE_GROWTH = 1.5
 
     # Rotation lente + légère pulsation/glow du soleil
     SUN_ROTATION_SPEED = 0.006  # degrés par milliseconde (~1 tour par minute)
@@ -88,6 +98,8 @@ class Eclipsoide:
         self.explosions_group = pg.sprite.Group()
         self.boss_group = pg.sprite.Group()
         self.boss = None
+        # Palier courant : le boss revient de plus en plus fort après chaque victoire
+        self.boss_level = 1
 
         self.coin_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 24)
         self.coin_icon = pg.transform.scale(pg.image.load('images/ui/Coins/coin_0.png'), (24, 24))
@@ -131,6 +143,21 @@ class Eclipsoide:
                             # DEBUG : quitte la phase boss et repart en phase vagues
                             self._exit_boss()
         return True
+
+    def _boss_life(self) -> int:
+        """ Vie du boss au palier courant : celle du palier précédent x BOSS_LIFE_GROWTH """
+        return int(Boss.LIFE * self.BOSS_LIFE_GROWTH ** (self.boss_level - 1))
+
+    def _boss_vaincu(self):
+        """ Le boss explose, le palier suivant démarre : les vagues reprennent """
+        Explosion(pg.Vector2(self.boss.rect.center), self.explosions_group)
+        self.boss.bombs.empty()
+        self.boss.kill()
+        self.boss = None
+        self.boss_level += 1
+        # Remettre l'horloge à zéro relance les vagues d'ennemis, puis l'arrivée
+        # du boss suivant une fois TIME_BEFORE_BOSS écoulé
+        self.time = 0
 
     def _exit_boss(self):
         """ DEBUG : supprime le boss et ses bombes, et remet le jeu en phase vagues """
@@ -176,6 +203,14 @@ class Eclipsoide:
         # Les bombes du boss explosent au contact du joueur et le tuent
         if self.boss is not None and self.boss.bombs_hitting(self.player):
             self.player.on_hit()
+
+        # Les tirs du joueur entament la vie du boss
+        if self.boss is not None:
+            touches = pg.sprite.spritecollide(self.boss, self.projectiles_group, dokill=True, collided=collide_boss)
+            for _ in touches:
+                self.boss.hited(40)
+            if not self.boss.is_alive:
+                self._boss_vaincu()
 
         # Collisions entre les projectiles du joueur et les ennemies
         collisions = pg.sprite.groupcollide(self.projectiles_group, self.enemies_group, dokilla=True, dokillb=False, collided=collide_projectile)
@@ -223,6 +258,7 @@ class Eclipsoide:
                 self.boss_group,
                 image='images/boss1.png',
                 bounds=self.screen.get_rect(),
+                life=self._boss_life(),
             )
         self.boss_group.update(dt)
 
@@ -301,5 +337,11 @@ class Eclipsoide:
         self.screen.blit(self.coin_icon, (10, 10))
         coin_text = self.coin_font.render(str(self.player.coins), True, (255, 220, 80))
         self.screen.blit(coin_text, (40, 10))
+
+        # Barre de vie du boss et palier courant, en haut au centre
+        if self.boss is not None:
+            self.boss.draw_life_bar(self.screen)
+            niveau = self.coin_font.render(f"BOSS NIV. {self.boss_level}", True, (255, 255, 255))
+            self.screen.blit(niveau, niveau.get_rect(center=(self.screen.get_width() // 2, 50)))
         if self.boss:
             self.boss.draw_bombs(self.screen)
