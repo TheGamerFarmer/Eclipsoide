@@ -16,7 +16,6 @@ class Enemy(pg.sprite.Sprite):
     MIN_SPEED_X = 30
     MAX_SPEED_X = 80
     ASTEROID_SIZE = 70
-    TIME_BETWEEN_SHOOT = 2000
     HIT_FLASH_DURATION = 90  # ms de flash blanc quand touché
 
     # Traînée de débris derrière l'astéroïde en chute (poussière de roche)
@@ -41,7 +40,8 @@ class Enemy(pg.sprite.Sprite):
         self.debris_timer = random.uniform(0, Enemy.DEBRIS_DELAY)
 
         # Points de vie de l'ennemie
-        self.life = 60
+        self.life = 60 * pow(2, datas.stage - 1)
+        self.time_between_shoot = max(3700 - (2 * datas.stage), 2000)
 
         self.time = 0
 
@@ -102,7 +102,7 @@ class Enemy(pg.sprite.Sprite):
 
         oldPos = pg.Vector2(self.rect.center)
 
-        if (self.time + dt) % Enemy.TIME_BETWEEN_SHOOT < dt:
+        if (self.time + dt) % self.time_between_shoot < dt:
             playerRect = self.player.rect
             direction = pg.Vector2(playerRect.center) - oldPos
             if direction.length() > 0:
