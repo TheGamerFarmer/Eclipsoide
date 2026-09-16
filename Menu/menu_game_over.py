@@ -6,8 +6,12 @@ UI_BASE_PATH = "images/ui"
 
 class GameOver:
     def __init__(self, screen_width, screen_height):
-        self.font = pg.font.SysFont('ComicSans', 20)
-        self.titre_font = pg.font.SysFont('ComicSans', 50)
+        self.bg_image = pg.image.load('images/backgroundGameOver.png').convert()
+        self.bg_image = pg.transform.scale(self.bg_image, (screen_width, screen_height))
+        font_path = os.path.join(UI_BASE_PATH, "Font", "Kenney Future.ttf")
+        self.titre_font = pg.font.Font(font_path, 60)
+        self.font = pg.font.Font(font_path, 26)
+
 
         btn_width = 300
         btn_height = 75
@@ -26,7 +30,7 @@ class GameOver:
 
     def draw(self, surface):
 
-        surface.fill((20,20,30))
+        surface.blit(self.bg_image, (0, 0))
         titre = self.titre_font.render("GAME OVER", True, (255, 244, 255))
         surface.blit(titre, titre.get_rect(center=(surface.get_width() // 2, 120)))
 
