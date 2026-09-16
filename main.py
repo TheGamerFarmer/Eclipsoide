@@ -88,19 +88,9 @@ def main():
 
         # Boucle de jeu
         while eclipsoide.isRunning():
-            for event in pg.event.get():
-                if event.type == pg.QUIT:
-                    pg.quit()
-                    sys.exit()
-
-
+            # Pas de pg.event.get() ici : isRunning() consomme déjà la file
+            # (QUIT compris). En lire une seconde fois volerait les touches.
             dt = clock.tick(60)
-
-
-            for event in pg.event.get():
-                if event.type == pg.QUIT:
-                    pg.quit()
-                    sys.exit()
 
             if Eclipsoide.pause:
                 # Le menu affiche le score de la partie en cours
@@ -153,8 +143,10 @@ def main():
                         pause.draw(screen)
                         pg.display.flip()
                     elif event.type == pg.KEYDOWN:
-                        if event.key == pg.K_ESCAPE:
-                            Eclipsoide.pause = not Eclipsoide.pause
+                        # Les deux touches de pause reprennent aussi la partie
+                        if event.key in (pg.K_ESCAPE, pg.K_p):
+                            Eclipsoide.pause = False
+                            eclipsoide.draw()
 
             # Met à jour le jeu sachant que dt millisecondes se sont écoulées
             eclipsoide.update(dt)
