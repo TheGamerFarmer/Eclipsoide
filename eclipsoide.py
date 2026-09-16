@@ -11,7 +11,6 @@ from boss import Boss
 from enemy import Enemy
 from player import Player
 from coin import Coin
-from coin_popup import CoinPopup
 from explosion import Explosion
 from heart_pickup import HeartPickup
 from hud import Hud
@@ -232,21 +231,13 @@ class Eclipsoide:
                             if self.player.lives < Player.MAX_LIVES and random.random() < self.HEART_DROP_CHANCE:
                                 HeartPickup(pg.Vector2(enemy.rect.center), self.player, self.hearts_group)
 
-        # Le joueur ramasse les pièces qu'il croise (aspirées automatiquement vers lui)
-        collected_coins = pg.sprite.spritecollide(self.player, self.coins_group, dokill=True)
-        if collected_coins:
-            self.player.add_coins(len(collected_coins) * Coin.VALUE)
+        # Le joueur ramasse les pièces et les coeurs qu'il croise (aspirés
+        # automatiquement vers lui) ; chaque classe gère sa propre collecte
+        if Coin.collect(self.player, self.coins_group, self.popups_group):
             self.hud.trigger_coin_pop()
-            for coin in collected_coins:
-                CoinPopup(pg.Vector2(coin.rect.center), Coin.VALUE, self.popups_group)
 
-        # Le joueur ramasse les coeurs qu'il croise (une vie de plus, plafonnée au max)
-        collected_hearts = pg.sprite.spritecollide(self.player, self.hearts_group, dokill=True)
-        for heart in collected_hearts:
-            if self.player.lives < Player.MAX_LIVES:
-                self.player.lives += 1
-                CoinPopup(pg.Vector2(heart.rect.center), 1, self.popups_group, color=self.HEART_POPUP_COLOR)
-                self.hud.trigger_heal_flash()
+        if HeartPickup.collect(self.player, self.hearts_group, self.popups_group, self.HEART_POPUP_COLOR):
+            self.hud.trigger_heal_flash()
 
         if self.player.is_alive == False:
             self.death_timer = self.DEATH_COOLDOWN
@@ -270,7 +261,7 @@ class Eclipsoide:
         if self.boss is None and self.time > self.TIME_BEFORE_BOSS + self.GROW_DURATION:
             self.boss = Boss(
                 self.screen.get_width() / 2 - self.BOSS_MAX_SIZE / 2,
-                (self.SUN_SIZE / 4) + (self.SUN_SIZE / 2) - (self.BOSS_MAX_SIZE / 2),
+                (self.hud.SUN_SIZE / 4) + (self.hud.SUN_SIZE / 2) - (self.BOSS_MAX_SIZE / 2),
                 self.BOSS_MAX_SIZE, self.BOSS_MAX_SIZE,
                 (255, 255, 255),
                 self.boss_group,
@@ -330,7 +321,7 @@ class Eclipsoide:
         # Barre de vie du boss et palier courant, en haut au centre
         if self.boss is not None:
             self.boss.draw_life_bar(self.screen)
-            niveau = self.coin_font.render(f"BOSS NIV. {self.boss_level}", True, (255, 255, 255))
+            niveau = self.hud.coin_font.render(f"BOSS NIV. {self.boss_level}", True, (255, 255, 255))
             self.screen.blit(niveau, niveau.get_rect(center=(self.screen.get_width() // 2, 50)))
         if self.boss:
             self.boss.draw_bombs(self.screen)

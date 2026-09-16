@@ -1,5 +1,6 @@
 import math
 import pygame as pg
+from coin_popup import CoinPopup
 
 class HeartPickup(pg.sprite.Sprite):
     """ Coeur rare qui drop des ennemis et redonne une vie au joueur (aspiré comme les pièces) """
@@ -30,6 +31,19 @@ class HeartPickup(pg.sprite.Sprite):
 
         self.image = HeartPickup.base_image
         self.rect = self.image.get_rect(center=self.position)
+
+    @classmethod
+    def collect(cls, player, hearts_group: pg.sprite.AbstractGroup, popups_group: pg.sprite.AbstractGroup, popup_color: tuple[int, int, int]) -> bool:
+        """ Ramasse les coeurs au contact du joueur, une vie de plus par coeur (plafonné à la
+        vie max). Retourne True si au moins une vie a réellement été récupérée """
+        collected = pg.sprite.spritecollide(player, hearts_group, dokill=True)
+        healed = False
+        for heart in collected:
+            if player.lives < player.MAX_LIVES:
+                player.lives += 1
+                CoinPopup(pg.Vector2(heart.rect.center), 1, popups_group, color=popup_color)
+                healed = True
+        return healed
 
     def update(self, dt):
         self.time += dt
