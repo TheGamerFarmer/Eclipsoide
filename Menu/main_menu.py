@@ -35,10 +35,10 @@ class MainMenu:
         surface.blit(self.bg_image, (0, 0))
 
         # Affichage du titre et de son ombre
-        titre_shadow = self.titre_font.render("ECLIPSOIDE", True, (0, 80, 150))
+        titre_shadow = self.titre_font.render("ECLIPSOÏDE", True, (0, 80, 150))
         surface.blit(titre_shadow, titre_shadow.get_rect(center=(surface.get_width() // 2 + 4, 104)))
 
-        titre = self.titre_font.render("ECLIPSOIDE", True, (255, 255, 255))
+        titre = self.titre_font.render("ECLIPSOÏDE", True, (255, 255, 255))
         surface.blit(titre, titre.get_rect(center=(surface.get_width() // 2, 100)))
 
         pg.draw.line(surface, (0, 120, 215), (surface.get_width() // 2 - 200, 150),
