@@ -168,11 +168,11 @@ class Eclipsoide:
                 # Rapproche l'arrivée du boss : tuer plus vite le fait venir plus tôt
                 self.datas.time += Datas.KILL_TIME_BONUS
                 if getattr(enemy, 'will_split', False):
-                    # La pièce est différée aux fragments (voir _spawn_fragments)
                     self._spawn_fragments(enemy)
-                else:
-                    value_multiplier = Enemy.FRAGMENT_COIN_VALUE_MULTIPLIER if getattr(enemy, 'is_fragment', False) else 1.0
-                    Coin(pg.Vector2(enemy.rect.center), self.player, self.datas.coins_group, datas=self.datas, value_multiplier=value_multiplier)
+                # La pièce du parent est toujours donnée, même s'il se scinde
+                # (les fragments rapportent leur propre pièce en plus, à leur mort)
+                value_multiplier = Enemy.FRAGMENT_COIN_VALUE_MULTIPLIER if getattr(enemy, 'is_fragment', False) else 1.0
+                Coin(pg.Vector2(enemy.rect.center), self.player, self.datas.coins_group, datas=self.datas, value_multiplier=value_multiplier)
                 Explosion(pg.Vector2(enemy.rect.center), self.datas.explosions_group)
                 if self.player.lives < self.player.max_lives and random.random() < self.player.heart_drop_chance:
                     HeartPickup(pg.Vector2(enemy.rect.center), self.player, self.datas.hearts_group, datas=self.datas)
