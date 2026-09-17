@@ -1,7 +1,7 @@
 .venv/
 Eclipsoide.egg-info/
 .idea/
-__pycache__/
+**__pycache__/
 /uv.lock
 /settings.json
 **.DS_Store

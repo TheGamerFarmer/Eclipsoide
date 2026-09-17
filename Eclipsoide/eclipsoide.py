@@ -110,6 +110,10 @@ class Eclipsoide:
                         case k if k == pg.K_ESCAPE or k == settings.OPTIONS["keybinds"]["pause"]:
                             # Échap marche toujours ; l'autre touche est réassignable dans les options
                             self.pause = not self.pause
+                        case pg.K_b:
+                            # DEBUG : saute directement à l'arrivée du boss (sans effet s'il est déjà là)
+                            if not self.pause and self.death_timer is None:
+                                self.datas.time = max(self.datas.time, Datas.TIME_BEFORE_BOSS)
         return True
 
     def update(self,dt : int):
