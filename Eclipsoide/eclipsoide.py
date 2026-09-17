@@ -273,10 +273,14 @@ class Eclipsoide:
 
         currentPos = initPos - ((initPos - finalPos) / Datas.TIME_BEFORE_BOSS * self.datas.time)
 
-        # Croissance après l'arrivée
+        # Croissance après l'arrivée, avec un léger rebond élastique (ease-out-back)
+        # au moment où le boss atteint sa taille finale
         grow_time = min(max(self.datas.time - Datas.TIME_BEFORE_BOSS, 0), Boss.GROW_DURATION)
         grow_ratio = grow_time / Boss.GROW_DURATION
-        current_size = int(Boss.BOSS_SIZE + (Boss.BOSS_MAX_SIZE - Boss.BOSS_SIZE) * grow_ratio)
+        bounce_t = grow_ratio - 1
+        c1 = 1.70158
+        eased_grow_ratio = 1 + (c1 + 1) * bounce_t ** 3 + c1 * bounce_t ** 2
+        current_size = max(1, int(Boss.BOSS_SIZE + (Boss.BOSS_MAX_SIZE - Boss.BOSS_SIZE) * eased_grow_ratio))
         scaled_boss = pg.transform.scale(self.boss.image, (current_size, current_size))
 
         bossX = max(self.screen.get_width() / 2 - current_size / 2, currentPos)
