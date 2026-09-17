@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e
 
-LOG_FILE="run.log"
-exec > >(tee -a "$LOG_FILE") 2>&1
-
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] === Lancement du jeu ==="
 
 # Vérification de l'environnement virtuel

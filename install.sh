@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e
 
-LOG_FILE="install.log"
-exec > >(tee -a "$LOG_FILE") 2>&1
-
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] === Début de l'installation ==="
 
 # Vérification de Python 3.12

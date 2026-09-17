@@ -1,17 +1,17 @@
 [project]
 name = "Eclipsoide"
 version = "0.1"
-requires-python = ">=3.12, <3.13"
+requires-python = ">=3.11, <3.13"
 dependencies = [
     "pygame==2.6.1",
     "mypy",
 ]
-[tool.setuptools.packages.find]
-include = ["boss*"]
 authors = [
     {name= "Raphaël MATHERET", email="raphael.matheret@etu.univ-grenoble-alpes.fr"},
     {name= "Romain PLANQUETTE", email="romain.planquette@etu.univ-grenoble-alpes.fr"},
     {name= "Erwan DIGNOIRE", email="erwan.dignoire@etu.univ-grenoble-alpes.fr"},
     {name= "Romain MISSOUM", email="romain.missoum@etu.univ-grenoble-alpes.fr"},
-    {name= "Raphaël MATHERET", email="raphael.matheret@etu.univ-grenoble-alpes.fr"},
 ]
+
+[tool.setuptools.packages.find]
+include = ["boss*"]

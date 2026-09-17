@@ -53,7 +53,7 @@ class Datas(object):
         self.stage = 1
         self.time = 0
 
-        self.bg_image1 = pg.image.load('images/backgroundGame1.png')
+        self.bg_image1 = pg.image.load('Eclipsoide/images/backgroundGame1.png')
         self.bg_image1 = pg.transform.scale(self.bg_image1, (screen.get_width(), screen.get_height()))
-        self.bg_image2 = pg.image.load('images/backgroundGame2.png')
+        self.bg_image2 = pg.image.load('Eclipsoide/images/backgroundGame2.png')
         self.bg_image2 = pg.transform.scale(self.bg_image2, (screen.get_width(), screen.get_height()))

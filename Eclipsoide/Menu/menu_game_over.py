@@ -2,11 +2,11 @@ import pygame as pg
 from . import ui_element
 import os
 
-UI_BASE_PATH = "images/ui"
+UI_BASE_PATH = "Eclipsoide/images/ui"
 
 class GameOver:
     def __init__(self, screen_width, screen_height):
-        self.bg_image = pg.image.load('images/backgroundGameOver.png').convert()
+        self.bg_image = pg.image.load('Eclipsoide/images/backgroundGameOver.png').convert()
         self.bg_image = pg.transform.scale(self.bg_image, (screen_width, screen_height))
         font_path = os.path.join(UI_BASE_PATH, "Font", "Kenney Future.ttf")
         self.titre_font = pg.font.Font(font_path, 60)

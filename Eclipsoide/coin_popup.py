@@ -12,7 +12,7 @@ class CoinPopup(pg.sprite.Sprite):
         super().__init__(*groups)
 
         if not CoinPopup.font_set:
-            font_path = os.path.join('images/ui', 'Font', 'Kenney Future.ttf')
+            font_path = os.path.join('Eclipsoide/images/ui', 'Font', 'Kenney Future.ttf')
             CoinPopup.font = pg.font.Font(font_path, 18)
             CoinPopup.font_set = True
 

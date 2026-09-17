@@ -3,7 +3,7 @@ import os
 import pygame as pg
 from . import ui_element
 
-UI_BASE_PATH = "images/ui"
+UI_BASE_PATH = "Eclipsoide/images/ui"
 
 
 class PauseMenu:

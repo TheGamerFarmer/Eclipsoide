@@ -3,7 +3,7 @@ import pygame as pg
 from . import ui_element
 from .menu_fx import MenuFx
 
-UI_BASE_PATH = "images/ui"
+UI_BASE_PATH = "Eclipsoide/images/ui"
 
 # Même position relative du soleil que sur le menu principal, pour la cohérence
 SUN_CENTER_RATIO = (0.5, 0.28)
@@ -12,7 +12,7 @@ SUN_CENTER_RATIO = (0.5, 0.28)
 class MenuCredit:
     def __init__(self, screen_width, screen_height):
         # Image de fond
-        self.bg_image = pg.image.load('images/backgroundWellcom.png').convert()
+        self.bg_image = pg.image.load('Eclipsoide/images/backgroundWellcom.png').convert()
         self.bg_image = pg.transform.scale(self.bg_image, (screen_width, screen_height))
 
         self.fx = MenuFx()

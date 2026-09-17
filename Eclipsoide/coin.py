@@ -25,7 +25,7 @@ class Coin(pg.sprite.Sprite):
         super().__init__(*groups)
 
         if not Coin.images_set:
-            Coin.images = [pg.image.load(f'images/ui/Coins/coin_{i}.png') for i in range(5)]
+            Coin.images = [pg.image.load(f'Eclipsoide/images/ui/Coins/coin_{i}.png') for i in range(5)]
             Coin.images = [pg.transform.scale(image, Coin.SIZE) for image in Coin.images]
             Coin.images_set = True
 

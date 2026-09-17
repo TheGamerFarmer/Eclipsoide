@@ -47,7 +47,7 @@ class Shop:
         # Polices et icones
         self.font_title = pg.font.SysFont("arial", 14, bold=True)
         self.font_desc = pg.font.SysFont("arial", 13, bold=True)
-        self.small_coin = pg.transform.scale(pg.image.load('images/ui/Coins/coin_0.png'), (14, 14))
+        self.small_coin = pg.transform.scale(pg.image.load('Eclipsoide/images/ui/Coins/coin_0.png'), (14, 14))
 
         # Données du shop
         self.items = {

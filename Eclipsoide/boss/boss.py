@@ -109,7 +109,7 @@ class Boss(pg.sprite.Sprite):
         self.bar_display_life = self.life
         self.time = 0
 
-        self._base_image = pg.image.load('images/boss1.png').convert_alpha()
+        self._base_image = pg.image.load('Eclipsoide/images/boss1.png').convert_alpha()
         self.hit_flash_timer = 0
         self._set_image(self._base_image)
         self.rect = self.image.get_rect()
@@ -119,10 +119,10 @@ class Boss(pg.sprite.Sprite):
         self._detonate_was_pressed = False
         self.multi_laser_timer = 0
         self.tracker_timer = 0
-        self.boss_bar_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 24)
+        self.boss_bar_font = pg.font.Font(os.path.join('Eclipsoide/images/ui', 'Font', 'Kenney Future.ttf'), 24)
 
         if not hasattr(Boss, 'laser_images'):
-            images = [pg.image.load(f'images/laser/enemy/laser_asteroide_{i}.png').convert_alpha() for i in range(4)]
+            images = [pg.image.load(f'Eclipsoide/images/laser/enemy/laser_asteroide_{i}.png').convert_alpha() for i in range(4)]
             Boss.laser_images = [pg.transform.scale(img, (14, 38)) for img in images]
 
     def _boss_vaincu(self):

@@ -2,8 +2,8 @@ import pygame as pg
 
 import settings
 
-MENU_MUSIC = 'audios/track-2.ogg'
-GAME_MUSIC = 'audios/track-1.ogg'
+MENU_MUSIC = 'Eclipsoide/audios/track-2.ogg'
+GAME_MUSIC = 'Eclipsoide/audios/track-1.ogg'
 
 # Morceau actuellement chargé dans le mixer (None si aucun)
 _current_track: str | None = None

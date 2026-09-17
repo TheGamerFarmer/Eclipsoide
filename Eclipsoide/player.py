@@ -21,15 +21,15 @@ class Player(pg.sprite.Sprite):
     # Texture du vaisseau selon le pourcentage de vie restant : le premier
     # seuil (proportion minimale) dont on est au-dessus ou égal s'applique
     DAMAGE_TEXTURES = [
-        (0.75, 'images/ship/ship-0.png'),
-        (0.50, 'images/ship/ship-1.png'),
-        (0.25, 'images/ship/ship-2.png'),
-        (0.0, 'images/ship/ship-3.png'),
+        (0.75, 'Eclipsoide/images/ship/ship-0.png'),
+        (0.50, 'Eclipsoide/images/ship/ship-1.png'),
+        (0.25, 'Eclipsoide/images/ship/ship-2.png'),
+        (0.0, 'Eclipsoide/images/ship/ship-3.png'),
     ]
     damage_images_set: bool = False
     damage_images: list[pg.Surface]
 
-    SHOOT_SOUND_PATH = 'audios/shoot-dragon.mp3'
+    SHOOT_SOUND_PATH = 'Eclipsoide/audios/shoot-dragon.mp3'
     shoot_sound_set: bool = False
     shoot_sound: pg.mixer.Sound | None = None
 
@@ -67,7 +67,7 @@ class Player(pg.sprite.Sprite):
         self.shield_timer = 0
         self.heart_drop_chance = 0
 
-        self.coins = 99999999999
+        self.coins = 0
         self.score = 0
 
         self.fire_delay = 500
@@ -78,7 +78,7 @@ class Player(pg.sprite.Sprite):
         self.nb_shot = 1
 
         if not Player.image_shoot_set:
-            Player.image_shoot = [pg.image.load(f'images/laser/player/laser_player_{i}.png') for i in range(4)]
+            Player.image_shoot = [pg.image.load(f'Eclipsoide/images/laser/player/laser_player_{i}.png') for i in range(4)]
             Player.image_shoot = [pg.transform.scale(image, (6, 16)) for image in Player.image_shoot]
             Player.image_shoot_set = True
 

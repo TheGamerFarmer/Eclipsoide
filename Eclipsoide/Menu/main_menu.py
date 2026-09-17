@@ -3,7 +3,7 @@ import pygame as pg
 from . import ui_element
 from .menu_fx import MenuFx
 
-UI_BASE_PATH = "images/ui"
+UI_BASE_PATH = "Eclipsoide/images/ui"
 
 
 class MainMenu:
@@ -13,7 +13,7 @@ class MainMenu:
     TRANSITION_DURATION = 600  # ms
 
     def __init__(self, screen_width, screen_height):
-        self.bg_image = pg.image.load('images/backgroundWellcom.png').convert()
+        self.bg_image = pg.image.load('Eclipsoide/images/backgroundWellcom.png').convert()
         self.bg_image = pg.transform.scale(self.bg_image, (screen_width, screen_height))
 
         self.fx = MenuFx()

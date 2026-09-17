@@ -75,7 +75,7 @@ class Hud:
     # Secousse + flash rouge bref sur l'icône du coeur qui vient de se vider
     HEART_BREAK_DURATION = 350  # ms
     HEART_BREAK_SHAKE_MAGNITUDE = 4  # px
-    # Animation du bouclier (images/shield/) autour du vaisseau tant qu'il est
+    # Animation du bouclier (Eclipsoide/images/shield/) autour du vaisseau tant qu'il est
     # actif, avec un pic de taille bref quand un coup est bloqué et un
     # clignotement d'avertissement juste avant qu'il ne s'éteigne
     SHIELD_FRAME_COUNT = 12
@@ -115,7 +115,7 @@ class Hud:
         self.screen = screen
         self.player = player
 
-        self.sun_image = pg.image.load('images/sun.png')
+        self.sun_image = pg.image.load('Eclipsoide/images/sun.png')
         self.sun_image = pg.transform.scale(self.sun_image, (self.SUN_SIZE, self.SUN_SIZE))
         self.sun_angle = 0.0
         self.sun_center = (screen.get_width() / 2, self.SUN_SIZE * 0.75)
@@ -123,20 +123,20 @@ class Hud:
         # Eclipsoide choisit de ne pas appeler advance() (ex: séquence de mort)
         self.time = 0.0
 
-        self.coin_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 24)
-        self.record_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 14)
-        self.level_banner_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 56)
-        self.record_celebration_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 30)
+        self.coin_font = pg.font.Font(os.path.join('Eclipsoide/images/ui', 'Font', 'Kenney Future.ttf'), 24)
+        self.record_font = pg.font.Font(os.path.join('Eclipsoide/images/ui', 'Font', 'Kenney Future.ttf'), 14)
+        self.level_banner_font = pg.font.Font(os.path.join('Eclipsoide/images/ui', 'Font', 'Kenney Future.ttf'), 56)
+        self.record_celebration_font = pg.font.Font(os.path.join('Eclipsoide/images/ui', 'Font', 'Kenney Future.ttf'), 30)
         # Record figé au lancement de la partie : c'est lui que le joueur cherche à battre
         self.record = settings.best_score()
         # Valeurs affichées, qui rattrapent progressivement les vraies valeurs du joueur
         self.displayed_score = player.score
         self.displayed_coins = player.coins
-        self.coin_icon = pg.transform.scale(pg.image.load('images/ui/Coins/coin_0.png'), (24, 24))
-        self.heart_full_icon = pg.transform.scale(pg.image.load('images/ui/Hearts/heart_full.png'), (22, 22))
-        self.heart_empty_icon = pg.transform.scale(pg.image.load('images/ui/Hearts/heart_empty.png'), (22, 22))
+        self.coin_icon = pg.transform.scale(pg.image.load('Eclipsoide/images/ui/Coins/coin_0.png'), (24, 24))
+        self.heart_full_icon = pg.transform.scale(pg.image.load('Eclipsoide/images/ui/Hearts/heart_full.png'), (22, 22))
+        self.heart_empty_icon = pg.transform.scale(pg.image.load('Eclipsoide/images/ui/Hearts/heart_empty.png'), (22, 22))
         self.shield_images = [
-            pg.transform.scale(pg.image.load(f'images/shield/shield_{i}.png'), self.SHIELD_SIZE)
+            pg.transform.scale(pg.image.load(f'Eclipsoide/images/shield/shield_{i}.png'), self.SHIELD_SIZE)
             for i in range(self.SHIELD_FRAME_COUNT)
         ]
 
@@ -360,7 +360,7 @@ class Hud:
         self.screen.blit(glow_surface, glow_surface.get_rect(center=self.player.rect.center))
 
     def draw_shield(self):
-        """ Anime le bouclier (images/shield/) autour du vaisseau tant qu'il est
+        """ Anime le bouclier (Eclipsoide/images/shield/) autour du vaisseau tant qu'il est
         actif : grossit brièvement quand un coup est bloqué, clignote juste avant
         de s'éteindre. À dessiner par-dessus le vaisseau, pas dans l'overlay HUD """
         if self.player.shield_timer <= 0:

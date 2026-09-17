@@ -2,7 +2,7 @@ import os
 import pygame as pg
 
 class Explosion(pg.sprite.Sprite):
-    """ Animation d'explosion jouée une fois puis auto-détruite (images/explosion) """
+    """ Animation d'explosion jouée une fois puis auto-détruite (Eclipsoide/images/explosion) """
     FRAME_COUNT = 8
     FRAME_DURATION = 45  # ms par frame
     SIZE = (110, 110)
@@ -17,7 +17,7 @@ class Explosion(pg.sprite.Sprite):
 
         if not Explosion.raw_images_set:
             Explosion.raw_images = [
-                pg.image.load(os.path.join('images', 'explosion', f'explosion_{i}.png'))
+                pg.image.load(os.path.join('Eclipsoide/images', 'explosion', f'explosion_{i}.png'))
                 for i in range(Explosion.FRAME_COUNT)
             ]
             Explosion.raw_images_set = True

@@ -28,7 +28,7 @@ class HeartPickup(pg.sprite.Sprite):
         super().__init__(*groups)
 
         if not HeartPickup.image_set:
-            HeartPickup.base_image = pg.image.load('images/ui/Hearts/heart_full.png')
+            HeartPickup.base_image = pg.image.load('Eclipsoide/images/ui/Hearts/heart_full.png')
             HeartPickup.base_image = pg.transform.scale(HeartPickup.base_image, HeartPickup.SIZE)
             HeartPickup.image_set = True
 

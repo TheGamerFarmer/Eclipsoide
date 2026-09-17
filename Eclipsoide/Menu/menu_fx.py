@@ -27,7 +27,7 @@ class MenuFx:
 
     def __init__(self, sun_size: int = None):
         self.sun_size = sun_size if sun_size is not None else self.SUN_SIZE
-        self.sun_image = pg.transform.scale(pg.image.load('images/sun.png'), (self.sun_size, self.sun_size))
+        self.sun_image = pg.transform.scale(pg.image.load('Eclipsoide/images/sun.png'), (self.sun_size, self.sun_size))
 
     def draw_sun(self, surface: pg.Surface, center: tuple[float, float]):
         now = pg.time.get_ticks()

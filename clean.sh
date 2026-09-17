@@ -1,8 +1,5 @@
 #!/bin/bash
 
-LOG_FILE="clean.log"
-exec > >(tee -a "$LOG_FILE") 2>&1
-
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] === Début du nettoyage ==="
 
 # Suppression de l'environnement virtuel
@@ -37,9 +34,5 @@ PYC_COUNT=$(find . -type f -name "*.pyc" | wc -l)
 find . -type f -name "*.pyc" -delete
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] $PYC_COUNT fichier(s) .pyc supprimé(s)."
 
-# Suppression des logs précédents (optionnel : commenter si on veut garder les logs)
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Suppression des logs précédents (install.log, run.log)..."
-rm -f install.log run.log
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Logs supprimés."
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] === Nettoyage terminé. ==="

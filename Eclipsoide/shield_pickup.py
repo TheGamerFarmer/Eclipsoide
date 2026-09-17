@@ -22,7 +22,7 @@ class ShieldPickup(pg.sprite.Sprite):
 
         if not ShieldPickup.images_set:
             ShieldPickup.images = [
-                pg.transform.scale(pg.image.load(f'images/shield/shield_{i}.png'), ShieldPickup.SIZE)
+                pg.transform.scale(pg.image.load(f'Eclipsoide/images/shield/shield_{i}.png'), ShieldPickup.SIZE)
                 for i in range(ShieldPickup.FRAME_COUNT)
             ]
             ShieldPickup.images_set = True

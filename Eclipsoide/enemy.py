@@ -53,12 +53,12 @@ class Enemy(pg.sprite.Sprite):
         self.time = 0
 
         if not Enemy.image_set:
-            Enemy.image = pg.image.load('images/asteroide.png')
+            Enemy.image = pg.image.load('Eclipsoide/images/asteroide.png')
             Enemy.image = pg.transform.scale(Enemy.image, self.size)
             Enemy.image_set = True
 
         if not Enemy.image_shoot_set:
-            Enemy.image_shoot = [pg.image.load(f'images/laser/enemy/laser_asteroide_{i}.png') for i in range(4)]
+            Enemy.image_shoot = [pg.image.load(f'Eclipsoide/images/laser/enemy/laser_asteroide_{i}.png') for i in range(4)]
             Enemy.image_shoot = [pg.transform.scale(image, (6, 16)) for image in Enemy.image_shoot]
             Enemy.image_shoot_set = True
 
