@@ -69,7 +69,7 @@ class Enemy(pg.sprite.Sprite):
 
         # Points de vie de l'ennemie (réduits proportionnellement pour un fragment)
         self.life = 60 * pow(2, datas.stage - 1) * size_ratio
-        self.time_between_shoot = max(3700 - (2 * datas.stage), 2000)
+        self.time_between_shoot = max(4000 - (2 * datas.stage), 2000)
 
         self.time = 0
 

@@ -11,6 +11,7 @@ authors = [
     {name= "Romain PLANQUETTE", email="romain.planquette@etu.univ-grenoble-alpes.fr"},
     {name= "Erwan DIGNOIRE", email="erwan.dignoire@etu.univ-grenoble-alpes.fr"},
     {name= "Romain MISSOUM", email="romain.missoum@etu.univ-grenoble-alpes.fr"},
+    {name= "Romain MISSOUM", email="romain.missoum@etu.univ-grenoble-alpes.fr"},
 ]
 
 [tool.setuptools.packages.find]
