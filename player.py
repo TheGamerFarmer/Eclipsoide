@@ -67,7 +67,7 @@ class Player(pg.sprite.Sprite):
         self.shield_timer = 0
         self.heart_drop_chance = 0
 
-        self.coins = 0
+        self.coins = 99999999999
         self.score = 0
 
         self.fire_delay = 500
