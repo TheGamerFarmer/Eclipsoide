@@ -34,7 +34,7 @@ class MainMenu:
 
         self.buttons = {
             "start": ui_element.Button(center_x, 200, btn_width, btn_height, "Start Game", self.font, btn_normal),
-            "option": ui_element.Button(center_x, 310, btn_width, btn_height, "Options", self.font, btn_normal),
+            "option": ui_element.Button(center_x, 310, btn_width, btn_height, "Settings", self.font, btn_normal),
             "credit": ui_element.Button(center_x, 420, btn_width, btn_height, "Credit", self.font, btn_normal),
             "leaderboard": ui_element.Button(center_x, 530, btn_width, btn_height, "Leaderboard", self.font, btn_normal),
             "quit": ui_element.Button(center_x, 640, btn_width, btn_height, "Quit", self.font, btn_quit)

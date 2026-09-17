@@ -58,9 +58,9 @@ class MenuOption:
 
         self.slider_volume = ui_element.Slider(140, 300, 300, 0, 100, start_vol, slider_track, slider_handle)
         self.slider_sfx_volume = ui_element.Slider(140, 380, 300, 0, 100, start_sfx_vol, slider_track, slider_handle)
-        self.check_music = ui_element.Checkbox(140, 430, "Musique", self.font, check_off, check_on, start_music)
-        self.check_sfx = ui_element.Checkbox(140, 480, "Bruitages", self.font, check_off, check_on, start_sfx)
-        self.check_fullscreen = ui_element.Checkbox(140, 550, "Plein ecran", self.font, check_off, check_on, start_fs)
+        self.check_music = ui_element.Checkbox(140, 430, "Music", self.font, check_off, check_on, start_music)
+        self.check_sfx = ui_element.Checkbox(140, 480, "Sound effects", self.font, check_off, check_on, start_sfx)
+        self.check_fullscreen = ui_element.Checkbox(140, 550, "full screen", self.font, check_off, check_on, start_fs)
 
         # Touche fixe, jamais réassignable (filet de sécurité)
         self.echap_button = ui_element.Button(715, 380, 105, 50, "ECHAP", self.keys_font, key_rect, text_color=(40, 40, 40))
@@ -88,8 +88,8 @@ class MenuOption:
         self.fx.draw_sun(surface, self.sun_center)
 
         titre_center = (surface.get_width() // 2, 70)
-        self.fx.draw_title_glow(surface, self.titre_font, "OPTIONS", titre_center)
-        titre = self.titre_font.render("OPTIONS", True, (255, 255, 255))
+        self.fx.draw_title_glow(surface, self.titre_font, "SETTINGS", titre_center)
+        titre = self.titre_font.render("SETTINGS", True, (255, 255, 255))
         surface.blit(titre, titre.get_rect(center=titre_center))
         pg.draw.line(surface, (0, 120, 215), (surface.get_width() // 2 - 150, 110),
                      (surface.get_width() // 2 + 150, 110), 2)
@@ -97,14 +97,14 @@ class MenuOption:
         surface.blit(self.panel_img, self.panel_rect)
 
         # REGLAGES
-        audio_titre = self.subtitle_font.render("Reglages", True, (240, 240, 245))
+        audio_titre = self.subtitle_font.render("Settings", True, (240, 240, 245))
         surface.blit(audio_titre, (140, 180))
 
-        vol_text = self.font.render(f"Musique : {int(self.slider_volume.val)}%", True, (255, 255, 255))
+        vol_text = self.font.render(f"Music : {int(self.slider_volume.val)}%", True, (255, 255, 255))
         surface.blit(vol_text, (140, 250))
         self.slider_volume.draw(surface)
 
-        sfx_vol_text = self.font.render(f"Bruitages : {int(self.slider_sfx_volume.val)}%", True, (255, 255, 255))
+        sfx_vol_text = self.font.render(f"Sound effects : {int(self.slider_sfx_volume.val)}%", True, (255, 255, 255))
         surface.blit(sfx_vol_text, (140, 350))
         self.slider_sfx_volume.draw(surface)
 
@@ -115,15 +115,15 @@ class MenuOption:
         self.check_fullscreen.draw(surface)
 
         # CONTROLES
-        ctrl_titre = self.subtitle_font.render("Controles", True, (240, 240, 245))
+        ctrl_titre = self.subtitle_font.render("Controls", True, (240, 240, 245))
         surface.blit(ctrl_titre, (630, 180))
 
         hint_color = (0, 0, 0) if self.rebinding_action else (0, 0, 0)
-        hint_text = "Appuyez sur une touche..." if self.rebinding_action else "(clic sur une touche pour la réassigner)"
+        hint_text = "Press a key..." if self.rebinding_action else "(click a key to reassign it)"
         hint_surf = pg.font.SysFont("arial", 13, italic=True).render(hint_text, True, hint_color)
         surface.blit(hint_surf, (630, 205))
 
-        surf_dep = self.font.render("Mouvement :", True, (255, 255, 255))
+        surf_dep = self.font.render("Movement :", True, (255, 255, 255))
         surface.blit(surf_dep, (520, 270))
 
         surf_pause = self.font.render("Pause :", True, (255, 255, 255))

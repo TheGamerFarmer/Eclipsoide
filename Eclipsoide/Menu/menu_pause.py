@@ -36,7 +36,7 @@ class PauseMenu:
         self.buttons = {
             "resume": ui_element.Button(center_x, 250, btn_width, btn_height, "Resume", self.font, btn_normal),
             "restart": ui_element.Button(center_x, 350, btn_width, btn_height, "Restart", self.font, btn_normal),
-            "option": ui_element.Button(center_x, 450, btn_width, btn_height, "Option", self.font, btn_normal),
+            "option": ui_element.Button(center_x, 450, btn_width, btn_height, "Settings", self.font, btn_normal),
             "menu": ui_element.Button(center_x, 550, btn_width, btn_height, "Menu", self.font, btn_normal),
             "quit": ui_element.Button(center_x, 650, btn_width, btn_height, "Quit", self.font, btn_quit)
         }
