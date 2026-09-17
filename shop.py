@@ -1,8 +1,7 @@
-import os
 import pygame as pg
 
-from coin import Coin
-
+def get_damage(lvl) -> int:
+    return round(20 * pow(1.2, lvl), 0)
 
 class Shop:
     def __init__(self, screen, player):
@@ -15,18 +14,18 @@ class Shop:
         self.small_coin = pg.transform.scale(pg.image.load('images/ui/Coins/coin_0.png'), (14, 14))
 
         # Données du shop
-        self.items = [
-            {"id": "damage", "name": "Degats", "lvl": 0, "max": float('inf'), "base_price": 100, "price": 100,
-             "key_str": "1", "keys": (pg.K_1, pg.K_KP1), "unicode": ["1", "&"], "mult": "x1"},
-            {"id": "cadence", "name": "Cadence de tir", "lvl": 0, "max": float('inf'), "base_price": 100, "price": 100,
-             "key_str": "2", "keys": (pg.K_2, pg.K_KP2), "unicode": ["2", "é"], "mult": "x1"},
-            {"id": "health", "name": "Vie Max", "lvl": 0, "max": 4, "base_price": 150, "price": 150, "key_str": "3",
+        self.items = {
+            "damage": {"id": "damage", "name": "Damage", "lvl": 0, "max": float('inf'), "base_price": 50, "price": 50,
+             "key_str": "1", "keys": (pg.K_1, pg.K_KP1), "unicode": ["1", "&"]},
+            "cadence": {"id": "cadence", "name": "Fire rate", "lvl": 0, "max": float('inf'), "base_price": 50, "price": 50,
+             "key_str": "2", "keys": (pg.K_2, pg.K_KP2), "unicode": ["2", "é"]},
+            "health": {"id": "health", "name": "Max health", "lvl": 1, "max": 5, "base_price": 150, "price": 150, "key_str": "3",
              "keys": (pg.K_3, pg.K_KP3), "unicode": ["3", '"']},
-            {"id": "double", "name": "Tir Double", "lvl": 0, "max": 1, "base_price": 1500, "price": 1500, "key_str": "4",
-             "keys": (pg.K_4, pg.K_KP4), "unicode": ["4", "'"]},
-            {"id": "coin", "name": "Coins x2", "lvl": 0, "max": 1, "base_price": 800, "price": 800, "key_str": "5",
-             "keys": (pg.K_5, pg.K_KP5), "unicode": ["5", "("]}
-        ]
+            "heart": {"id": "heart", "name": "Heart chance", "lvl": 0, "max": 5, "base_price": 150, "price": 150, "key_str": "4",
+             "keys": (pg.K_5, pg.K_KP5), "unicode": ["4", "'"]},
+            "multi_shot": {"id": "multi_shot", "name": "Multi shot", "lvl": 1, "max": float('inf'), "base_price": 2500, "price": 2500, "key_str": "5",
+             "keys": (pg.K_4, pg.K_KP4), "unicode": ["5", "("]}
+        }
         self.rects = []
 
     def draw(self):
@@ -40,7 +39,7 @@ class Shop:
 
         self.rects.clear()
 
-        for i, item in enumerate(self.items):
+        for i, item in enumerate(self.items.values()):
             x = start_x + i * (btn_w + spacing)
             self.rects.append((pg.Rect(x, y, btn_w, btn_h), item))
 
@@ -78,16 +77,30 @@ class Shop:
                 self.screen.blit(self.small_coin, (prix_x + prix_w + 4, y + 8))
 
             # 3. Niveau
+            lvl_str = ''
+            mult_str = None
+
             lvl = item['lvl']
-            if item['id'] in ['damage', 'cadence']:
-                lvl_str = f"Niveau {lvl}"
-                mult_str = f"x{round(1 + 0.10 * lvl, 1)}"
-            elif item['id'] == 'health':
-                lvl_str = f"{lvl} / {item['max']}"
-                mult_str = None
-            else:
-                lvl_str = "Acquis" if lvl > 0 else "Non acquis"
-                mult_str = None
+            match item['id']:
+                case 'damage':
+                    lvl_str = f"Level {lvl}"
+                    mult_str = f"{int(get_damage(lvl))}"
+                case 'cadence':
+                    lvl_str = f"Level {lvl}"
+                    mult_str = f"x{round(1 + 0.05 * lvl, 2)}"
+                case 'health':
+                    lvl_str = f"{lvl} / {item['max']}"
+                    mult_str = None
+                case 'heart':
+                    if self.items["health"]["lvl"] == 1:
+                        lvl_str = "Lock"
+                        mult_str = None
+                    else:
+                        lvl_str = f"Level {lvl}"
+                        mult_str = f"{10 * lvl}%"
+                case 'multi_shot' :
+                    lvl_str = f"Level {lvl}"
+                    mult_str = f"x{1 * lvl}"
 
             color_lvl = (100, 150, 150) if is_max else (170, 245, 255)
             self.screen.blit(self.font_desc.render(lvl_str, True, color_lvl), (x + 8, y + 28))
@@ -103,7 +116,7 @@ class Shop:
                     self._buy_upgrade(item)
 
         elif event.type == pg.KEYDOWN:
-            for item in self.items:
+            for item in self.items.values():
                 if event.key in item['keys'] or event.unicode in item['unicode']:
                     self._buy_upgrade(item)
 
@@ -115,17 +128,24 @@ class Shop:
                 self.player.coins -= item['price']
                 item['lvl'] += 1
 
-                nouveau_prix = int(round(item['base_price'] * (1.25 ** item['lvl']) / 10) * 10)
-                item['price'] = nouveau_prix
+                nouveau_prix = 0
 
-                if item['id'] == 'damage':
-                    self.player.damage = 20 * (1 + 0.10 * item['lvl'])
-                elif item['id'] == 'cadence':
-                    self.player.fire_delay = 300 / (1 + 0.10 * item['lvl'])
-                elif item['id'] == 'health':
-                    self.player.max_lives += 1
-                    self.player.lives += 1
-                elif item['id'] == 'double':
-                    self.player.double_shot = True
-                elif item['id'] == 'coin':
-                    Coin.value = 40
+                match item['id']:
+                    case 'damage':
+                        nouveau_prix = round(item['base_price'] * pow(1.2, item['lvl']), 0)
+                        self.player.damage = get_damage(item['lvl'])
+                    case 'cadence':
+                        nouveau_prix = round(item['base_price'] * pow(1.25, item['lvl']), 0)
+                        self.player.fire_delay = 500 / (1 + 0.05 * item['lvl'])
+                    case 'health':
+                        nouveau_prix = round(item['base_price'] * (2 ** item['lvl']))
+                        self.player.max_lives += 1
+                        self.player.lives += 1
+                    case 'heart':
+                        nouveau_prix = round(item['base_price'] * (1.5 ** item['lvl']), 0)
+                        self.player.heart_drop_chance += 0.01
+                    case 'multi_shot':
+                        nouveau_prix = item['base_price'] * (2 ** item['lvl'])
+                        self.player.nb_shot += 1
+
+                item['price'] = nouveau_prix

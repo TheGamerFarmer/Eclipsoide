@@ -1,6 +1,7 @@
 import pygame as pg
 from coin_popup import CoinPopup
 from datas import Datas
+from player import Player
 
 
 class Coin(pg.sprite.Sprite):
@@ -13,9 +14,8 @@ class Coin(pg.sprite.Sprite):
 
     images_set: bool = False
     images: list[pg.Surface]
-    value = 20
 
-    def __init__(self, position: pg.Vector2, player, *groups):
+    def __init__(self, position: pg.Vector2, player: Player, *groups):
         super().__init__(*groups)
 
         if not Coin.images_set:
@@ -51,7 +51,7 @@ class Coin(pg.sprite.Sprite):
         if not collected:
             return False
 
-        player.add_coins(len(collected) * cls.value)
+        player.add_coins(len(collected) * player.get_coins_value())
         for coin in collected:
-            CoinPopup(pg.Vector2(coin.rect.center), cls.value, datas.popups_group)
+            CoinPopup(pg.Vector2(coin.rect.center), player.get_coins_value(), datas.popups_group)
         return True
