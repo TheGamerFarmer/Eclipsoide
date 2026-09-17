@@ -46,7 +46,7 @@ class Shop:
             is_max = item['lvl'] >= item['max']  # type: ignore
             can_afford = not is_max and self.player.coins >= item['price']
 
-            if is_max:
+            if is_max or self._is_lock(item):
                 bg_color = (30, 30, 30, 150)
                 border_color = (60, 60, 60, 255)
             elif can_afford:
@@ -68,7 +68,7 @@ class Shop:
             self.screen.blit(titre_surf, (x + 8, y + 8))
 
             # 2. Prix
-            if not is_max:
+            if not is_max and not self._is_lock(item):
                 prix_surf = self.font_title.render(str(item['price']), True, (255, 220, 80))
                 prix_w = prix_surf.get_width()
                 icon_w = self.small_coin.get_width()
@@ -92,7 +92,7 @@ class Shop:
                     lvl_str = f"{lvl} / {item['max']}"
                     mult_str = None
                 case 'heart':
-                    if self.items["health"]["lvl"] == 1:
+                    if self._is_lock(item):
                         lvl_str = "Lock"
                         mult_str = None
                     else:
@@ -149,3 +149,6 @@ class Shop:
                         self.player.nb_shot += 1
 
                 item['price'] = nouveau_prix
+
+    def _is_lock(self, item):
+        return item["id"] == "heart" and self.items["health"]["lvl"] == 1
