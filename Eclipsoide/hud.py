@@ -476,6 +476,10 @@ class Hud:
         score_text = self.record_font.render(f"SCORE : {self.displayed_score}", True, color)
         self._blit_pop_text(score_text, (10, self.SCORE_Y))
 
+    def _draw_godmode(self):
+        godmode_text = self.record_font.render('GODMODE : ACTIVE', True, (255, 220, 80))
+        self._blit_pop_text(godmode_text, (10, 120))
+
     def _draw_hearts(self):
         icon_w, icon_h = self.heart_full_icon.get_size()
 
@@ -541,6 +545,9 @@ class Hud:
         self._draw_record_celebration()
 
         self.shop.draw()
+
+        if self.player.godmode == True:
+            self._draw_godmode()
 
     def _draw_level_banner(self):
         if self.level_banner_timer <= 0:
