@@ -5,7 +5,6 @@ from .menu_fx import MenuFx, FadeIn
 
 UI_BASE_PATH = "Eclipsoide/images/ui"
 
-
 class MainMenu:
     SUN_CENTER = (0.5, 0.28)  # proportion de la largeur/hauteur de l'écran
 

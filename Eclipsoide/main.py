@@ -145,8 +145,9 @@ def main():
                         eclipsoide.pause = False
                         for group in eclipsoide.datas.groups:
                             group.empty()
-                        eclipsoide = Eclipsoide(screen)
+                        clock = pg.time.Clock()
                         gc.collect()
+                        eclipsoide = Eclipsoide(screen)
                         game_start_time = pg.time.get_ticks()
                     elif action == "quit":
                         pg.quit()
@@ -216,6 +217,7 @@ def main():
                     for group in eclipsoide.datas.groups:
                         group.empty()
                     del eclipsoide
+                    clock = pg.time.Clock()
                     gc.collect()
                     eclipsoide = Eclipsoide(screen)
                     game_start_time = pg.time.get_ticks()

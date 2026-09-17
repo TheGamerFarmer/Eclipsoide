@@ -25,7 +25,7 @@ class Tracker(pg.sprite.Sprite):
         self.datas = datas
         self.player = player
 
-        self.life = int(100 * (1.5 ** (self.datas.stage - 1)))
+        self.life = int(100 * (3 ** (self.datas.stage - 1)))
         self.time = 0
 
         # création du visuel

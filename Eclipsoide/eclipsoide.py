@@ -158,7 +158,7 @@ class Eclipsoide:
             CoinPopup(pg.Vector2(enemy.rect.center), round(self.player.damage, 0), self.datas.popups_group, color=self.DAMAGE_POPUP_COLOR, prefix="-")
             if died:
                 # Rapproche l'arrivée du boss : tuer plus vite le fait venir plus tôt
-                self.datas.time += Datas.KILL_TIME_BONUS
+                self.boss.time += Datas.KILL_TIME_BONUS
                 if getattr(enemy, 'will_split', False):
                     self._spawn_fragments(enemy)
                 # La pièce du parent est toujours donnée, même s'il se scinde

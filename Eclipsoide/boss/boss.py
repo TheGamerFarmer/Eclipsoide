@@ -147,6 +147,7 @@ class Boss(pg.sprite.Sprite):
         # Remettre l'horloge à zéro relance les vagues d'ennemis, puis l'arrivée
         # du boss suivant une fois TIME_BEFORE_BOSS écoulé
         self.datas.time = 0
+        self.time = 0
 
         for sprite in list(self.datas.enemies_group):
             if isinstance(sprite, Tracker):
@@ -189,7 +190,6 @@ class Boss(pg.sprite.Sprite):
             self.hud.trigger_shake(self.hud.BOSS_SPAWN_SHAKE_DURATION, self.hud.BOSS_SPAWN_SHAKE_MAGNITUDE)
 
         if self.is_spawn:
-
             bomb_cooldown = self.BOMB_INTERVAL // 2 if self._is_enraged() else self.BOMB_INTERVAL
             laser_cooldown = 2500 if self._is_enraged() else 5000
             tracker_cooldown = 4000 if self._is_enraged() else 8000
