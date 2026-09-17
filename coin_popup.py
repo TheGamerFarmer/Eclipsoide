@@ -8,7 +8,7 @@ class CoinPopup(pg.sprite.Sprite):
     font_set: bool = False
     font: pg.font.Font
 
-    def __init__(self, position: pg.Vector2, amount: int, *groups, color: tuple[int, int, int] = (255, 220, 80), prefix: str = "+"):
+    def __init__(self, position: pg.Vector2, amount: int | float, *groups, color: tuple[int, int, int] = (255, 220, 80), prefix: str = "+"):
         super().__init__(*groups)
 
         if not CoinPopup.font_set:

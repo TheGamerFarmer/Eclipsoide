@@ -16,7 +16,7 @@ class Player(pg.sprite.Sprite):
     damage: float = 20.0
     # Référence pour le halo des tirs : au-dessus de ce seuil de dégâts (ex.
     # améliorations), le halo grossit ; en dessous, il rétrécit
-    BASE_DAMAGE = 20
+    BASE_DAMAGE = 30
 
     # Texture du vaisseau selon le pourcentage de vie restant : le premier
     # seuil (proportion minimale) dont on est au-dessus ou égal s'applique
@@ -233,14 +233,18 @@ class Player(pg.sprite.Sprite):
             if outcome != Player.HIT_IGNORED:
                 result = outcome
 
-        if boss is not None and boss.bombs_hitting(self):
-            outcome = self.on_hit()
-            if outcome != Player.HIT_IGNORED:
-                result = outcome
-        if boss is not None and boss.boss_hitting(self):
-            outcome = self.on_hit()
-            if outcome != Player.HIT_IGNORED:
-                result = outcome
+        # Le boss existe dès le début de la partie mais reste "éteint" (rect à
+        # sa position par défaut, coin supérieur gauche) tant qu'il n'a pas
+        # spawné : sans ce garde-fou, cette zone tue le joueur au contact
+        if boss is not None and boss.is_spawn:
+            if boss.bombs_hitting(self):
+                outcome = self.on_hit()
+                if outcome != Player.HIT_IGNORED:
+                    result = outcome
+            if boss.boss_hitting(self):
+                outcome = self.on_hit()
+                if outcome != Player.HIT_IGNORED:
+                    result = outcome
 
 
         return result

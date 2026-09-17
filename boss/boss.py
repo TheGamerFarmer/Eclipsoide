@@ -2,6 +2,7 @@ import pygame as pg
 import os
 
 from boss.bomb import Bomb
+from coin_popup import CoinPopup
 from datas import Datas
 from explosion import Explosion
 from hud import Hud
@@ -37,6 +38,9 @@ class Boss(pg.sprite.Sprite):
     BAR_BORDER_COLOR = (255, 255, 255)
     BAR_MIN_SEGMENT = 6  # en dessous, on n'affiche plus les séparations
 
+    HIT_FLASH_DURATION = 90  # ms de flash blanc quand touché
+    DAMAGE_POPUP_COLOR = (255, 255, 255)
+
     size = (BOSS_SIZE, BOSS_SIZE)
 
     @staticmethod
@@ -47,6 +51,20 @@ class Boss(pg.sprite.Sprite):
         if not isinstance(image, list):
             image = [image]
         return [pg.image.load(img).convert_alpha() if isinstance(img, str) else img for img in image]
+
+    @staticmethod
+    def _build_flash_image(image: pg.Surface) -> pg.Surface:
+        flash = image.copy()
+        flash.fill((255, 255, 255, 0), special_flags=pg.BLEND_RGBA_ADD)
+        return flash
+
+    def _set_image(self, image: pg.Surface) -> None:
+        """ Fixe l'apparence "normale" du boss et prépare sa version flashée en
+        blanc (rejouée brièvement à chaque coup) ; à rappeler chaque fois que
+        l'image change (arrivée, palier suivant) """
+        self.normal_image = image
+        self.flash_image = self._build_flash_image(image)
+        self.image = self.normal_image if self.hit_flash_timer <= 0 else self.flash_image
 
     def __init__(self, datas: Datas, player: Player, *groups):
         pg.sprite.Sprite.__init__(self, *groups)
@@ -59,9 +77,10 @@ class Boss(pg.sprite.Sprite):
         self.life = self.max_life
 
         self._base_image = pg.image.load('images/boss1.png').convert_alpha()
-        self.image = self._base_image
+        self.hit_flash_timer = 0
+        self._set_image(self._base_image)
         self.rect = self.image.get_rect()
-        self.mask = pg.mask.from_surface(self.image)
+        self.mask = pg.mask.from_surface(self.normal_image)
 
         self.bomb_timer = 0
         self._detonate_was_pressed = False
@@ -76,22 +95,29 @@ class Boss(pg.sprite.Sprite):
         self.datas.stage += 1
         self.max_life = int(Boss.LIFE * Boss.BOSS_LIFE_GROWTH ** (self.datas.stage - 1))
         self.life = self.max_life
-        self.image = self._base_image
+        self.hit_flash_timer = 0
+        self._set_image(self._base_image)
         self.rect = self.image.get_rect()
-        self.mask = pg.mask.from_surface(self.image)
+        self.mask = pg.mask.from_surface(self.normal_image)
         self.bomb_timer = 0
         # Remettre l'horloge à zéro relance les vagues d'ennemis, puis l'arrivée
         # du boss suivant une fois TIME_BEFORE_BOSS écoulé
         self.datas.time = 0
 
     def update(self, dt) -> None:
+        if self.hit_flash_timer > 0:
+            self.hit_flash_timer -= dt
+            self.image = self.flash_image if self.hit_flash_timer > 0 else self.normal_image
+
         # Les bombes du boss explosent au contact du joueur et le tuent
         if  self.bombs_hitting(self.player):
             self.player.on_hit()
 
         # Les tirs du joueur entament la vie du boss
         if self.is_spawn:
-            self.check_hits(self.datas.projectiles_group, 40)
+            for position in self.check_hits(self.datas.projectiles_group, self.player.damage):
+                CoinPopup(pg.Vector2(position), round(self.player.damage), self.datas.popups_group,
+                          color=self.DAMAGE_POPUP_COLOR, prefix="-")
             if not self.is_alive:
                 self._boss_vaincu()
 
@@ -100,11 +126,11 @@ class Boss(pg.sprite.Sprite):
             self.is_spawn = True
             screen = self.datas.screen
             scaled = pg.transform.scale(self._base_image, (Boss.BOSS_MAX_SIZE, Boss.BOSS_MAX_SIZE))
-            self.image = scaled
+            self._set_image(scaled)
             bossX = int(screen.get_width() / 2 - Boss.BOSS_MAX_SIZE / 2)
             bossY = int((Hud.SUN_SIZE / 4) + (Hud.SUN_SIZE / 2) - Boss.BOSS_MAX_SIZE / 2)
             self.rect = self.image.get_rect(topleft=(bossX, bossY))
-            self.mask = pg.mask.from_surface(self.image)
+            self.mask = pg.mask.from_surface(self.normal_image)
 
         if self.is_spawn:
             self.bomb_timer += dt
@@ -121,6 +147,7 @@ class Boss(pg.sprite.Sprite):
     def hited(self, damage: int) -> None:
         """Inflige des dégâts au boss (même nom que Enemy.hited)."""
         self.life = max(0, self.life - damage)
+        self.hit_flash_timer = Boss.HIT_FLASH_DURATION
 
     @staticmethod
     def collide(boss: "Boss", projectile: pg.sprite.Sprite) -> bool:
