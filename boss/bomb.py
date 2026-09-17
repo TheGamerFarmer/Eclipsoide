@@ -24,6 +24,13 @@ class Bomb(pg.sprite.Sprite):
     EXPLOSION_COLOR = (255, 160, 0)
     EXPLOSION_CORE_COLOR = (255, 230, 150)
 
+    # Clignotement d'avertissement avant l'autodétonation (mèche qui se consume) :
+    # l'intervalle se resserre à mesure que le temps restant approche de zéro
+    FUSE_WARNING_THRESHOLD = 800   # ms restantes à partir desquelles ça clignote
+    FUSE_BLINK_INTERVAL_MAX = 220  # ms entre clignotements au début de l'alerte
+    FUSE_BLINK_INTERVAL_MIN = 60   # ms entre clignotements juste avant l'explosion
+    FUSE_FLASH_COLOR = (255, 90, 30)
+
     def __init__(self, center: tuple[int, int], velocity: pg.Vector2, screen: pg.Surface | None = None, *groups):
         pg.sprite.Sprite.__init__(self, *groups)
         self.screen = screen
@@ -32,7 +39,11 @@ class Bomb(pg.sprite.Sprite):
         self.exploding = False
         self.explosion_time = 0
         self.fuse_time = 0
-        self.image = self._build_bomb_image()
+        self.fuse_blink_timer = 0
+        self.fuse_flashing = False
+        self.normal_image = self._build_bomb_image()
+        self.flash_image = self._build_fuse_flash_image(self.normal_image)
+        self.image = self.normal_image
         self.rect = self.image.get_rect(center=center)
 
     def _build_bomb_image(self) -> pg.Surface:
@@ -54,6 +65,11 @@ class Bomb(pg.sprite.Sprite):
         # Liseré clair pour détacher la bombe du fond
         pg.draw.circle(surface, self.ROCK_EDGE_COLOR, centre, self.RADIUS, 2)
         return surface
+
+    def _build_fuse_flash_image(self, image: pg.Surface) -> pg.Surface:
+        flash = image.copy()
+        flash.fill((*self.FUSE_FLASH_COLOR, 0), special_flags=pg.BLEND_RGBA_ADD)
+        return flash
 
     def _build_explosion_image(self, radius: int) -> pg.Surface:
         size = max(radius * 2, 1)
@@ -91,6 +107,19 @@ class Bomb(pg.sprite.Sprite):
         if self.fuse_time >= self.FUSE_TIME:
             self.explode()
             return
+
+        remaining = self.FUSE_TIME - self.fuse_time
+        if remaining <= self.FUSE_WARNING_THRESHOLD:
+            t = remaining / self.FUSE_WARNING_THRESHOLD
+            blink_interval = self.FUSE_BLINK_INTERVAL_MIN + (self.FUSE_BLINK_INTERVAL_MAX - self.FUSE_BLINK_INTERVAL_MIN) * t
+            self.fuse_blink_timer -= dt
+            if self.fuse_blink_timer <= 0:
+                self.fuse_blink_timer = blink_interval
+                self.fuse_flashing = not self.fuse_flashing
+                self.image = self.flash_image if self.fuse_flashing else self.normal_image
+        elif self.fuse_flashing:
+            self.fuse_flashing = False
+            self.image = self.normal_image
 
         self.pos += self.velocity * dt
         self.rect.center = (int(self.pos.x), int(self.pos.y))

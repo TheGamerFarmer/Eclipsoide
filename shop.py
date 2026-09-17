@@ -4,9 +4,23 @@ def get_damage(lvl) -> int:
     return round(20 * pow(1.2, lvl), 0)
 
 class Shop:
+    # Anneau coloré qui pulse brièvement autour du vaisseau à chaque achat,
+    # la couleur variant selon le type d'amélioration (confirmation visuelle)
+    PURCHASE_FLASH_DURATION = 500  # ms
+    PURCHASE_FLASH_COLORS = {
+        "damage": (255, 80, 80),
+        "cadence": (80, 180, 255),
+        "health": (120, 255, 140),
+        "double": (200, 120, 255),
+        "coin": (255, 210, 60),
+    }
+
     def __init__(self, screen, player):
         self.screen = screen
         self.player = player
+
+        self.purchase_flash_start: int | None = None
+        self.purchase_flash_color = (255, 255, 255)
 
         # Polices et icones
         self.font_title = pg.font.SysFont("arial", 14, bold=True)
@@ -108,6 +122,25 @@ class Shop:
             if mult_str:
                 mult_surf = self.font_desc.render(mult_str, True, (150, 255, 150))
                 self.screen.blit(mult_surf, (x + btn_w - 8 - mult_surf.get_width(), y + 28))
+
+        self._draw_purchase_flash()
+
+    def _draw_purchase_flash(self):
+        if self.purchase_flash_start is None:
+            return
+
+        elapsed = pg.time.get_ticks() - self.purchase_flash_start
+        if elapsed >= self.PURCHASE_FLASH_DURATION:
+            self.purchase_flash_start = None
+            return
+
+        progress = elapsed / self.PURCHASE_FLASH_DURATION
+        alpha = int(220 * (1 - progress))
+        radius = int(self.player.rect.width * 0.9 + 14 * progress)
+        size = radius * 2 + 8
+        surface = pg.Surface((size, size), pg.SRCALPHA)
+        pg.draw.circle(surface, (*self.purchase_flash_color, alpha), (size // 2, size // 2), radius, 4)
+        self.screen.blit(surface, surface.get_rect(center=self.player.rect.center))
 
     def handle_event(self, event):
         if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:

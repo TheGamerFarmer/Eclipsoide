@@ -167,7 +167,7 @@ class Eclipsoide:
             if died:
                 # Rapproche l'arrivée du boss : tuer plus vite le fait venir plus tôt
                 self.datas.time += Datas.KILL_TIME_BONUS
-                Coin(pg.Vector2(enemy.rect.center), self.player, self.datas.coins_group)
+                Coin(pg.Vector2(enemy.rect.center), self.player, self.datas.coins_group, datas=self.datas)
                 Explosion(pg.Vector2(enemy.rect.center), self.datas.explosions_group)
                 if self.player.lives < self.player.max_lives and random.random() < self.player.heart_drop_chance:
                     HeartPickup(pg.Vector2(enemy.rect.center), self.player, self.datas.hearts_group)
@@ -268,6 +268,10 @@ class Eclipsoide:
         self.screen.blit(self.datas.bg_image2, (0, 0))
 
         self.hud.draw_sun()
+
+        # Halo rouge pulsant derrière le boss une fois sa vie sous le seuil critique
+        boss_center = (bossX + current_size / 2, (Hud.SUN_SIZE / 4) + (Hud.SUN_SIZE / 2))
+        self.boss.draw_enrage_glow(self.screen, boss_center, current_size / 2)
 
         # Animation d'arrivée : tant que le sprite Boss n'existe pas encore
         self.screen.blit(scaled_boss, (bossX, (Hud.SUN_SIZE / 4) + (Hud.SUN_SIZE / 2) - (current_size / 2)))

@@ -10,6 +10,8 @@ from player import Player
 import math
 from boss.multi_laser import MultiLaser
 from boss.tracker import Tracker
+from spawn_ping import SpawnPing
+from shockwave import Shockwave
 
 
 class Boss(pg.sprite.Sprite):
@@ -47,6 +49,16 @@ class Boss(pg.sprite.Sprite):
     BAR_FILL_COLOR_HIGH = (70, 210, 90)
     BAR_DRAIN_COLOR = (255, 250, 220)
     BAR_DRAIN_SPEED = 0.35  # points de vie/ms rattrapés par la bande claire
+
+    # Phase "enragée" sous ce seuil de vie : glow rouge pulsant derrière le
+    # boss + halo autour de sa barre, pour signaler qu'il devient critique
+    ENRAGE_THRESHOLD = 0.25
+    ENRAGE_GLOW_COLOR = (255, 40, 40)
+    ENRAGE_GLOW_PERIOD = 450  # ms, pulsation rapide façon "alerte"
+    ENRAGE_GLOW_LAYERS = 3
+    ENRAGE_GLOW_PADDING = 20
+    ENRAGE_GLOW_PULSE_RADIUS = 15
+    ENRAGE_GLOW_MAX_ALPHA = 110
 
     HIT_FLASH_DURATION = 90  # ms de flash blanc quand touché
     # Intensité du blanc ajouté (0-255) : moins que 255 pour laisser deviner la
@@ -95,6 +107,7 @@ class Boss(pg.sprite.Sprite):
         self.max_life = int(Boss.LIFE * Boss.BOSS_LIFE_GROWTH ** (self.datas.stage - 1))
         self.life = self.max_life
         self.bar_display_life = self.life
+        self.time = 0
 
         self._base_image = pg.image.load('images/boss1.png').convert_alpha()
         self.hit_flash_timer = 0
@@ -116,10 +129,13 @@ class Boss(pg.sprite.Sprite):
         """ Le boss explose, le palier suivant démarre : les vagues reprennent """
         explosion_size = (int(self.rect.width * self.EXPLOSION_SIZE_RATIO), int(self.rect.height * self.EXPLOSION_SIZE_RATIO))
         Explosion(pg.Vector2(self.rect.center), self.datas.explosions_group, size=explosion_size)
+        Shockwave(pg.Vector2(self.rect.center), self.datas.explosions_group,
+                  min_radius=self.rect.width * 0.15, max_radius=self.rect.width * 0.9)
         self.hud.trigger_shake()
         self.datas.bombs_group.empty()
         self.is_spawn = False
         self.datas.stage += 1
+        self.hud.trigger_level_banner(self.datas.stage)
         self.max_life = int(Boss.LIFE * Boss.BOSS_LIFE_GROWTH ** (self.datas.stage - 1))
         self.life = self.max_life
         self.bar_display_life = self.life
@@ -138,6 +154,8 @@ class Boss(pg.sprite.Sprite):
                 Explosion(pg.Vector2(sprite.rect.center), self.datas.explosions_group)
 
     def update(self, dt) -> None:
+        self.time += dt
+
         if self.hit_flash_timer > 0:
             self.hit_flash_timer -= dt
             self.image = self.flash_image if self.hit_flash_timer > 0 else self.normal_image
@@ -234,6 +252,31 @@ class Boss(pg.sprite.Sprite):
             low, high = cls.BAR_FILL_COLOR_LOW, cls.BAR_FILL_COLOR_MID
         return tuple(int(low[i] + (high[i] - low[i]) * t) for i in range(3))
 
+    def _is_enraged(self) -> bool:
+        return self.is_spawn and self.max_life > 0 and 0 < self.life / self.max_life <= self.ENRAGE_THRESHOLD
+
+    def draw_enrage_glow(self, surface: pg.Surface, center: tuple[float, float], radius: float) -> None:
+        """ Halo rouge pulsant, affiché derrière le boss quand sa vie passe sous
+        ENRAGE_THRESHOLD, pour signaler qu'il devient critique """
+        if not self._is_enraged():
+            return
+
+        pulse = (math.sin(self.time * (2 * math.pi / self.ENRAGE_GLOW_PERIOD)) + 1) / 2
+        max_radius = radius + self.ENRAGE_GLOW_PADDING + self.ENRAGE_GLOW_PULSE_RADIUS * pulse
+        size = int(max_radius * 2)
+        glow_surface = pg.Surface((size, size), pg.SRCALPHA)
+        glow_center = (size // 2, size // 2)
+
+        for layer in range(self.ENRAGE_GLOW_LAYERS, 0, -1):
+            layer_radius = int(max_radius * (layer / self.ENRAGE_GLOW_LAYERS))
+            alpha = (self.ENRAGE_GLOW_MAX_ALPHA * (0.6 + 0.4 * pulse)) * (1 - layer / (self.ENRAGE_GLOW_LAYERS + 1))
+            alpha = max(0, min(255, int(alpha)))
+            layer_surface = pg.Surface((size, size), pg.SRCALPHA)
+            pg.draw.circle(layer_surface, (*self.ENRAGE_GLOW_COLOR, alpha), glow_center, layer_radius)
+            glow_surface.blit(layer_surface, (0, 0), special_flags=pg.BLEND_RGBA_ADD)
+
+        surface.blit(glow_surface, glow_surface.get_rect(center=center))
+
     def draw_life_bar(self, surface: pg.Surface) -> None:
         """
         Dessine la barre de vie du boss en haut de la surface (à appeler avec le HUD).
@@ -265,6 +308,14 @@ class Boss(pg.sprite.Sprite):
                 pg.draw.line(surface, self.BAR_BORDER_COLOR, (sep_x, y), (sep_x, y + self.BAR_HEIGHT - 1))
 
         pg.draw.rect(surface, self.BAR_BORDER_COLOR, contour, 2)
+
+        if self._is_enraged():
+            pulse = (math.sin(self.time * (2 * math.pi / self.ENRAGE_GLOW_PERIOD)) + 1) / 2
+            alpha = int(90 + 100 * pulse)
+            halo_rect = contour.inflate(10, 10)
+            halo_surface = pg.Surface(halo_rect.size, pg.SRCALPHA)
+            pg.draw.rect(halo_surface, (*self.ENRAGE_GLOW_COLOR, alpha), halo_surface.get_rect(), width=4, border_radius=6)
+            surface.blit(halo_surface, halo_rect.topleft)
 
     def _mouth(self) -> tuple[int, int]:
         """
@@ -348,4 +399,6 @@ class Boss(pg.sprite.Sprite):
         # On vérifie qu'il n'y a pas déjà un drone en vie
         has_tracker = any(isinstance(sprite, Tracker) for sprite in self.datas.enemies_group)
         if not has_tracker:
-            Tracker(self._mouth(), self.player, self.datas, self.datas.enemies_group)
+            mouth_pos = pg.Vector2(self._mouth())
+            SpawnPing(mouth_pos, self.datas.particles_group)
+            Tracker(mouth_pos, self.player, self.datas, self.datas.enemies_group)

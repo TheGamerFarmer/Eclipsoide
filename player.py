@@ -35,7 +35,10 @@ class Player(pg.sprite.Sprite):
 
     PLAYER_SPEED = 0.4
 
-    TRAIL_DELAY = 12  # ms entre deux particules de moteur
+    # Traînée plus dense en mouvement qu'à l'arrêt : l'intervalle entre deux
+    # particules se resserre dès que le vaisseau se déplace
+    TRAIL_DELAY_IDLE = 26    # ms entre particules à l'arrêt
+    TRAIL_DELAY_MOVING = 8   # ms entre particules en mouvement
     TRAIL_COLOR_START = (255, 230, 140)
     TRAIL_COLOR_END = (255, 80, 20)
 
@@ -64,7 +67,7 @@ class Player(pg.sprite.Sprite):
         self.shield_timer = 0
         self.heart_drop_chance = 0
 
-        self.coins = 0
+        self.coins = 99999999999
         self.score = 0
 
         self.fire_delay = 500
@@ -154,7 +157,8 @@ class Player(pg.sprite.Sprite):
         self.trail_timer -= dt
         if self.trail_timer > 0:
             return
-        self.trail_timer = Player.TRAIL_DELAY
+        moving = movement.length_squared() > 0
+        self.trail_timer = Player.TRAIL_DELAY_MOVING if moving else Player.TRAIL_DELAY_IDLE
 
         # Point d'émission au niveau du réacteur, légèrement décalé pour ne pas
         # coller pile sous le vaisseau
