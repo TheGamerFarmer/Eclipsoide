@@ -7,11 +7,24 @@ SETTINGS_FILE = "settings.json"
 
 WINDOW_SIZE = (1024, 768)
 
+# Touches par défaut : Z/Q/S/D restent réassignables, les flèches et Échap
+# continuent de fonctionner en secours quoi qu'il arrive (voir player.py/eclipsoide.py)
+DEFAULT_KEYBINDS = {
+    "up": pg.K_z,
+    "down": pg.K_s,
+    "left": pg.K_q,
+    "right": pg.K_d,
+    "pause": pg.K_p,
+}
+
 OPTIONS = {
+    # Volume de la musique (les bruitages ont leur propre réglage, sfx_volume)
     "volume": 50.0,
+    "sfx_volume": 50.0,
     "music": True,
     "sfx": True,
     "fullscreen": True,
+    "keybinds": dict(DEFAULT_KEYBINDS),
     # Historique des scores, du plus ancien au plus récent
     "scores": []
 }

@@ -1,7 +1,7 @@
 import os
 import pygame as pg
 from . import ui_element
-from .menu_fx import MenuFx
+from .menu_fx import MenuFx, FadeIn
 
 UI_BASE_PATH = "Eclipsoide/images/ui"
 
@@ -40,36 +40,14 @@ class MainMenu:
             "quit": ui_element.Button(center_x, 640, btn_width, btn_height, "Quit", self.font, btn_quit)
         }
 
-        self._shown_at = None
+        self.fade = FadeIn(self.TRANSITION_DURATION)
 
     def on_shown(self):
         """ À appeler chaque fois que ce menu redevient actif : relance le fondu d'entrée """
-        self._shown_at = pg.time.get_ticks()
-
-    def _transition_progress(self) -> float:
-        """ 0 à l'arrivée -> 1 une fois le fondu terminé (ou si jamais déclenché) """
-        if self._shown_at is None:
-            return 1.0
-        elapsed = pg.time.get_ticks() - self._shown_at
-        if elapsed >= self.TRANSITION_DURATION:
-            return 1.0
-        return elapsed / self.TRANSITION_DURATION
+        self.fade.on_shown()
 
     def draw(self, surface):
-        progress = self._transition_progress()
-
-        if progress >= 1.0:
-            self._draw_content(surface)
-            return
-
-        # Fondu d'entrée : le contenu est dessiné sur un tampon puis blitté
-        # avec une opacité croissante (ease-out)
-        buffer = pg.Surface(surface.get_size())
-        self._draw_content(buffer)
-        eased = 1 - (1 - progress) ** 2
-        buffer.set_alpha(int(255 * eased))
-        surface.fill((0, 0, 0))
-        surface.blit(buffer, (0, 0))
+        self.fade.wrap_draw(surface, self._draw_content)
 
     def _draw_content(self, surface):
         # Affichage du fond
