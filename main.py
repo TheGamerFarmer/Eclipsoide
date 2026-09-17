@@ -98,7 +98,7 @@ def main():
             if eclipsoide.pause:
                 audio.set_paused(True)
                 # Le menu affiche le score de la partie en cours
-                pause.set_score(eclipsoide.player.coins)
+                pause.set_score(eclipsoide.player.score)
                 pause.draw(screen)
                 pg.display.flip()
             while eclipsoide.pause:
