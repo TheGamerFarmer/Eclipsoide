@@ -18,6 +18,13 @@ class Enemy(pg.sprite.Sprite):
     ASTEROID_SIZE = 70
     HIT_FLASH_DURATION = 90  # ms de flash blanc quand touché
 
+    # Légère variation de taille/teinte à chaque spawn, pour casser la
+    # répétition visuelle (tous les astéroïdes utilisent la même texture)
+    SIZE_VARIATION_MIN = 0.85
+    SIZE_VARIATION_MAX = 1.15
+    TINT_VARIATION_MIN = 0.85
+    TINT_VARIATION_MAX = 1.15
+
     # Traînée de débris derrière l'astéroïde en chute (poussière de roche)
     DEBRIS_DELAY = 90  # ms entre deux particules de débris
     DEBRIS_COLOR_START = (180, 140, 90)
@@ -45,9 +52,6 @@ class Enemy(pg.sprite.Sprite):
 
         self.time = 0
 
-        # La surface (image) à afficher de ce sprite
-        self.surface = pg.Surface(self.size)
-
         if not Enemy.image_set:
             Enemy.image = pg.image.load('images/asteroide.png')
             Enemy.image = pg.transform.scale(Enemy.image, self.size)
@@ -59,7 +63,20 @@ class Enemy(pg.sprite.Sprite):
             Enemy.image_shoot_set = True
 
         self.image = pg.transform.rotate(Enemy.image, random.randint(-180, 180))
-        self.surface.blit(self.image, (0,0))
+
+        scale = random.uniform(Enemy.SIZE_VARIATION_MIN, Enemy.SIZE_VARIATION_MAX)
+        new_size = (max(1, int(self.image.get_width() * scale)), max(1, int(self.image.get_height() * scale)))
+        self.image = pg.transform.smoothscale(self.image, new_size)
+
+        tint = (
+            random.uniform(Enemy.TINT_VARIATION_MIN, Enemy.TINT_VARIATION_MAX),
+            random.uniform(Enemy.TINT_VARIATION_MIN, Enemy.TINT_VARIATION_MAX),
+            random.uniform(Enemy.TINT_VARIATION_MIN, Enemy.TINT_VARIATION_MAX),
+        )
+        tint_surface = pg.Surface(self.image.get_size(), pg.SRCALPHA)
+        tint_surface.fill((min(255, int(255 * tint[0])), min(255, int(255 * tint[1])), min(255, int(255 * tint[2])), 255))
+        self.image = self.image.copy()
+        self.image.blit(tint_surface, (0, 0), special_flags=pg.BLEND_RGBA_MULT)
 
         # Version "flashée" en blanc de l'image, affichée brièvement quand touché
         self.normal_image = self.image
@@ -68,8 +85,8 @@ class Enemy(pg.sprite.Sprite):
 
         self.player = player
         self.screen = screen
-        # Recupère le rectangle de la surface du Sprite
-        self.rect = self.surface.get_rect()
+        # Recupère le rectangle du Sprite (taille alignée sur l'image, variation incluse)
+        self.rect = self.image.get_rect()
 
         screenWith = Enemy.ASTEROID_SIZE * self.SPAWN_EXTRA_PROPORTION
 

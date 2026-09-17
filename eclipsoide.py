@@ -170,7 +170,7 @@ class Eclipsoide:
                 Coin(pg.Vector2(enemy.rect.center), self.player, self.datas.coins_group, datas=self.datas)
                 Explosion(pg.Vector2(enemy.rect.center), self.datas.explosions_group)
                 if self.player.lives < self.player.max_lives and random.random() < self.player.heart_drop_chance:
-                    HeartPickup(pg.Vector2(enemy.rect.center), self.player, self.datas.hearts_group)
+                    HeartPickup(pg.Vector2(enemy.rect.center), self.player, self.datas.hearts_group, datas=self.datas)
                 if self.player.shield_timer <= 0 and random.random() < self.SHIELD_DROP_CHANCE:
                     ShieldPickup(pg.Vector2(enemy.rect.center), self.player, self.datas.shields_group)
 

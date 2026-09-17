@@ -72,6 +72,9 @@ class Hud:
     HEART_BG_COLOR = (255, 255, 255, 140)
     HEART_BG_PADDING = 3
     HEART_BG_RADIUS = 6
+    # Secousse + flash rouge bref sur l'icône du coeur qui vient de se vider
+    HEART_BREAK_DURATION = 350  # ms
+    HEART_BREAK_SHAKE_MAGNITUDE = 4  # px
     # Animation du bouclier (images/shield/) autour du vaisseau tant qu'il est
     # actif, avec un pic de taille bref quand un coup est bloqué et un
     # clignotement d'avertissement juste avant qu'il ne s'éteigne
@@ -154,6 +157,9 @@ class Hud:
         self.record_beaten_announced = False
         self.record_celebration_timer = 0
         self.record_celebration_particles: list[tuple[float, float]] = []
+        self.heart_break_index: int | None = None
+        self.heart_break_timer = 0
+        self._last_lives = player.lives
 
         self.shop = Shop(self.screen, self.player)
 
@@ -205,12 +211,19 @@ class Hud:
         self.zoom_timer = max(0, self.zoom_timer - dt)
         self.level_banner_timer = max(0, self.level_banner_timer - dt)
         self.record_celebration_timer = max(0, self.record_celebration_timer - dt)
+        self.heart_break_timer = max(0, self.heart_break_timer - dt)
 
         # Déclenché une seule fois par partie, pile à l'instant où le score
         # dépasse le record (figé au lancement de la partie)
         if not self.record_beaten_announced and self.player.score > self.record:
             self.record_beaten_announced = True
             self._trigger_record_celebration()
+
+        # Secousse/flash sur le coeur qui vient de se vider, dès qu'une vie est perdue
+        if self.player.lives < self._last_lives:
+            self.heart_break_index = self.player.lives
+            self.heart_break_timer = self.HEART_BREAK_DURATION
+        self._last_lives = self.player.lives
 
         self._advance_counters(dt)
 
@@ -417,10 +430,21 @@ class Hud:
         for i in range(self.player.max_lives):
             x = 10 + i * 26
             icon = self.heart_full_icon if i < self.player.lives else self.heart_empty_icon
-            self.screen.blit(icon, (x, self.HEARTS_Y))
 
-            icon = self.heart_full_icon if i < self.player.lives else self.heart_empty_icon
-            self.screen.blit(icon, (x, self.HEARTS_Y))
+            offset_x = 0
+            flash_alpha = 0
+            if i == self.heart_break_index and self.heart_break_timer > 0:
+                progress = 1 - (self.heart_break_timer / self.HEART_BREAK_DURATION)
+                shake_mag = self.HEART_BREAK_SHAKE_MAGNITUDE * (1 - progress)
+                offset_x = int(shake_mag * math.sin(self.heart_break_timer * 0.09))
+                flash_alpha = int(220 * (1 - progress))
+
+            self.screen.blit(icon, (x + offset_x, self.HEARTS_Y))
+            if flash_alpha > 0:
+                red_overlay = icon.copy()
+                red_overlay.fill((255, 40, 40, 0), special_flags=pg.BLEND_RGBA_ADD)
+                red_overlay.set_alpha(flash_alpha)
+                self.screen.blit(red_overlay, (x + offset_x, self.HEARTS_Y))
 
     def draw_overlay(self):
         """ Dessine, par-dessus le jeu, les flashs, la vignette de vie basse puis le HUD (pièces/vies) """
