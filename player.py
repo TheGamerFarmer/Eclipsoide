@@ -237,6 +237,11 @@ class Player(pg.sprite.Sprite):
             outcome = self.on_hit()
             if outcome != Player.HIT_IGNORED:
                 result = outcome
+        if boss is not None and boss.boss_hitting(self):
+            outcome = self.on_hit()
+            if outcome != Player.HIT_IGNORED:
+                result = outcome
+
 
         return result
 

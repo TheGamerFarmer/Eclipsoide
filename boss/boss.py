@@ -201,3 +201,12 @@ class Boss(pg.sprite.Sprite):
         for bomb in hits:
             bomb.explode()
         return hits
+
+    def boss_hitting(self, target: pg.sprite.Sprite):
+        """
+        Retourne les bombes qui touchent target (collision au pixel près).
+        Une bombe qui tombe sur la cible explose au contact.
+        """
+        # noinspection bad-argument-type
+        hits = pg.sprite.spritecollide(target, self.datas.boss_group, False, pg.sprite.collide_mask)
+        return hits
