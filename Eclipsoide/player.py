@@ -71,6 +71,7 @@ class Player(pg.sprite.Sprite):
         self.max_lives = 1
         self.lives = self.max_lives
         self.invincible_timer = 0
+        self.godmode = False
         self.shield_timer = 0
         self.heart_drop_chance = 0
 
@@ -134,6 +135,8 @@ class Player(pg.sprite.Sprite):
             movement.x -= 1
         if keystate[keybinds["right"]] or keystate[pg.K_RIGHT]:
             movement.x += 1
+        if keystate[pg.K_g]:
+            self.godmode = not self.godmode
 
         if movement.length_squared() != 0:
             movement = movement.normalize()
@@ -229,6 +232,9 @@ class Player(pg.sprite.Sprite):
         # supplémentaires (sinon rester au contact d'un ennemi vide toutes
         # les vies en un seul passage)
         if self.invincible_timer > 0:
+            return Player.HIT_IGNORED
+
+        if self.godmode == True and self.lives == 1:
             return Player.HIT_IGNORED
 
         self.invincible_timer = Player.INVINCIBILITY_DURATION
