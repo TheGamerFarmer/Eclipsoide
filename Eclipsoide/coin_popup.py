@@ -5,6 +5,11 @@ class CoinPopup(pg.sprite.Sprite):
     DURATION = 600     # ms avant disparition
     RISE_SPEED = 0.03  # pixels/ms
 
+    # Punch d'échelle à l'apparition : parti grossi, revient à sa taille
+    # normale, pour un peu plus d'impact que la simple montée/fondu
+    PUNCH_DURATION = 150  # ms
+    PUNCH_SCALE = 1.5
+
     font_set: bool = False
     font: pg.font.Font
 
@@ -34,4 +39,12 @@ class CoinPopup(pg.sprite.Sprite):
         alpha = max(0, 255 - int(255 * (self.time / CoinPopup.DURATION)))
         self.image = self.base_image.copy()
         self.image.set_alpha(alpha)
+
+        if self.time < CoinPopup.PUNCH_DURATION:
+            t = self.time / CoinPopup.PUNCH_DURATION
+            eased = 1 - (1 - t) ** 3  # ease-out cubique
+            scale = CoinPopup.PUNCH_SCALE - (CoinPopup.PUNCH_SCALE - 1.0) * eased
+            size = (max(1, int(self.image.get_width() * scale)), max(1, int(self.image.get_height() * scale)))
+            self.image = pg.transform.smoothscale(self.image, size)
+
         self.rect = self.image.get_rect(center=self.position)

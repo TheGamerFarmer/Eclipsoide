@@ -3,6 +3,7 @@ from coin_popup import CoinPopup
 from datas import Datas
 from player import Player
 from particle import Particle
+from spawn_pop import spawn_scale
 
 
 class Coin(pg.sprite.Sprite):
@@ -17,6 +18,9 @@ class Coin(pg.sprite.Sprite):
     TRAIL_DELAY = 30  # ms entre deux particules de traînée
     TRAIL_COLOR_START = (255, 230, 120)
     TRAIL_COLOR_END = (255, 180, 40)
+
+    # Pop d'apparition (grossit depuis rien avec un léger rebond) à la naissance
+    SPAWN_ANIM_DURATION = 150  # ms
 
     images_set: bool = False
     images: list[pg.Surface]
@@ -37,6 +41,7 @@ class Coin(pg.sprite.Sprite):
         self.position = pg.Vector2(position)
         self.speed = Coin.MIN_SPEED
         self.trail_timer = 0
+        self.spawn_anim_timer = Coin.SPAWN_ANIM_DURATION
 
         self.frameIndex = 0.0
         self.image = Coin.images[0]
@@ -46,13 +51,19 @@ class Coin(pg.sprite.Sprite):
         self.frameIndex += dt * Coin.FRAME_SPEED
         self.image = Coin.images[int(self.frameIndex) % len(Coin.images)]
 
+        if self.spawn_anim_timer > 0:
+            self.spawn_anim_timer -= dt
+            scale = max(0.01, spawn_scale(self.spawn_anim_timer, Coin.SPAWN_ANIM_DURATION))
+            size = (max(1, int(self.image.get_width() * scale)), max(1, int(self.image.get_height() * scale)))
+            self.image = pg.transform.smoothscale(self.image, size)
+
         # Aspiration : la pièce accélère en se dirigeant vers le joueur
         direction = pg.Vector2(self.player.rect.center) - self.position
         if direction.length_squared() > 0:
             self.speed = min(self.speed + Coin.ACCELERATION * dt, Coin.MAX_SPEED)
             self.position += direction.normalize() * self.speed * dt
 
-        self.rect.center = self.position
+        self.rect = self.image.get_rect(center=self.position)
 
         if self.datas is not None:
             self.trail_timer -= dt
