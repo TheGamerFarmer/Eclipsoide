@@ -282,7 +282,7 @@ class Player(pg.sprite.Sprite):
         return result
 
     def get_coins_value(self):
-        return 10 * pow(1.5, self.datas.stage - 1)
+        return 10 * pow(2, self.datas.stage - 1)
 
     def add_coins(self, amount: int):
         self.coins += amount
