@@ -22,7 +22,6 @@ from hud import Hud
 # Définition du jeu Pong
 class Eclipsoide:
     # Chance qu'un ennemi tué drop un coeur (uniquement si le joueur n'est pas déjà à vie max)
-    HEART_DROP_CHANCE = 0.06
     HEART_POPUP_COLOR = (255, 90, 120)
 
     # Chance qu'un ennemi tué drop un bouclier (plus rare que les coeurs,
@@ -82,7 +81,7 @@ class Eclipsoide:
         self.pause = False
 
         # Création d'une instance du joueur
-        self.player = Player(0.3, self.datas, self.datas.player_group)
+        self.player = Player(self.datas, self.datas.player_group)
 
         # Soleil animé, HUD (pièces/vies) et effets d'écran (flashs, vignette,
         # tremblement d'écran) : créé avant le boss, qui s'en sert pour trigger_shake()
@@ -170,7 +169,7 @@ class Eclipsoide:
                 self.datas.time += Datas.KILL_TIME_BONUS
                 Coin(pg.Vector2(enemy.rect.center), self.player, self.datas.coins_group)
                 Explosion(pg.Vector2(enemy.rect.center), self.datas.explosions_group)
-                if self.player.lives < self.player.max_lives and random.random() < self.HEART_DROP_CHANCE:
+                if self.player.lives < self.player.max_lives and random.random() < self.player.heart_drop_chance:
                     HeartPickup(pg.Vector2(enemy.rect.center), self.player, self.datas.hearts_group)
                 if self.player.shield_timer <= 0 and random.random() < self.SHIELD_DROP_CHANCE:
                     ShieldPickup(pg.Vector2(enemy.rect.center), self.player, self.datas.shields_group)
