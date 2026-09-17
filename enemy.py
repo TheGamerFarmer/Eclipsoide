@@ -157,7 +157,7 @@ class Enemy(pg.sprite.Sprite):
         collisions = pg.sprite.groupcollide(datas.projectiles_group, datas.enemies_group, dokilla=True, dokillb=False, collided=collided)
         for enemies in collisions.values():
             for enemy in enemies:
-                if type(enemy) == cls:
+                if hasattr(enemy, 'hited'):
                     was_alive = enemy.life > 0
                     enemy.hited(damage)
                     hits.append((enemy, was_alive and enemy.life <= 0))
