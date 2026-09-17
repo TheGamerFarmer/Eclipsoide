@@ -189,25 +189,28 @@ class Boss(pg.sprite.Sprite):
             self.hud.trigger_shake(self.hud.BOSS_SPAWN_SHAKE_DURATION, self.hud.BOSS_SPAWN_SHAKE_MAGNITUDE)
 
         if self.is_spawn:
+
+            bomb_cooldown = self.BOMB_INTERVAL // 2 if self._is_enraged() else self.BOMB_INTERVAL
+            laser_cooldown = 2500 if self._is_enraged() else 5000
+            tracker_cooldown = 4000 if self._is_enraged() else 8000
+
             self.bomb_timer += dt
-            if self.bomb_timer >= self.BOMB_INTERVAL:
-                self.bomb_timer -= self.BOMB_INTERVAL
+            if self.bomb_timer >= bomb_cooldown:
+                self.bomb_timer -= bomb_cooldown
                 self.drop_bomb()
 
             self.datas.bombs_group.update(dt)
 
             # laser
             self.multi_laser_timer += dt
-            # toutes les 5 secondes
-            if self.multi_laser_timer >= 5000:
-                self.multi_laser_timer -= 5000
+            if self.multi_laser_timer >= laser_cooldown:
+                self.multi_laser_timer -= laser_cooldown
                 self.fire_multi_laser()
 
             # tracker
             self.tracker_timer += dt
-            # toutes les 8 secondes
-            if self.tracker_timer >= 8000:
-                self.tracker_timer -= 8000
+            if self.tracker_timer >= tracker_cooldown:
+                self.tracker_timer -= tracker_cooldown
                 self.fire_tracker()
 
     @property
@@ -347,7 +350,8 @@ class Boss(pg.sprite.Sprite):
             direction = pg.Vector2(0, 1)
 
         # On ajoute la vitesse
-        velocity = direction * Bomb.SPEED_Y
+        speed = Bomb.SPEED_Y * 2 if self._is_enraged() else Bomb.SPEED_Y
+        velocity = direction * speed
 
         # On crée la bombe
         return Bomb(self._mouth(), velocity, self.datas.screen, self.datas.bombs_group)
@@ -379,7 +383,7 @@ class Boss(pg.sprite.Sprite):
 
     def fire_multi_laser(self):
         spread = 80
-        count = 7
+        count = 11 if self._is_enraged() else 7
 
         mouth_pos = pg.Vector2(self._mouth())
         player_pos = pg.Vector2(self.player.rect.center)
