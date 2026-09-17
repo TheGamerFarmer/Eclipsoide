@@ -2,7 +2,7 @@ import pygame as pg
 
 class Datas(object):
     #The time between two wave in millisecond
-    TIME_BETWEEN_WAVE = 5000
+    TIME_BETWEEN_WAVE = 6000
     #The time before the boss spawn in millisecond
     TIME_BEFORE_BOSS = 240000
 
@@ -12,25 +12,6 @@ class Datas(object):
 
     # Délai (explosion du joueur) avant d'afficher l'écran de game over
     DEATH_COOLDOWN = 1300 # ms
-
-    def __del__(self):
-        del self.enemies_group
-        del self.player_group
-        del self.projectiles_group
-        del self.enemy_projectiles_group
-        del self.coins_group
-        del self.popups_group
-        del self.particles_group
-        del self.explosions_group
-        del self.hearts_group
-        del self.boss_group
-        del self.bombs_group
-        del self.shields_group
-        del self.stage
-        del self.time
-        del self.screen
-        del self.groups
-        del self
 
     def __init__(self, screen: pg.Surface) -> None:
         self.screen = screen

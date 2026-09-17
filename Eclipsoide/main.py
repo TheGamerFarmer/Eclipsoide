@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Pour lancer directement l'exécution à partir du sell si le fichier a les droits d'exécution
 # Utilisation de pygame avec un préfixe plus simple
+import gc
 import pygame as pg
 import sys
 
@@ -137,7 +138,10 @@ def main():
                         eclipsoide.draw()
                     elif action == "restart":
                         eclipsoide.pause = False
+                        for group in eclipsoide.datas.groups:
+                            group.empty()
                         eclipsoide = Eclipsoide(screen)
+                        gc.collect()
                         game_start_time = pg.time.get_ticks()
                     elif action == "quit":
                         pg.quit()
@@ -204,7 +208,10 @@ def main():
                 action = eclipsoide.menu_game_over.handle_event(event)
                 if action == "retry":
                     game_over_running = False
+                    for group in eclipsoide.datas.groups:
+                        group.empty()
                     del eclipsoide
+                    gc.collect()
                     eclipsoide = Eclipsoide(screen)
                     game_start_time = pg.time.get_ticks()
                 elif action == "menu":
@@ -216,7 +223,6 @@ def main():
             screen.fill((0, 0, 0))
             eclipsoide.menu_game_over.draw(screen)
             pg.display.flip()
-
 
 # Appel automatiquement la fonction main si pas utilisé comme module
 # Laisse la possibilité d'include la fonction main() dans un autre code en tant que module

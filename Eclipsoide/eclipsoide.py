@@ -53,18 +53,6 @@ class Eclipsoide:
     pause = False
     time = 0
 
-    def __del__(self):
-        del self.player
-        del self.datas
-        del self.screen
-        del self.boss
-        del self.hud
-        del self.isEnded
-        del self.menu_game_over
-        del self
-        print("new Eclipsoide")
-
-
     def __init__(self,screen: pg.Surface):
         """ Création des attribut du jeux """
         # Conserve le lien vers l'objet surface ecran du jeux
@@ -148,7 +136,7 @@ class Eclipsoide:
         self.hud.advance(dt)
 
         if (self.datas.time + dt) % Datas.TIME_BETWEEN_WAVE < dt and self.datas.time < Datas.TIME_BEFORE_BOSS:
-            nbEnemies: int = int(self.datas.time / Datas.TIME_BETWEEN_WAVE / 6)
+            nbEnemies: int = int(self.datas.time / Datas.TIME_BETWEEN_WAVE / 7)
             for i in range(-2, nbEnemies):
                 Enemy(self.screen, self.player, self.datas, self.datas.enemies_group)
 
