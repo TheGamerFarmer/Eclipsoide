@@ -54,8 +54,9 @@ class Hud:
     # Record affiché sous le compteur : gris tant qu'il n'est pas battu, vert ensuite
     RECORD_COLOR = (200, 200, 210)
     RECORD_BEATEN_COLOR = (80, 255, 140)
-    RECORD_Y = 40
-    HEARTS_Y = 64
+    SCORE_Y = 40
+    RECORD_Y = 60
+    HEARTS_Y = 84
     # Fond arrondi derrière chaque coeur, pour que les emplacements vides
     # (juste un contour fin) restent visibles sur un fond d'écran chargé
     HEART_BG_COLOR = (255, 255, 255, 140)
@@ -88,6 +89,7 @@ class Hud:
         self.record_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 14)
         # Record figé au lancement de la partie : c'est lui que le joueur cherche à battre
         self.record = settings.best_score()
+        self.score = player.score
         self.coin_icon = pg.transform.scale(pg.image.load('images/ui/Coins/coin_0.png'), (24, 24))
         self.heart_full_icon = pg.transform.scale(pg.image.load('images/ui/Hearts/heart_full.png'), (22, 22))
         self.heart_empty_icon = pg.transform.scale(pg.image.load('images/ui/Hearts/heart_empty.png'), (22, 22))
@@ -275,8 +277,18 @@ class Hud:
     def _draw_record(self):
         beaten = self.player.score > self.record
         color = self.RECORD_BEATEN_COLOR if beaten else self.RECORD_COLOR
-        record_text = self.record_font.render(f"RECORD : {self.record}", True, color)
+        if beaten:
+            self.score = self.player.score
+            record_text = self.record_font.render(f"RECORD : {self.score}", True, color)
+        else:
+            record_text = self.record_font.render(f"RECORD : {self.record}", True, color)
         self.screen.blit(record_text, (10, self.RECORD_Y))
+
+    def _draw_score(self):
+        self.score = self.player.score
+        color = self.RECORD_BEATEN_COLOR
+        score_text = self.record_font.render(f"RECORD : {self.score}", True, color)
+        self.screen.blit(score_text, (10, self.SCORE_Y))
 
     def _draw_hearts(self):
         icon_w, icon_h = self.heart_full_icon.get_size()
@@ -305,6 +317,7 @@ class Hud:
 
         self._draw_coin_counter()
         self._draw_record()
+        self._draw_score()
         self._draw_hearts()
 
         self.shop.draw()
