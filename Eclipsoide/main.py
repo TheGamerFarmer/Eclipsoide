@@ -2,8 +2,13 @@
 # Pour lancer directement l'exécution à partir du sell si le fichier a les droits d'exécution
 # Utilisation de pygame avec un préfixe plus simple
 import gc
+import os
 import pygame as pg
 import sys
+
+# Les ressources sont référencées depuis la racine du projet (ex: 'Eclipsoide/images/...'),
+# on s'y place pour que le jeu se lance quel que soit le répertoire courant
+os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import audio
 import settings
