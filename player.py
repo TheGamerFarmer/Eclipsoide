@@ -33,6 +33,8 @@ class Player(pg.sprite.Sprite):
     shoot_sound_set: bool = False
     shoot_sound: pg.mixer.Sound | None = None
 
+    PLAYER_SPEED = 0.4
+
     # Traînée plus dense en mouvement qu'à l'arrêt : l'intervalle entre deux
     # particules se resserre dès que le vaisseau se déplace
     TRAIL_DELAY_IDLE = 26    # ms entre particules à l'arrêt
@@ -53,10 +55,9 @@ class Player(pg.sprite.Sprite):
     HIT_SHIELDED = 'shielded'
     HIT_TAKEN = 'hit'
 
-    def __init__(self, speed: float, datas: Datas, *groups):
+    def __init__(self, datas: Datas, *groups):
         super().__init__(*groups)
 
-        self.speed = speed
         self.datas = datas
 
         self.is_alive = True
@@ -64,16 +65,17 @@ class Player(pg.sprite.Sprite):
         self.lives = self.max_lives
         self.invincible_timer = 0
         self.shield_timer = 0
+        self.heart_drop_chance = 0
 
         self.coins = 99999999999
         self.score = 0
 
-        self.fire_delay = 300
+        self.fire_delay = 500
         self.fire_timer = 0
 
         self.trail_timer = 0
 
-        self.double_shot = False
+        self.nb_shot = 1
 
         if not Player.image_shoot_set:
             Player.image_shoot = [pg.image.load(f'images/laser/player/laser_player_{i}.png') for i in range(4)]
@@ -124,7 +126,7 @@ class Player(pg.sprite.Sprite):
         if movement.length_squared() != 0:
             movement = movement.normalize()
 
-        self.position += movement * self.speed * dt
+        self.position += movement * Player.PLAYER_SPEED * dt
         self.rect.midbottom = self.position
         self.rect.clamp_ip(self.datas.screen.get_rect())
         self.position = pg.Vector2(self.rect.midbottom)
@@ -134,14 +136,10 @@ class Player(pg.sprite.Sprite):
 
         if self.fire_timer <= 0:
             glow_scale = self.damage / Player.BASE_DAMAGE
-            if self.double_shot:
-                Projectile(pg.Vector2(self.rect.centerx - 10, self.rect.centery), 0.4, pg.Vector2(0, -1),
+            for i in range(self.nb_shot):
+                offset_x = int(20 * (i - (self.nb_shot - 1) / 2))
+                Projectile(pg.Vector2(self.rect.centerx + offset_x, self.rect.centery), 1, pg.Vector2(0, -1),
                            Player.image_shoot, (0, 255, 0), self.datas.projectiles_group, glow_scale=glow_scale)
-                Projectile(pg.Vector2(self.rect.centerx + 10, self.rect.centery), 0.4, pg.Vector2(0, -1),
-                           Player.image_shoot, (0, 255, 0), self.datas.projectiles_group, glow_scale=glow_scale)
-            else:
-                Projectile(pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), Player.image_shoot, (0, 255, 0),
-                           self.datas.projectiles_group, glow_scale=glow_scale)
 
             self.fire_timer = self.fire_delay
             self._play_shoot_sound()
@@ -252,6 +250,9 @@ class Player(pg.sprite.Sprite):
 
 
         return result
+
+    def get_coins_value(self):
+        return 10 * pow(1.5, self.datas.stage - 1)
 
     def add_coins(self, amount: int):
         self.coins += amount

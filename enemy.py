@@ -148,7 +148,7 @@ class Enemy(pg.sprite.Sprite):
             self.kill()
 
     @classmethod
-    def check_hits(cls, datas: Datas, damage: int, collided=Projectile.collide) -> list[tuple["Enemy", bool]]:
+    def check_hits(cls, datas: Datas, damage: float | int, collided=Projectile.collide) -> list[tuple["Enemy", bool]]:
         """ Applique les dégâts des tirs du joueur touchant des ennemis.
         Retourne la liste des (ennemi, vient_de_mourir) pour chaque impact,
         pour laisser l'appelant gérer les récompenses (pièces, coeurs, etc.) """
