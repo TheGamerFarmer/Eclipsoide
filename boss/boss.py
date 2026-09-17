@@ -7,6 +7,9 @@ from datas import Datas
 from explosion import Explosion
 from hud import Hud
 from player import Player
+import math
+from boss.multi_laser import MultiLaserTelegraph
+from boss.tracker import Tracker
 
 
 class Boss(pg.sprite.Sprite):
@@ -25,7 +28,7 @@ class Boss(pg.sprite.Sprite):
 
     # Le boss a LIVES "vies" (les crans de la barre). Au premier palier chacune
     # encaisse LIFE_PER_SEGMENT points, soit 3 à 4 tirs du joueur (40 par tir).
-    LIFE_PER_SEGMENT = 140
+    LIFE_PER_SEGMENT = 560
     LIVES = 20
     LIFE = LIVES * LIFE_PER_SEGMENT  # 2800 pv, environ 70 tirs
 
@@ -40,6 +43,10 @@ class Boss(pg.sprite.Sprite):
 
     HIT_FLASH_DURATION = 90  # ms de flash blanc quand touché
     DAMAGE_POPUP_COLOR = (255, 255, 255)
+    # L'explosion de mort est mise à l'échelle du boss (pas le sprite d'origine,
+    # 110px, qui serait ridicule à côté d'un boss de 620px) sans pour autant
+    # être 1:1 (l'asset pixelise trop à cette taille)
+    EXPLOSION_SIZE_RATIO = 0.55
 
     size = (BOSS_SIZE, BOSS_SIZE)
 
@@ -66,11 +73,12 @@ class Boss(pg.sprite.Sprite):
         self.flash_image = self._build_flash_image(image)
         self.image = self.normal_image if self.hit_flash_timer <= 0 else self.flash_image
 
-    def __init__(self, datas: Datas, player: Player, *groups):
+    def __init__(self, datas: Datas, player: Player, hud, *groups):
         pg.sprite.Sprite.__init__(self, *groups)
 
         self.datas = datas
         self.player = player
+        self.hud = hud
         self.is_spawn = False
 
         self.max_life = int(Boss.LIFE * Boss.BOSS_LIFE_GROWTH ** (self.datas.stage - 1))
@@ -84,12 +92,19 @@ class Boss(pg.sprite.Sprite):
 
         self.bomb_timer = 0
         self._detonate_was_pressed = False
-
+        self.multi_laser_timer = 0
+        self.tracker_timer = 0
         self.boss_bar_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 24)
+
+        if not hasattr(Boss, 'laser_images'):
+            images = [pg.image.load(f'images/laser/enemy/laser_asteroide_{i}.png').convert_alpha() for i in range(4)]
+            Boss.laser_images = [pg.transform.scale(img, (14, 38)) for img in images]
 
     def _boss_vaincu(self):
         """ Le boss explose, le palier suivant démarre : les vagues reprennent """
-        Explosion(pg.Vector2(self.rect.center), self.datas.explosions_group)
+        explosion_size = (int(self.rect.width * self.EXPLOSION_SIZE_RATIO), int(self.rect.height * self.EXPLOSION_SIZE_RATIO))
+        Explosion(pg.Vector2(self.rect.center), self.datas.explosions_group, size=explosion_size)
+        self.hud.trigger_shake()
         self.datas.bombs_group.empty()
         self.is_spawn = False
         self.datas.stage += 1
@@ -103,6 +118,11 @@ class Boss(pg.sprite.Sprite):
         # Remettre l'horloge à zéro relance les vagues d'ennemis, puis l'arrivée
         # du boss suivant une fois TIME_BEFORE_BOSS écoulé
         self.datas.time = 0
+
+        for sprite in list(self.datas.enemies_group):
+            if isinstance(sprite, Tracker):
+                sprite.kill()
+                Explosion(pg.Vector2(sprite.rect.center), self.datas.explosions_group)
 
     def update(self, dt) -> None:
         if self.hit_flash_timer > 0:
@@ -139,6 +159,20 @@ class Boss(pg.sprite.Sprite):
                 self.drop_bomb()
 
             self.datas.bombs_group.update(dt)
+
+        # laser
+        self.multi_laser_timer += dt
+        # toutes les 5 secondes
+        if self.multi_laser_timer >= 5000:
+            self.multi_laser_timer -= 5000
+            self.fire_multi_laser()
+
+        # tracker
+        self.tracker_timer += dt
+        # toutes les 8 secondes
+        if self.tracker_timer >= 8000:
+            self.tracker_timer -= 8000
+            self.fire_tracker()
 
     @property
     def is_alive(self) -> bool:
@@ -207,11 +241,27 @@ class Boss(pg.sprite.Sprite):
         return self.rect.midbottom
 
     def drop_bomb(self) -> Bomb | None:
-        """Lâche une bombe depuis le bas du boss, si la limite n'est pas atteinte."""
-        active = [b for b in self.datas.bombs_group if not b.exploding]
+        """Lâche une bombe depuis le bas du boss ciblée vers le joueur."""
+        active = [b for b in self.datas.bombs_group if isinstance(b, Bomb) and not b.exploding]
         if len(active) >= self.MAX_BOMBS:
             return None
-        return Bomb(self._mouth(), self.datas.screen, self.datas.bombs_group)
+
+        # On récupère les positions
+        mouth_pos = pg.Vector2(self._mouth())
+        player_pos = pg.Vector2(self.player.rect.center)
+
+        # Calcul du vecteur (Destination - Origine)
+        direction = player_pos - mouth_pos
+        if direction.length_squared() > 0:
+            direction = direction.normalize()
+        else:
+            direction = pg.Vector2(0, 1)
+
+        # On ajoute la vitesse
+        velocity = direction * Bomb.SPEED_Y
+
+        # On crée la bombe
+        return Bomb(self._mouth(), velocity, self.datas.screen, self.datas.bombs_group)
 
     def detonate(self) -> None:
         """Fait exploser toutes les bombes lâchées par ce boss."""
@@ -237,3 +287,27 @@ class Boss(pg.sprite.Sprite):
         # noinspection bad-argument-type
         hits = pg.sprite.spritecollide(target, self.datas.boss_group, False, pg.sprite.collide_mask)
         return hits
+
+    def fire_multi_laser(self):
+        spread = 80
+        count = 7
+
+        mouth_pos = pg.Vector2(self._mouth())
+        player_pos = pg.Vector2(self.player.rect.center)
+        direction = player_pos - mouth_pos
+
+        if direction.length_squared() > 0:
+            center_angle = math.degrees(math.atan2(direction.y, direction.x))
+        else:
+            center_angle = 90
+
+        start_angle = center_angle - (spread / 2)
+
+        telegraph = MultiLaserTelegraph(self._mouth(), self.datas, start_angle, spread, count, Boss.laser_images)
+        self.datas.bombs_group.add(telegraph)
+
+    def fire_tracker(self):
+        # On vérifie qu'il n'y a pas déjà un drone en vie
+        has_tracker = any(isinstance(sprite, Tracker) for sprite in self.datas.enemies_group)
+        if not has_tracker:
+            Tracker(self._mouth(), self.player, self.datas, self.datas.enemies_group)

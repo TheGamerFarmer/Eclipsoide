@@ -72,6 +72,10 @@ class Eclipsoide:
         """ Création des attribut du jeux """
         # Conserve le lien vers l'objet surface ecran du jeux
         self.screen = screen
+        # Surface intermédiaire utilisée pour le tremblement d'écran : tout le
+        # rendu y est redirigé pendant l'effet, puis blitée sur l'écran réel
+        # avec un décalage aléatoire (voir draw())
+        self._frame_buffer = pg.Surface(screen.get_size())
 
         # Objet sous groupe pour avoir la liste des sprites et automatiser la mise à jour par update()
         # Automatise aussi l'affichage : draw() par défaut affiche dans l'écran image à la position rect
@@ -83,11 +87,12 @@ class Eclipsoide:
         # Création d'une instance du joueur
         self.player = Player(0.3, self.datas, self.datas.player_group)
 
-        #Création du boss
-        self.boss = Boss(self.datas, self.player, self.datas.boss_group)
-
-        # Soleil animé, HUD (pièces/vies) et effets d'écran (flashs, vignette)
+        # Soleil animé, HUD (pièces/vies) et effets d'écran (flashs, vignette,
+        # tremblement d'écran) : créé avant le boss, qui s'en sert pour trigger_shake()
         self.hud = Hud(screen, self.player)
+
+        #Création du boss
+        self.boss = Boss(self.datas, self.player, self.hud, self.datas.boss_group)
 
         self.menu_game_over = GameOver(self.screen.get_width(), self.screen.get_height())
 
@@ -164,6 +169,8 @@ class Eclipsoide:
         for enemy, died in Enemy.check_hits(self.datas, self.player.damage):
             CoinPopup(pg.Vector2(enemy.rect.center), round(self.player.damage, 0), self.datas.popups_group, color=self.DAMAGE_POPUP_COLOR, prefix="-")
             if died:
+                # Rapproche l'arrivée du boss : tuer plus vite le fait venir plus tôt
+                self.datas.time += Datas.KILL_TIME_BONUS
                 Coin(pg.Vector2(enemy.rect.center), self.player, self.datas.coins_group)
                 Explosion(pg.Vector2(enemy.rect.center), self.datas.explosions_group)
                 if self.player.lives < self.player.max_lives and random.random() < self.HEART_DROP_CHANCE:
@@ -213,7 +220,26 @@ class Eclipsoide:
             self.screen.blit(marker, (x - size, 4))
 
     def draw(self):
-        """ Dessine le nouvel état du jeu """
+        """ Dessine le nouvel état du jeu, avec un éventuel tremblement d'écran
+        (déclenché ex. par la mort du boss) : le rendu est redirigé vers une
+        surface intermédiaire, puis blitée sur l'écran réel avec un décalage
+        aléatoire qui décroît avec le temps restant du tremblement """
+        shaking = self.hud.shake_timer > 0
+        if shaking:
+            real_screen, self.screen = self.screen, self._frame_buffer
+            self.hud.screen = self._frame_buffer
+            self.hud.shop.screen = self._frame_buffer
+
+        self._draw_frame()
+
+        if shaking:
+            self.screen = real_screen
+            self.hud.screen = real_screen
+            self.hud.shop.screen = real_screen
+            self.screen.fill((0, 0, 0))
+            self.screen.blit(self._frame_buffer, self.hud.get_shake_offset())
+
+    def _draw_frame(self):
         initPos = self.screen.get_width() + Boss.BOSS_SIZE
         finalPos = self.screen.get_width() / 2 - Hud.SUN_SIZE / 2
 
@@ -251,7 +277,6 @@ class Eclipsoide:
         # Dessine tous les sprites dans la surface de l'écran
         self.datas.enemies_group.draw(self.screen)
         self.datas.player_group.draw(self.screen)
-        self.hud.draw_shield()
         self.datas.projectiles_group.draw(self.screen)
         self.datas.enemy_projectiles_group.draw(self.screen)
         self.datas.coins_group.draw(self.screen)
@@ -261,7 +286,6 @@ class Eclipsoide:
         self.datas.hearts_group.draw(self.screen)
         self.datas.shields_group.draw(self.screen)
         self.datas.bombs_group.draw(self.screen)
-        self.datas.shields_group.draw(self.screen)
 
         # Flashs de dégâts/soin, vignette de vie basse, compteur de pièces, vies
         self._draw_spawn_warnings()
