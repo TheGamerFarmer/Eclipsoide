@@ -396,9 +396,6 @@ class Boss(pg.sprite.Sprite):
         self.datas.bombs_group.add(telegraph)
 
     def fire_tracker(self):
-        # On vérifie qu'il n'y a pas déjà un drone en vie
-        has_tracker = any(isinstance(sprite, Tracker) for sprite in self.datas.enemies_group)
-        if not has_tracker:
-            mouth_pos = pg.Vector2(self._mouth())
-            SpawnPing(mouth_pos, self.datas.particles_group)
-            Tracker(mouth_pos, self.player, self.datas, self.datas.enemies_group)
+        mouth_pos = pg.Vector2(self._mouth())
+        SpawnPing(mouth_pos, self.datas.particles_group)
+        Tracker(mouth_pos, self.player, self.datas, self.datas.enemies_group)

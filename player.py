@@ -222,7 +222,7 @@ class Player(pg.sprite.Sprite):
         encaissé (HIT_TAKEN/HIT_SHIELDED), ou HIT_IGNORED si aucun """
         result = Player.HIT_IGNORED
 
-        if pg.sprite.spritecollide(self, enemies_group, dokill=False):
+        if pg.sprite.spritecollide(self, enemies_group, dokill=False, collided=collided):
             outcome = self.on_hit()
             if outcome != Player.HIT_IGNORED:
                 result = outcome

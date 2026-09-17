@@ -25,7 +25,7 @@ class Tracker(pg.sprite.Sprite):
         self.datas = datas
         self.player = player
 
-        self.life = 100
+        self.life = int(100 * (1.5 ** (self.datas.stage - 1)))
         self.time = 0
 
         # création du visuel
@@ -40,6 +40,9 @@ class Tracker(pg.sprite.Sprite):
         self.pos = pg.Vector2(pos)
         self.direction = pg.Vector2(0, 1)
         self.trail_timer = 0
+
+        self.hitbox = pg.Rect(0, 0, 24, 24)
+        self.hitbox.center = self.rect.center
 
     def hited(self, damage: int):
         self.life -= damage
@@ -64,6 +67,7 @@ class Tracker(pg.sprite.Sprite):
 
         self.pos += self.direction * self.SPEED * dt
         self.rect.center = (int(self.pos.x), int(self.pos.y))
+        self.hitbox.center = self.rect.center
 
         self.trail_timer -= dt
         if self.trail_timer <= 0:
