@@ -7,6 +7,7 @@ from datas import Datas
 from player import Player
 from projectile import Projectile
 from particle import Particle
+from spawn_pop import spawn_scale
 
 # Une balle qui rebondie sur les bords et des paddles
 class Enemy(pg.sprite.Sprite):
@@ -43,6 +44,10 @@ class Enemy(pg.sprite.Sprite):
     # (ease-out-back), au lieu d'apparaître directement à taille pleine
     SPAWN_ANIM_DURATION = 150  # ms
     SPAWN_ANIM_OVERSHOOT = 1.70158
+
+    # Anticipation avant disparition : bref instant de compression (squash)
+    # une fois la vie tombée à 0, avant que le sprite ne soit retiré
+    DEATH_ANIM_DURATION = 90  # ms
 
     image_set: bool = False
     image: pg.Surface
@@ -105,6 +110,8 @@ class Enemy(pg.sprite.Sprite):
         self.hit_flash_timer = 0
 
         self.spawn_anim_timer = Enemy.SPAWN_ANIM_DURATION if is_fragment else 0
+        self.dying = False
+        self.death_anim_timer = 0
 
         self.player = player
         self.screen = screen
@@ -144,11 +151,8 @@ class Enemy(pg.sprite.Sprite):
     def _apply_spawn_scale(self):
         """ Grossit depuis rien jusqu'à la taille normale avec un léger rebond
         (ease-out-back), pour marquer la naissance d'un fragment """
-        progress = max(0.0, min(1.0, 1 - (self.spawn_anim_timer / Enemy.SPAWN_ANIM_DURATION)))
-        t = progress - 1
-        c1 = Enemy.SPAWN_ANIM_OVERSHOOT
-        c3 = c1 + 1
-        scale = max(0.01, 1 + c3 * t ** 3 + c1 * t ** 2)
+        scale = spawn_scale(self.spawn_anim_timer, Enemy.SPAWN_ANIM_DURATION, Enemy.SPAWN_ANIM_OVERSHOOT)
+        scale = max(0.01, scale)
 
         source = self.flash_image if self.hit_flash_timer > 0 else self.normal_image
         center = self.rect.center
@@ -161,6 +165,15 @@ class Enemy(pg.sprite.Sprite):
         if self.hit_flash_timer > 0:
             self.hit_flash_timer -= dt
             self.image = self.flash_image if self.hit_flash_timer > 0 else self.normal_image
+
+        if self.dying:
+            # Figé sur place le temps du squash : ni mouvement, ni tir, ni débris
+            self.death_anim_timer -= dt
+            if self.death_anim_timer <= 0:
+                self.kill()
+                return
+            self._apply_death_squash()
+            return
 
         if self.spawn_anim_timer > 0:
             self.spawn_anim_timer -= dt
@@ -210,8 +223,23 @@ class Enemy(pg.sprite.Sprite):
     def hited(self, damage: int):
         self.life -= damage
         self.hit_flash_timer = Enemy.HIT_FLASH_DURATION
-        if self.life <= 0:
-            self.kill()
+        if self.life <= 0 and not self.dying:
+            self.dying = True
+            self.death_anim_timer = Enemy.DEATH_ANIM_DURATION
+
+    def _apply_death_squash(self):
+        """ Compresse brièvement le sprite juste avant sa disparition, pour
+        marquer l'impact final (les récompenses/l'explosion sont déjà
+        déclenchées par l'appelant dès que la vie tombe à 0) """
+        progress = max(0.0, min(1.0, 1 - (self.death_anim_timer / Enemy.DEATH_ANIM_DURATION)))
+        scale_x = 1 + 0.3 * progress
+        scale_y = max(0.05, 1 - 0.6 * progress)
+
+        source = self.flash_image if self.hit_flash_timer > 0 else self.normal_image
+        center = self.rect.center
+        size = (max(1, int(source.get_width() * scale_x)), max(1, int(source.get_height() * scale_y)))
+        self.image = pg.transform.smoothscale(source, size)
+        self.rect = self.image.get_rect(center=center)
 
     @classmethod
     def check_hits(cls, datas: Datas, damage: float | int, collided=Projectile.collide) -> list[tuple["Enemy", bool]]:

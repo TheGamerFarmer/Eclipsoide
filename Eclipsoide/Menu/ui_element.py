@@ -2,12 +2,17 @@ import pygame as pg
 
 
 class Button:
+    # Bref effet d'enfoncement au clic, pour un retour tactile immédiat
+    PRESS_DURATION = 150  # ms
+    PRESS_OFFSET = 3  # px, décalage vers le bas au pic de l'enfoncement
+
     def __init__(self, x, y, width, height, text, font, image_path, text_color=(255, 255, 255)):
         self.rect = pg.Rect(x, y, width, height)
         self.font = font
         self.text = text
         self.text_color = text_color
         self.is_hovered = False
+        self.press_start: int | None = None
 
         self.image = pg.image.load(image_path).convert_alpha()
         self.image = pg.transform.scale(self.image, (width, height))
@@ -16,13 +21,22 @@ class Button:
         self.hover_overlay.fill((255, 255, 255, 50))
 
     def draw(self, surface):
-        surface.blit(self.image, self.rect)
+        offset_y = 0
+        if self.press_start is not None:
+            elapsed = pg.time.get_ticks() - self.press_start
+            if elapsed < Button.PRESS_DURATION:
+                offset_y = int(Button.PRESS_OFFSET * (1 - elapsed / Button.PRESS_DURATION))
+            else:
+                self.press_start = None
+
+        draw_rect = self.rect.move(0, offset_y)
+        surface.blit(self.image, draw_rect)
 
         if self.is_hovered:
-            surface.blit(self.hover_overlay, self.rect)
+            surface.blit(self.hover_overlay, draw_rect)
 
         text_surface = self.font.render(self.text, True, self.text_color)
-        text_rect = text_surface.get_rect(center=self.rect.center)
+        text_rect = text_surface.get_rect(center=draw_rect.center)
         surface.blit(text_surface, text_rect)
 
     def handle_event(self, event):
@@ -30,6 +44,7 @@ class Button:
             self.is_hovered = self.rect.collidepoint(event.pos)
         elif event.type == pg.MOUSEBUTTONDOWN:
             if event.button == 1 and self.rect.collidepoint(event.pos):
+                self.press_start = pg.time.get_ticks()
                 return True
         return False
 

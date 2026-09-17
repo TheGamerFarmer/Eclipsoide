@@ -3,6 +3,7 @@ import math
 import random
 import pygame as pg
 from shop import Shop
+from spawn_pop import spawn_scale
 
 import settings
 
@@ -57,6 +58,10 @@ class Hud:
     COIN_POP_DURATION = 220  # ms
     COIN_POP_AMPLITUDE = 0.45  # +45% de taille au pic
 
+    # Même genre de pop, mais sur le texte SCORE/RECORD dès qu'il augmente
+    SCORE_POP_DURATION = 220  # ms
+    SCORE_POP_AMPLITUDE = 0.35
+
     # Record affiché sous le compteur : gris tant qu'il n'est pas battu, vert ensuite
     RECORD_COLOR = (200, 200, 210)
     RECORD_BEATEN_COLOR = (80, 255, 140)
@@ -80,12 +85,16 @@ class Hud:
     # Secousse + flash rouge bref sur l'icône du coeur qui vient de se vider
     HEART_BREAK_DURATION = 350  # ms
     HEART_BREAK_SHAKE_MAGNITUDE = 4  # px
+    # Pop + flash vert sur l'icône du coeur qui vient de se remplir (heal)
+    HEART_HEAL_DURATION = 300  # ms
     # Animation du bouclier (Eclipsoide/images/shield/) autour du vaisseau tant qu'il est
     # actif, avec un pic de taille bref quand un coup est bloqué et un
     # clignotement d'avertissement juste avant qu'il ne s'éteigne
     SHIELD_FRAME_COUNT = 12
     SHIELD_SIZE = (56, 56)
     SHIELD_FRAME_DELAY = 45  # ms entre deux frames de l'animation
+    # Pop d'apparition (grossit depuis rien avec rebond) à l'activation
+    SHIELD_SPAWN_ANIM_DURATION = 200  # ms
     SHIELD_PULSE_DURATION = 250  # ms
     SHIELD_PULSE_SCALE = 0.25  # +25% de taille au pic
     SHIELD_WARNING_THRESHOLD = 1200  # ms restantes à partir desquelles ça clignote
@@ -165,7 +174,13 @@ class Hud:
         self.record_celebration_particles: list[tuple[float, float]] = []
         self.heart_break_index: int | None = None
         self.heart_break_timer = 0
+        self.heart_heal_index: int | None = None
+        self.heart_heal_timer = 0
         self._last_lives = player.lives
+        self.score_pop_timer = 0
+        self._last_score = player.score
+        self.shield_spawn_timer = 0
+        self._shield_was_active = False
 
         self.shop = Shop(self.screen, self.player)
 
@@ -222,6 +237,9 @@ class Hud:
         self.level_banner_timer = max(0, self.level_banner_timer - dt)
         self.record_celebration_timer = max(0, self.record_celebration_timer - dt)
         self.heart_break_timer = max(0, self.heart_break_timer - dt)
+        self.heart_heal_timer = max(0, self.heart_heal_timer - dt)
+        self.score_pop_timer = max(0, self.score_pop_timer - dt)
+        self.shield_spawn_timer = max(0, self.shield_spawn_timer - dt)
 
         # Déclenché une seule fois par partie, pile à l'instant où le score
         # dépasse le record (figé au lancement de la partie)
@@ -233,7 +251,22 @@ class Hud:
         if self.player.lives < self._last_lives:
             self.heart_break_index = self.player.lives
             self.heart_break_timer = self.HEART_BREAK_DURATION
+        # Pop vert sur le coeur qui vient de se remplir, dès qu'une vie est regagnée
+        elif self.player.lives > self._last_lives:
+            self.heart_heal_index = self.player.lives - 1
+            self.heart_heal_timer = self.HEART_HEAL_DURATION
         self._last_lives = self.player.lives
+
+        # Pop sur SCORE/RECORD dès que le score augmente
+        if self.player.score > self._last_score:
+            self.score_pop_timer = self.SCORE_POP_DURATION
+        self._last_score = self.player.score
+
+        # Pop d'apparition du bouclier, uniquement au moment où il s'active
+        shield_active = self.player.shield_timer > 0
+        if shield_active and not self._shield_was_active:
+            self.shield_spawn_timer = self.SHIELD_SPAWN_ANIM_DURATION
+        self._shield_was_active = shield_active
 
         self._advance_counters(dt)
 
@@ -381,6 +414,10 @@ class Hud:
 
         pulse = self.shield_pulse_timer / self.SHIELD_PULSE_DURATION if self.shield_pulse_timer > 0 else 0
         scale = 1 + self.SHIELD_PULSE_SCALE * pulse
+
+        if self.shield_spawn_timer > 0:
+            scale *= max(0.01, spawn_scale(self.shield_spawn_timer, self.SHIELD_SPAWN_ANIM_DURATION))
+
         if scale != 1.0:
             size = (max(1, int(self.SHIELD_SIZE[0] * scale)), max(1, int(self.SHIELD_SIZE[1] * scale)))
             frame = pg.transform.smoothscale(frame, size)
@@ -412,6 +449,19 @@ class Hud:
         self.screen.blit(icon_surface, icon_surface.get_rect(center=icon_rect.center))
         self.screen.blit(text_surface, text_surface.get_rect(center=text_rect.center))
 
+    def _score_pop_scale(self) -> float:
+        if self.score_pop_timer <= 0:
+            return 1.0
+        elapsed = 1 - (self.score_pop_timer / self.SCORE_POP_DURATION)
+        return 1 + self.SCORE_POP_AMPLITUDE * math.sin(math.pi * elapsed)
+
+    def _blit_pop_text(self, text_surface: pg.Surface, topleft: tuple[int, int]):
+        rect = text_surface.get_rect(topleft=topleft)
+        scale = self._score_pop_scale()
+        if scale != 1.0:
+            text_surface = pg.transform.smoothscale(text_surface, (max(1, int(rect.width * scale)), max(1, int(rect.height * scale))))
+        self.screen.blit(text_surface, text_surface.get_rect(center=rect.center))
+
     def _draw_record(self):
         beaten = self.player.score > self.record
         color = self.RECORD_BEATEN_COLOR if beaten else self.RECORD_COLOR
@@ -419,12 +469,12 @@ class Hud:
             record_text = self.record_font.render(f"RECORD : {self.displayed_score}", True, color)
         else:
             record_text = self.record_font.render(f"RECORD : {self.record}", True, color)
-        self.screen.blit(record_text, (10, self.RECORD_Y))
+        self._blit_pop_text(record_text, (10, self.RECORD_Y))
 
     def _draw_score(self):
         color = self.RECORD_BEATEN_COLOR
         score_text = self.record_font.render(f"SCORE : {self.displayed_score}", True, color)
-        self.screen.blit(score_text, (10, self.SCORE_Y))
+        self._blit_pop_text(score_text, (10, self.SCORE_Y))
 
     def _draw_hearts(self):
         icon_w, icon_h = self.heart_full_icon.get_size()
@@ -449,12 +499,32 @@ class Hud:
                 offset_x = int(shake_mag * math.sin(self.heart_break_timer * 0.09))
                 flash_alpha = int(220 * (1 - progress))
 
-            self.screen.blit(icon, (x + offset_x, self.HEARTS_Y))
+            heal_scale = 1.0
+            heal_alpha = 0
+            if i == self.heart_heal_index and self.heart_heal_timer > 0:
+                elapsed = 1 - (self.heart_heal_timer / self.HEART_HEAL_DURATION)
+                heal_scale = 1 + 0.5 * math.sin(math.pi * elapsed)
+                heal_alpha = int(200 * (1 - elapsed))
+
+            draw_icon = icon
+            if heal_scale != 1.0:
+                size = (max(1, int(icon_w * heal_scale)), max(1, int(icon_h * heal_scale)))
+                draw_icon = pg.transform.smoothscale(icon, size)
+
+            icon_rect = draw_icon.get_rect(center=(x + icon_w // 2 + offset_x, self.HEARTS_Y + icon_h // 2))
+            self.screen.blit(draw_icon, icon_rect)
+
             if flash_alpha > 0:
                 red_overlay = icon.copy()
                 red_overlay.fill((255, 40, 40, 0), special_flags=pg.BLEND_RGBA_ADD)
                 red_overlay.set_alpha(flash_alpha)
                 self.screen.blit(red_overlay, (x + offset_x, self.HEARTS_Y))
+
+            if heal_alpha > 0:
+                green_overlay = draw_icon.copy()
+                green_overlay.fill((*self.HEAL_FLASH_COLOR, 0), special_flags=pg.BLEND_RGBA_ADD)
+                green_overlay.set_alpha(heal_alpha)
+                self.screen.blit(green_overlay, icon_rect)
 
     def draw_overlay(self):
         """ Dessine, par-dessus le jeu, les flashs, la vignette de vie basse puis le HUD (pièces/vies) """
