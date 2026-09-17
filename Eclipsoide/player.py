@@ -1,3 +1,4 @@
+import math
 import random
 import pygame as pg
 
@@ -35,6 +36,12 @@ class Player(pg.sprite.Sprite):
 
     PLAYER_SPEED = 0.4
 
+    # Léger flottement vertical quand le vaisseau est à l'arrêt, qui s'installe
+    # et se dissipe en douceur plutôt que de s'activer/désactiver brutalement
+    BOB_AMPLITUDE = 3     # px
+    BOB_PERIOD = 1400     # ms pour un cycle complet
+    BOB_EASE_SPEED = 0.006  # vitesse d'installation/dissipation de l'intensité
+
     # Traînée plus dense en mouvement qu'à l'arrêt : l'intervalle entre deux
     # particules se resserre dès que le vaisseau se déplace
     TRAIL_DELAY_IDLE = 26    # ms entre particules à l'arrêt
@@ -67,7 +74,7 @@ class Player(pg.sprite.Sprite):
         self.shield_timer = 0
         self.heart_drop_chance = 0
 
-        self.coins = 0
+        self.coins = 999999999999
         self.score = 0
 
         self.fire_delay = 500
@@ -105,6 +112,8 @@ class Player(pg.sprite.Sprite):
         self.hitbox.center = self.rect.center
 
         self.position = pg.Vector2(self.rect.midbottom)
+        self.bob_time = 0
+        self.bob_intensity = 0.0
 
     def update(self, dt):
         self._update_damage_texture()
@@ -133,6 +142,18 @@ class Player(pg.sprite.Sprite):
         self.rect.midbottom = self.position
         self.rect.clamp_ip(self.datas.screen.get_rect())
         self.position = pg.Vector2(self.rect.midbottom)
+
+        # Flottement idle : recalculé depuis self.position (jamais intégré à
+        # elle) pour ne pas dériver, avec une intensité qui s'installe/se
+        # dissipe en douceur au lieu de basculer net dès qu'on bouge
+        moving = movement.length_squared() != 0
+        target_intensity = 0.0 if moving else 1.0
+        self.bob_intensity += (target_intensity - self.bob_intensity) * min(1.0, Player.BOB_EASE_SPEED * dt)
+        self.bob_time += dt
+        if self.bob_intensity > 0.001:
+            bob_offset = int(Player.BOB_AMPLITUDE * self.bob_intensity * math.sin(self.bob_time * (2 * math.pi / Player.BOB_PERIOD)))
+            self.rect.y += bob_offset
+
         self.hitbox.center = self.rect.center
 
         self.fire_timer -= dt
