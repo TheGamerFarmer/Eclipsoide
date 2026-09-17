@@ -16,7 +16,7 @@ class Tracker(pg.sprite.Sprite):
         self.datas = datas
         self.player = player
 
-        self.life = 60
+        self.life = 100
         self.time = 0
 
         # création du visuel
