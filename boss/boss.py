@@ -40,6 +40,10 @@ class Boss(pg.sprite.Sprite):
 
     HIT_FLASH_DURATION = 90  # ms de flash blanc quand touché
     DAMAGE_POPUP_COLOR = (255, 255, 255)
+    # L'explosion de mort est mise à l'échelle du boss (pas le sprite d'origine,
+    # 110px, qui serait ridicule à côté d'un boss de 620px) sans pour autant
+    # être 1:1 (l'asset pixelise trop à cette taille)
+    EXPLOSION_SIZE_RATIO = 0.55
 
     size = (BOSS_SIZE, BOSS_SIZE)
 
@@ -66,11 +70,12 @@ class Boss(pg.sprite.Sprite):
         self.flash_image = self._build_flash_image(image)
         self.image = self.normal_image if self.hit_flash_timer <= 0 else self.flash_image
 
-    def __init__(self, datas: Datas, player: Player, *groups):
+    def __init__(self, datas: Datas, player: Player, hud, *groups):
         pg.sprite.Sprite.__init__(self, *groups)
 
         self.datas = datas
         self.player = player
+        self.hud = hud
         self.is_spawn = False
 
         self.max_life = int(Boss.LIFE * Boss.BOSS_LIFE_GROWTH ** (self.datas.stage - 1))
@@ -89,7 +94,9 @@ class Boss(pg.sprite.Sprite):
 
     def _boss_vaincu(self):
         """ Le boss explose, le palier suivant démarre : les vagues reprennent """
-        Explosion(pg.Vector2(self.rect.center), self.datas.explosions_group)
+        explosion_size = (int(self.rect.width * self.EXPLOSION_SIZE_RATIO), int(self.rect.height * self.EXPLOSION_SIZE_RATIO))
+        Explosion(pg.Vector2(self.rect.center), self.datas.explosions_group, size=explosion_size)
+        self.hud.trigger_shake()
         self.datas.bombs_group.empty()
         self.is_spawn = False
         self.datas.stage += 1

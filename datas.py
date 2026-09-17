@@ -4,7 +4,11 @@ class Datas(object):
     #The time between two wave in millisecond
     TIME_BETWEEN_WAVE = 5000
     #The time before the boss spawn in millisecond
-    TIME_BEFORE_BOSS = 30000
+    TIME_BEFORE_BOSS = 300000
+
+    # Chaque ennemi tué avance l'horloge, donc rapproche l'arrivée du boss
+    # (tuer plus vite = boss plus tôt)
+    KILL_TIME_BONUS = 1000  # ms
 
     # Délai (explosion du joueur) avant d'afficher l'écran de game over
     DEATH_COOLDOWN = 1300 # ms
