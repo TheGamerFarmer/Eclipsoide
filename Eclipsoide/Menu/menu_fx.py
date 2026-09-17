@@ -2,6 +2,41 @@ import math
 import pygame as pg
 
 
+class FadeIn:
+    """ Fondu d'entrée réutilisable par les écrans de menu : on_shown() relance
+    l'horloge, wrap_draw() dessine le contenu sur un tampon et l'affiche avec
+    une opacité croissante (ease-out) tant que le fondu n'est pas terminé """
+
+    def __init__(self, duration: int = 400):
+        self.duration = duration
+        self._shown_at: int | None = None
+
+    def on_shown(self):
+        self._shown_at = pg.time.get_ticks()
+
+    def _progress(self) -> float:
+        if self._shown_at is None:
+            return 1.0
+        elapsed = pg.time.get_ticks() - self._shown_at
+        if elapsed >= self.duration:
+            return 1.0
+        return elapsed / self.duration
+
+    def wrap_draw(self, surface: pg.Surface, draw_content):
+        """ draw_content(surface) : fonction qui dessine le contenu complet de l'écran """
+        progress = self._progress()
+        if progress >= 1.0:
+            draw_content(surface)
+            return
+
+        buffer = pg.Surface(surface.get_size())
+        draw_content(buffer)
+        eased = 1 - (1 - progress) ** 2
+        buffer.set_alpha(int(255 * eased))
+        surface.fill((0, 0, 0))
+        surface.blit(buffer, (0, 0))
+
+
 class MenuFx:
     """ Éléments d'ambiance animés partagés par les écrans de menu qui utilisent
     le fond étoilé (soleil qui tourne/pulse/brille, lueur pulsante de titre).

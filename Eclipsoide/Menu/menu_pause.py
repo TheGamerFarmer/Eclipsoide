@@ -7,7 +7,14 @@ UI_BASE_PATH = "Eclipsoide/images/ui"
 
 
 class PauseMenu:
+    # Fondu d'entrée, rejoué à chaque nouvelle mise en pause. Contrairement aux
+    # écrans de menu classiques, il ne faut pas repartir d'un fond noir : la
+    # partie gelée reste visible derrière, seul le panneau de pause s'estompe
+    TRANSITION_DURATION = 250  # ms
+
     def __init__(self, screen_width, screen_height):
+
+        self._shown_at: int | None = None
 
         font_path = os.path.join(UI_BASE_PATH, "Font", "Kenney Future.ttf")
         self.titre_font = pg.font.Font(font_path, 60)
@@ -38,7 +45,33 @@ class PauseMenu:
         """ Renseigne le score de la partie en cours """
         self.score = score
 
+    def on_shown(self):
+        """ À appeler chaque fois que la pause s'active : relance le fondu d'entrée """
+        self._shown_at = pg.time.get_ticks()
+
+    def _progress(self) -> float:
+        if self._shown_at is None:
+            return 1.0
+        elapsed = pg.time.get_ticks() - self._shown_at
+        if elapsed >= self.TRANSITION_DURATION:
+            return 1.0
+        return elapsed / self.TRANSITION_DURATION
+
     def draw(self, surface):
+        progress = self._progress()
+        if progress >= 1.0:
+            self._draw_content(surface)
+            return
+
+        # Panneau de pause dessiné sur un tampon transparent puis blitté avec une
+        # opacité croissante : la partie gelée reste visible en dessous pendant le fondu
+        buffer = pg.Surface(surface.get_size(), pg.SRCALPHA)
+        self._draw_content(buffer)
+        eased = 1 - (1 - progress) ** 2
+        buffer.set_alpha(int(255 * eased))
+        surface.blit(buffer, (0, 0))
+
+    def _draw_content(self, surface):
         overlay = pg.Surface(surface.get_size(), pg.SRCALPHA)
         overlay.fill((50, 0, 50, 90))
         surface.blit(overlay, (0, 0))

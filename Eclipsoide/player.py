@@ -114,13 +114,16 @@ class Player(pg.sprite.Sprite):
         keystate = pg.key.get_pressed()
         movement = pg.Vector2()
 
-        if keystate[pg.K_z] or keystate[pg.K_UP]:
+        # Les flèches marchent toujours, quels que soient les touches
+        # réassignées dans les options (filet de sécurité)
+        keybinds = settings.OPTIONS["keybinds"]
+        if keystate[keybinds["up"]] or keystate[pg.K_UP]:
             movement.y -= 1
-        if keystate[pg.K_s] or keystate[pg.K_DOWN]:
+        if keystate[keybinds["down"]] or keystate[pg.K_DOWN]:
             movement.y += 1
-        if keystate[pg.K_q] or keystate[pg.K_LEFT]:
+        if keystate[keybinds["left"]] or keystate[pg.K_LEFT]:
             movement.x -= 1
-        if keystate[pg.K_d] or keystate[pg.K_RIGHT]:
+        if keystate[keybinds["right"]] or keystate[pg.K_RIGHT]:
             movement.x += 1
 
         if movement.length_squared() != 0:
@@ -150,7 +153,7 @@ class Player(pg.sprite.Sprite):
         if Player.shoot_sound is None or not settings.OPTIONS["sfx"]:
             return
         # Volume relu à chaque tir pour suivre les changements du menu options
-        Player.shoot_sound.set_volume(settings.OPTIONS["volume"] / 100)
+        Player.shoot_sound.set_volume(settings.OPTIONS["sfx_volume"] / 100)
         Player.shoot_sound.play()
 
     def _emit_trail(self, dt, movement: pg.Vector2):

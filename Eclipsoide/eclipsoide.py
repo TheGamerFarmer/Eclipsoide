@@ -119,8 +119,8 @@ class Eclipsoide:
                         case pg.K_f:
                             # Touche 'f' passe en fullscreen ou revient en mode window
                             settings.toggle_fullscreen()
-                        case pg.K_ESCAPE | pg.K_p:
-                            # alterne la pause
+                        case k if k == pg.K_ESCAPE or k == settings.OPTIONS["keybinds"]["pause"]:
+                            # Échap marche toujours ; l'autre touche est réassignable dans les options
                             self.pause = not self.pause
         return True
 
@@ -244,6 +244,21 @@ class Eclipsoide:
                 self.screen.blit(zoomed, zoomed.get_rect(center=center))
             else:
                 self.screen.blit(self._frame_buffer, offset)
+
+        if self.death_timer is not None:
+            self._draw_death_fade()
+
+    def _draw_death_fade(self):
+        """ Assombrit progressivement l'écran pendant le death_timer (l'explosion
+        du joueur joue en fond), pour une transition plus douce vers le game over
+        que le cut brutal d'avant """
+        progress = 1 - max(0, self.death_timer) / Datas.DEATH_COOLDOWN
+        alpha = max(0, min(255, int(255 * progress)))
+        if alpha <= 0:
+            return
+        overlay = pg.Surface(self.screen.get_size(), pg.SRCALPHA)
+        overlay.fill((0, 0, 0, alpha))
+        self.screen.blit(overlay, (0, 0))
 
     def _draw_frame(self):
         initPos = self.screen.get_width() + Boss.BOSS_SIZE

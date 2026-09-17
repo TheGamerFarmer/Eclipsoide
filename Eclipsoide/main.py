@@ -13,6 +13,22 @@ from Menu.menu_option import MenuOption
 from Menu.menu_pause import PauseMenu
 from eclipsoide import Eclipsoide
 
+# Fondu depuis le noir au tout début d'une partie (nouvelle ou relancée),
+# symétrique au fondu vers le noir déjà en place à la mort du joueur
+GAME_START_FADE_DURATION = 400  # ms
+
+
+def draw_start_fade(screen, start_time):
+    if start_time is None:
+        return
+    elapsed = pg.time.get_ticks() - start_time
+    if elapsed >= GAME_START_FADE_DURATION:
+        return
+    alpha = 255 - int(255 * (elapsed / GAME_START_FADE_DURATION))
+    overlay = pg.Surface(screen.get_size(), pg.SRCALPHA)
+    overlay.fill((0, 0, 0, alpha))
+    screen.blit(overlay, (0, 0))
+
 
 # Fonction principale
 def main():
@@ -38,6 +54,7 @@ def main():
     game_over_running = False
     pause = PauseMenu(1024, 768)
     leaderboard = MenuLeaderboard(1024, 768)
+    game_start_time = None
     while True:
         # On s'assure de revenir au menu principal par défaut
         active_menu = menu
@@ -65,6 +82,7 @@ def main():
                     # On ne recrée pas la fenêtre ici pour garder une transition ultra-fluide
                     clock = pg.time.Clock()
                     eclipsoide = Eclipsoide(screen)
+                    game_start_time = pg.time.get_ticks()
 
                 elif action == "quit":
                     pg.quit()
@@ -73,10 +91,13 @@ def main():
                 # Menu options
                 elif action == "option":
                     active_menu = options_menu
+                    options_menu.on_shown()
                 elif action == "credit":
                     active_menu = credit_menu
+                    credit_menu.on_shown()
                 elif action == "leaderboard":
                     active_menu = leaderboard
+                    leaderboard.on_shown()
                 elif action == "back":
                     active_menu = menu
                     audio.apply_settings()
@@ -97,8 +118,10 @@ def main():
 
             if eclipsoide.pause:
                 audio.set_paused(True)
-                # Le menu affiche le score de la partie en cours
+                # Le menu affiche le score de la partie en cours, et rejoue son
+                # fondu d'entrée à chaque nouvelle mise en pause
                 pause.set_score(eclipsoide.player.score)
+                pause.on_shown()
                 pause.draw(screen)
                 pg.display.flip()
             while eclipsoide.pause:
@@ -110,10 +133,12 @@ def main():
                     action = pause.handle_event(event)
                     if action == "resume":
                         eclipsoide.pause = False
+                        eclipsoide.hud.trigger_resume_flash()
                         eclipsoide.draw()
                     elif action == "restart":
                         eclipsoide.pause = False
                         eclipsoide = Eclipsoide(screen)
+                        game_start_time = pg.time.get_ticks()
                     elif action == "quit":
                         pg.quit()
                         sys.exit()
@@ -124,6 +149,7 @@ def main():
 
                     elif action == "option":
                         active_menu = options_menu
+                        options_menu.on_shown()
                         while active_menu == options_menu:
                             clock.tick(0)
                             for evt in pg.event.get():
@@ -143,10 +169,17 @@ def main():
                         pause.draw(screen)
                         pg.display.flip()
                     elif event.type == pg.KEYDOWN:
-                        # Les deux touches de pause reprennent aussi la partie
-                        if event.key in (pg.K_ESCAPE, pg.K_p):
+                        # Échap marche toujours ; l'autre touche est réassignable dans les options
+                        if event.key in (pg.K_ESCAPE, settings.OPTIONS["keybinds"]["pause"]):
                             eclipsoide.pause = False
+                            eclipsoide.hud.trigger_resume_flash()
                             eclipsoide.draw()
+
+                # Redessine à chaque tick (pas seulement après une action) pour
+                # que le fondu d'entrée de la pause ait le temps de s'animer
+                if eclipsoide.pause:
+                    pause.draw(screen)
+                    pg.display.flip()
 
             # Sortie de pause (reprise, restart ou retour menu)
             audio.set_paused(False)
@@ -156,6 +189,7 @@ def main():
 
             screen.fill((0, 0, 0))
             eclipsoide.draw()
+            draw_start_fade(screen, game_start_time)
             pg.display.flip()
 
 
@@ -171,6 +205,7 @@ def main():
                     game_over_running = False
                     del eclipsoide
                     eclipsoide = Eclipsoide(screen)
+                    game_start_time = pg.time.get_ticks()
                 elif action == "menu":
                     start_menu = True
                     game_over_running = False

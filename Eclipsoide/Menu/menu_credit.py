@@ -1,7 +1,7 @@
 import os
 import pygame as pg
 from . import ui_element
-from .menu_fx import MenuFx
+from .menu_fx import MenuFx, FadeIn
 
 UI_BASE_PATH = "Eclipsoide/images/ui"
 
@@ -10,12 +10,16 @@ SUN_CENTER_RATIO = (0.5, 0.28)
 
 
 class MenuCredit:
+    # Fondu d'entrée, rejoué à chaque fois que ce menu redevient actif
+    TRANSITION_DURATION = 400  # ms
+
     def __init__(self, screen_width, screen_height):
         # Image de fond
         self.bg_image = pg.image.load('Eclipsoide/images/backgroundWellcom.png').convert()
         self.bg_image = pg.transform.scale(self.bg_image, (screen_width, screen_height))
 
         self.fx = MenuFx()
+        self.fade = FadeIn(self.TRANSITION_DURATION)
         self.sun_center = (screen_width * SUN_CENTER_RATIO[0], screen_height * SUN_CENTER_RATIO[1])
 
         # Polices
@@ -58,7 +62,14 @@ class MenuCredit:
             "PLANQUETTE Romain"
         ]
 
+    def on_shown(self):
+        """ À appeler chaque fois que ce menu redevient actif : relance le fondu d'entrée """
+        self.fade.on_shown()
+
     def draw(self, surface):
+        self.fade.wrap_draw(surface, self._draw_content)
+
+    def _draw_content(self, surface):
         surface.blit(self.bg_image, (0, 0))
         self.fx.draw_sun(surface, self.sun_center)
 

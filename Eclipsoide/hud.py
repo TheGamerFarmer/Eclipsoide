@@ -29,6 +29,11 @@ class Hud:
     HIT_FLASH_COLOR = (255, 30, 30)
     HIT_FLASH_MAX_ALPHA = 130
 
+    # Flash blanc discret au moment exact où la partie reprend depuis la pause
+    RESUME_FLASH_DURATION = 220  # ms
+    RESUME_FLASH_COLOR = (255, 255, 255)
+    RESUME_FLASH_MAX_ALPHA = 90
+
     # Au moment où une vie est récupérée : une aura qui irradie doucement
     # depuis le vaisseau (volontairement différente du flash de dégâts, plus
     # lente et localisée, pour ne pas donner l'impression d'un coup encaissé)
@@ -143,6 +148,7 @@ class Hud:
         self.vignette_surface = self._build_vignette(self.VIGNETTE_COLOR)
 
         self.hit_flash_timer = 0
+        self.resume_flash_timer = 0
         self.heal_flash_timer = 0
         self.coin_pop_timer = 0
         self.shield_pulse_timer = 0
@@ -167,6 +173,9 @@ class Hud:
 
     def trigger_hit_flash(self):
         self.hit_flash_timer = self.HIT_FLASH_DURATION
+
+    def trigger_resume_flash(self):
+        self.resume_flash_timer = self.RESUME_FLASH_DURATION
 
     def trigger_heal_flash(self):
         self.heal_flash_timer = self.HEAL_FLASH_DURATION
@@ -204,6 +213,7 @@ class Hud:
         """ Décomptes des flashs/pop : toujours appelé, même pendant une pause de gameplay
         (séquence de mort), pour que les effets déjà lancés terminent proprement """
         self.hit_flash_timer = max(0, self.hit_flash_timer - dt)
+        self.resume_flash_timer = max(0, self.resume_flash_timer - dt)
         self.heal_flash_timer = max(0, self.heal_flash_timer - dt)
         self.coin_pop_timer = max(0, self.coin_pop_timer - dt)
         self.shield_pulse_timer = max(0, self.shield_pulse_timer - dt)
@@ -449,6 +459,7 @@ class Hud:
     def draw_overlay(self):
         """ Dessine, par-dessus le jeu, les flashs, la vignette de vie basse puis le HUD (pièces/vies) """
         self._draw_full_screen_flash(self.hit_flash_timer, self.HIT_FLASH_DURATION, self.HIT_FLASH_COLOR, self.HIT_FLASH_MAX_ALPHA)
+        self._draw_full_screen_flash(self.resume_flash_timer, self.RESUME_FLASH_DURATION, self.RESUME_FLASH_COLOR, self.RESUME_FLASH_MAX_ALPHA)
         self._draw_heal_glow()
         self._draw_low_health_vignette()
 
