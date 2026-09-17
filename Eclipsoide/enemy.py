@@ -39,6 +39,11 @@ class Enemy(pg.sprite.Sprite):
     FRAGMENT_SPEED_BOOST = 1.4
     FRAGMENT_COIN_VALUE_MULTIPLIER = 0.5
 
+    # Naissance d'un fragment : grossit depuis rien avec un léger rebond
+    # (ease-out-back), au lieu d'apparaître directement à taille pleine
+    SPAWN_ANIM_DURATION = 150  # ms
+    SPAWN_ANIM_OVERSHOOT = 1.70158
+
     image_set: bool = False
     image: pg.Surface
     image_shoot_set: bool = False
@@ -99,6 +104,8 @@ class Enemy(pg.sprite.Sprite):
         self.flash_image = self._build_flash_image(self.image)
         self.hit_flash_timer = 0
 
+        self.spawn_anim_timer = Enemy.SPAWN_ANIM_DURATION if is_fragment else 0
+
         self.player = player
         self.screen = screen
         # Recupère le rectangle du Sprite (taille alignée sur l'image, variation incluse)
@@ -126,17 +133,39 @@ class Enemy(pg.sprite.Sprite):
 
         self.movement = pg.Vector2(self.speedX, self.speedY)
 
+        if self.spawn_anim_timer > 0:
+            self._apply_spawn_scale()
+
     @staticmethod
     def _build_flash_image(image: pg.Surface) -> pg.Surface:
         flash = image.copy()
         flash.fill((255, 255, 255, 0), special_flags=pg.BLEND_RGBA_ADD)
         return flash
 
+    def _apply_spawn_scale(self):
+        """ Grossit depuis rien jusqu'à la taille normale avec un léger rebond
+        (ease-out-back), pour marquer la naissance d'un fragment """
+        progress = max(0.0, min(1.0, 1 - (self.spawn_anim_timer / Enemy.SPAWN_ANIM_DURATION)))
+        t = progress - 1
+        c1 = Enemy.SPAWN_ANIM_OVERSHOOT
+        c3 = c1 + 1
+        scale = max(0.01, 1 + c3 * t ** 3 + c1 * t ** 2)
+
+        source = self.flash_image if self.hit_flash_timer > 0 else self.normal_image
+        center = self.rect.center
+        size = (max(1, int(source.get_width() * scale)), max(1, int(source.get_height() * scale)))
+        self.image = pg.transform.smoothscale(source, size)
+        self.rect = self.image.get_rect(center=center)
+
     def update(self,dt):
         """ Met à jour la position de la balle  """
         if self.hit_flash_timer > 0:
             self.hit_flash_timer -= dt
             self.image = self.flash_image if self.hit_flash_timer > 0 else self.normal_image
+
+        if self.spawn_anim_timer > 0:
+            self.spawn_anim_timer -= dt
+            self._apply_spawn_scale()
 
         oldPos = pg.Vector2(self.rect.center)
 
