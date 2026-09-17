@@ -33,12 +33,12 @@ class Shop:
              "key_str": "1", "keys": (pg.K_1, pg.K_KP1), "unicode": ["1", "&"]},
             "cadence": {"id": "cadence", "name": "Fire rate", "lvl": 0, "max": float('inf'), "base_price": 50, "price": 50,
              "key_str": "2", "keys": (pg.K_2, pg.K_KP2), "unicode": ["2", "é"]},
-            "health": {"id": "health", "name": "Max health", "lvl": 1, "max": 5, "base_price": 150, "price": 150, "key_str": "3",
+            "health": {"id": "health", "name": "Max health", "lvl": 1, "max": 5, "base_price": 100, "price": 100, "key_str": "3",
              "keys": (pg.K_3, pg.K_KP3), "unicode": ["3", '"']},
-            "heart": {"id": "heart", "name": "Heart chance", "lvl": 0, "max": 5, "base_price": 150, "price": 150, "key_str": "4",
-             "keys": (pg.K_5, pg.K_KP5), "unicode": ["4", "'"]},
+            "heart": {"id": "heart", "name": "Heart chance", "lvl": 0, "max": 5, "base_price": 100, "price": 100, "key_str": "4",
+             "keys": (pg.K_4, pg.K_KP4), "unicode": ["4", "'"]},
             "multi_shot": {"id": "multi_shot", "name": "Multi shot", "lvl": 1, "max": float('inf'), "base_price": 2500, "price": 2500, "key_str": "5",
-             "keys": (pg.K_4, pg.K_KP4), "unicode": ["5", "("]}
+             "keys": (pg.K_5, pg.K_KP5), "unicode": ["5", "("]}
         }
         self.rects = []
 
@@ -171,7 +171,7 @@ class Shop:
                         nouveau_prix = round(item['base_price'] * pow(1.25, item['lvl']), 0)
                         self.player.fire_delay = 500 / (1 + 0.05 * item['lvl'])
                     case 'health':
-                        nouveau_prix = round(item['base_price'] * (2 ** item['lvl']))
+                        nouveau_prix = item['base_price'] * (2 ** item['lvl'] - 1)
                         self.player.max_lives += 1
                         self.player.lives += 1
                     case 'heart':
