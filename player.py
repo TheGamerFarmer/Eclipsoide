@@ -16,7 +16,7 @@ class Player(pg.sprite.Sprite):
     damage: float = 20.0
     # Référence pour le halo des tirs : au-dessus de ce seuil de dégâts (ex.
     # améliorations), le halo grossit ; en dessous, il rétrécit
-    BASE_DAMAGE = 30
+    BASE_DAMAGE = 60
 
     # Texture du vaisseau selon le pourcentage de vie restant : le premier
     # seuil (proportion minimale) dont on est au-dessus ou égal s'applique
@@ -62,7 +62,7 @@ class Player(pg.sprite.Sprite):
         self.invincible_timer = 0
         self.shield_timer = 0
 
-        self.coins = 0
+        self.coins = 99999999999999999
         self.score = 0
 
         self.fire_delay = 300
