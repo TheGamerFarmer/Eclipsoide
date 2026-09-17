@@ -60,8 +60,6 @@ class Eclipsoide:
         del self.screen
         del self.boss
         del self.hud
-        del self.stage
-        del self.time
         del self.isEnded
         del self.menu_game_over
         del self
@@ -82,7 +80,6 @@ class Eclipsoide:
         self.datas = Datas(screen)
 
         self.pause = False
-        self.stage = 1
 
         # Création d'une instance du joueur
         self.player = Player(0.3, self.datas, self.datas.player_group)
