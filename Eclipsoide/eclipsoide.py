@@ -125,6 +125,18 @@ class Eclipsoide:
         if self.pause:
             return
 
+        # DEBUG : détecte d'éventuels sprites fantômes dans les groupes au tout
+        # début d'une nouvelle partie (avant la première vague d'ennemis)
+        if self.datas.time == 0 and self.death_timer is None:
+            group_names = ['enemies','player','projectiles','enemy_proj',
+                           'coins','popups','particles','explosions',
+                           'hearts','boss','bombs','shields']
+            for name, group in zip(group_names, self.datas.groups):
+                n = len(group)
+                expected = 1 if name in ('player', 'boss') else 0
+                if n != expected:
+                    print(f"[DEBUG restart] '{name}' group : {n} sprites (attendu {expected})")
+
         self.hud.update_timers(dt)
 
         # Séquence de mort en cours : on laisse l'explosion du joueur se jouer
@@ -275,7 +287,7 @@ class Eclipsoide:
         initPos = self.screen.get_width() + Boss.BOSS_SIZE
         finalPos = self.screen.get_width() / 2 - Hud.SUN_SIZE / 2
 
-        currentPos = initPos - ((initPos - finalPos) / Datas.TIME_BEFORE_BOSS * self.datas.time)
+        currentPos = initPos - (((initPos - finalPos) / Datas.TIME_BEFORE_BOSS) * self.datas.time)
 
         # Croissance après l'arrivée, avec un léger rebond élastique (ease-out-back)
         # au moment où le boss atteint sa taille finale
@@ -311,7 +323,6 @@ class Eclipsoide:
             self.boss.draw_life_bar(self.screen)
             niveau = self.boss.boss_bar_font.render(f"BOSS NIV. {self.datas.stage}", True, (255, 255, 255))
             self.screen.blit(niveau, niveau.get_rect(center=(self.screen.get_width() // 2, 50)))
-        if self.boss.is_spawn:
             self.datas.bombs_group.draw(self.screen)
 
         # Dessine tous les sprites dans la surface de l'écran
@@ -325,7 +336,6 @@ class Eclipsoide:
         self.datas.explosions_group.draw(self.screen)
         self.datas.hearts_group.draw(self.screen)
         self.datas.shields_group.draw(self.screen)
-        self.datas.bombs_group.draw(self.screen)
 
         # Flashs de dégâts/soin, vignette de vie basse, compteur de pièces, vies
         self._draw_spawn_warnings()

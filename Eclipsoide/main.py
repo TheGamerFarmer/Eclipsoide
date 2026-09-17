@@ -120,7 +120,7 @@ def main():
         while eclipsoide.isRunning():
             # Pas de pg.event.get() ici : isRunning() consomme déjà la file
             # (QUIT compris). En lire une seconde fois volerait les touches.
-            dt = clock.tick(60)
+            dt = min(clock.tick(60), 100)
 
             if eclipsoide.pause:
                 audio.set_paused(True)
@@ -143,12 +143,17 @@ def main():
                         eclipsoide.draw()
                     elif action == "restart":
                         eclipsoide.pause = False
+                        killed = sum(len(g) for g in eclipsoide.datas.groups)
+                        print(f"[RESTART-pause] {killed} sprites à tuer")
                         for group in eclipsoide.datas.groups:
+                            for sprite in list(group.sprites()):
+                                sprite.kill()
                             group.empty()
                         clock = pg.time.Clock()
                         gc.collect()
                         eclipsoide = Eclipsoide(screen)
                         game_start_time = pg.time.get_ticks()
+                        print("[RESTART-pause] Nouvelle partie OK")
                     elif action == "quit":
                         pg.quit()
                         sys.exit()
@@ -214,13 +219,18 @@ def main():
                 action = eclipsoide.menu_game_over.handle_event(event)
                 if action == "retry":
                     game_over_running = False
+                    killed = sum(len(g) for g in eclipsoide.datas.groups)
+                    print(f"[RETRY] {killed} sprites à tuer")
                     for group in eclipsoide.datas.groups:
+                        for sprite in list(group.sprites()):
+                            sprite.kill()
                         group.empty()
                     del eclipsoide
                     clock = pg.time.Clock()
                     gc.collect()
                     eclipsoide = Eclipsoide(screen)
                     game_start_time = pg.time.get_ticks()
+                    print("[RETRY] Nouvelle partie OK")
                 elif action == "menu":
                     start_menu = True
                     game_over_running = False
