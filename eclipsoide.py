@@ -55,8 +55,18 @@ class Eclipsoide:
     time = 0
 
     def __del__(self):
-      # print("new Eclipsoide")
-      pass
+        del self.player
+        del self.datas
+        del self.screen
+        del self.boss
+        del self.hud
+        del self.stage
+        del self.time
+        del self.isEnded
+        del self.menu_game_over
+        del self
+        print("new Eclipsoide")
+
 
     def __init__(self,screen: pg.Surface):
         """ Création des attribut du jeux """
