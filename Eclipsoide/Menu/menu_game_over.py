@@ -1,13 +1,18 @@
 import pygame as pg
 from . import ui_element
+from .menu_fx import FadeIn
 import os
 
 UI_BASE_PATH = "Eclipsoide/images/ui"
 
 class GameOver:
+    # Fondu d'entrée, rejoué à chaque fois que l'écran de game over s'affiche
+    TRANSITION_DURATION = 500  # ms
+
     def __init__(self, screen_width, screen_height):
         self.bg_image = pg.image.load('Eclipsoide/images/backgroundGameOver.png').convert()
         self.bg_image = pg.transform.scale(self.bg_image, (screen_width, screen_height))
+        self.fade = FadeIn(self.TRANSITION_DURATION)
         font_path = os.path.join(UI_BASE_PATH, "Font", "Kenney Future.ttf")
         self.titre_font = pg.font.Font(font_path, 60)
         self.font = pg.font.Font(font_path, 26)
@@ -38,8 +43,14 @@ class GameOver:
         self.score = score
         self.history = list(history)
 
-    def draw(self, surface):
+    def on_shown(self):
+        """ À appeler chaque fois que cet écran redevient actif : relance le fondu d'entrée """
+        self.fade.on_shown()
 
+    def draw(self, surface):
+        self.fade.wrap_draw(surface, self._draw_content)
+
+    def _draw_content(self, surface):
         surface.blit(self.bg_image, (0, 0))
         titre = self.titre_font.render("GAME OVER", True, (255, 244, 255))
         surface.blit(titre, titre.get_rect(center=(surface.get_width() // 2, 120)))

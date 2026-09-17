@@ -167,7 +167,12 @@ class Eclipsoide:
             if died:
                 # Rapproche l'arrivée du boss : tuer plus vite le fait venir plus tôt
                 self.datas.time += Datas.KILL_TIME_BONUS
-                Coin(pg.Vector2(enemy.rect.center), self.player, self.datas.coins_group, datas=self.datas)
+                if getattr(enemy, 'will_split', False):
+                    # La pièce est différée aux fragments (voir _spawn_fragments)
+                    self._spawn_fragments(enemy)
+                else:
+                    value_multiplier = Enemy.FRAGMENT_COIN_VALUE_MULTIPLIER if getattr(enemy, 'is_fragment', False) else 1.0
+                    Coin(pg.Vector2(enemy.rect.center), self.player, self.datas.coins_group, datas=self.datas, value_multiplier=value_multiplier)
                 Explosion(pg.Vector2(enemy.rect.center), self.datas.explosions_group)
                 if self.player.lives < self.player.max_lives and random.random() < self.player.heart_drop_chance:
                     HeartPickup(pg.Vector2(enemy.rect.center), self.player, self.datas.hearts_group, datas=self.datas)
@@ -195,6 +200,14 @@ class Eclipsoide:
         # Met à jours tous les sprites en fonction du temps qui a passé
         for group in self.datas.groups:
             group.update(dt)
+
+    def _spawn_fragments(self, parent: Enemy):
+        """ Remplace la pièce du gros astéroïde par SPLIT_COUNT fragments plus
+        petits, qui ne tirent pas et rapportent chacun moins de pièces """
+        for _ in range(Enemy.SPLIT_COUNT):
+            Enemy(self.screen, self.player, self.datas, self.datas.enemies_group,
+                  is_fragment=True, spawn_position=pg.Vector2(parent.rect.center),
+                  size_ratio=Enemy.FRAGMENT_SIZE_RATIO)
 
     def _draw_spawn_warnings(self):
         """ Marqueur triangulaire pulsant en haut de l'écran, tant qu'un ennemi
@@ -249,10 +262,16 @@ class Eclipsoide:
             self._draw_death_fade()
 
     def _draw_death_fade(self):
-        """ Assombrit progressivement l'écran pendant le death_timer (l'explosion
-        du joueur joue en fond), pour une transition plus douce vers le game over
-        que le cut brutal d'avant """
-        progress = 1 - max(0, self.death_timer) / Datas.DEATH_COOLDOWN
+        """ Laisse l'explosion du joueur jouer à pleine visibilité, puis assombrit
+        progressivement l'écran une fois son animation terminée, jusqu'au game over """
+        explosion_duration = Explosion.FRAME_COUNT * Explosion.FRAME_DURATION
+        elapsed = Datas.DEATH_COOLDOWN - max(0, self.death_timer)
+        fade_elapsed = elapsed - explosion_duration
+        if fade_elapsed <= 0:
+            return
+
+        fade_duration = max(1, Datas.DEATH_COOLDOWN - explosion_duration)
+        progress = min(1.0, fade_elapsed / fade_duration)
         alpha = max(0, min(255, int(255 * progress)))
         if alpha <= 0:
             return

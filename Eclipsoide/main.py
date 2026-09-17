@@ -195,6 +195,7 @@ def main():
 
         if start_menu == False:
             game_over_running = True
+            eclipsoide.menu_game_over.on_shown()
         while game_over_running:
             for event in pg.event.get():
                 if event.type == pg.QUIT:

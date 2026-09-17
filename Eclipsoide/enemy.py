@@ -30,6 +30,15 @@ class Enemy(pg.sprite.Sprite):
     DEBRIS_COLOR_START = (180, 140, 90)
     DEBRIS_COLOR_END = (80, 60, 40)
 
+    # Scission : certains astéroïdes (jamais les fragments eux-mêmes) se
+    # cassent en plusieurs morceaux plus petits à leur mort. Les fragments ne
+    # tirent pas et rapportent moins de pièces (voir Coin.value_multiplier)
+    SPLIT_CHANCE = 0.4
+    SPLIT_COUNT = 2
+    FRAGMENT_SIZE_RATIO = 0.55
+    FRAGMENT_SPEED_BOOST = 1.4
+    FRAGMENT_COIN_VALUE_MULTIPLIER = 0.5
+
     image_set: bool = False
     image: pg.Surface
     image_shoot_set: bool = False
@@ -37,7 +46,8 @@ class Enemy(pg.sprite.Sprite):
 
     size = (ASTEROID_SIZE,ASTEROID_SIZE)
 
-    def __init__(self,screen: pg.Surface, player: Player, datas: Datas, *groups):
+    def __init__(self, screen: pg.Surface, player: Player, datas: Datas, *groups,
+                 is_fragment: bool = False, spawn_position: pg.Vector2 = None, size_ratio: float = 1.0):
         # Appel du constructeur la super classe
         pg.sprite.Sprite.__init__(self, *groups)
 
@@ -46,8 +56,14 @@ class Enemy(pg.sprite.Sprite):
         # débris tous en même temps
         self.debris_timer = random.uniform(0, Enemy.DEBRIS_DELAY)
 
-        # Points de vie de l'ennemie
-        self.life = 60 * pow(2, datas.stage - 1)
+        self.is_fragment = is_fragment
+        self.can_shoot = not is_fragment
+        # Seuls les astéroïdes "entiers" peuvent se scinder, jamais un fragment
+        # (sinon la scission s'enchaînerait indéfiniment)
+        self.will_split = (not is_fragment) and random.random() < Enemy.SPLIT_CHANCE
+
+        # Points de vie de l'ennemie (réduits proportionnellement pour un fragment)
+        self.life = 60 * pow(2, datas.stage - 1) * size_ratio
         self.time_between_shoot = max(3700 - (2 * datas.stage), 2000)
 
         self.time = 0
@@ -64,7 +80,7 @@ class Enemy(pg.sprite.Sprite):
 
         self.image = pg.transform.rotate(Enemy.image, random.randint(-180, 180))
 
-        scale = random.uniform(Enemy.SIZE_VARIATION_MIN, Enemy.SIZE_VARIATION_MAX)
+        scale = size_ratio * random.uniform(Enemy.SIZE_VARIATION_MIN, Enemy.SIZE_VARIATION_MAX)
         new_size = (max(1, int(self.image.get_width() * scale)), max(1, int(self.image.get_height() * scale)))
         self.image = pg.transform.smoothscale(self.image, new_size)
 
@@ -88,15 +104,20 @@ class Enemy(pg.sprite.Sprite):
         # Recupère le rectangle du Sprite (taille alignée sur l'image, variation incluse)
         self.rect = self.image.get_rect()
 
-        screenWith = Enemy.ASTEROID_SIZE * self.SPAWN_EXTRA_PROPORTION
-
-        self.initPosition = pg.Vector2(random.randint(-screenWith, screen.get_width() + screenWith), random.randint(-Enemy.ASTEROID_SIZE * Enemy.SPAWN_EXTRA_PROPORTION, -Enemy.ASTEROID_SIZE))
-        self.rect.move_ip(self.initPosition)
+        if spawn_position is not None:
+            # Fragment : apparaît directement à l'endroit où l'astéroïde parent a explosé
+            self.rect = self.image.get_rect(center=(int(spawn_position.x), int(spawn_position.y)))
+            self.initPosition = pg.Vector2(self.rect.topleft)
+        else:
+            screenWith = Enemy.ASTEROID_SIZE * self.SPAWN_EXTRA_PROPORTION
+            self.initPosition = pg.Vector2(random.randint(-screenWith, screen.get_width() + screenWith), random.randint(-Enemy.ASTEROID_SIZE * Enemy.SPAWN_EXTRA_PROPORTION, -Enemy.ASTEROID_SIZE))
+            self.rect.move_ip(self.initPosition)
 
 
         # Vecteur de mouvement
-        self.speedY = random.randrange(Enemy.MIN_SPEED_Y, Enemy.MAX_SPEED_Y, 1) / 1000.0
-        self.speedX = random.randrange(Enemy.MIN_SPEED_X, Enemy.MAX_SPEED_X, 1) / 1000.0
+        speed_boost = Enemy.FRAGMENT_SPEED_BOOST if is_fragment else 1.0
+        self.speedY = random.randrange(Enemy.MIN_SPEED_Y, Enemy.MAX_SPEED_Y, 1) / 1000.0 * speed_boost
+        self.speedX = random.randrange(Enemy.MIN_SPEED_X, Enemy.MAX_SPEED_X, 1) / 1000.0 * speed_boost
 
         self.speedY = max(self.speedX, self.speedY)
 
@@ -119,7 +140,7 @@ class Enemy(pg.sprite.Sprite):
 
         oldPos = pg.Vector2(self.rect.center)
 
-        if (self.time + dt) % self.time_between_shoot < dt:
+        if self.can_shoot and (self.time + dt) % self.time_between_shoot < dt:
             playerRect = self.player.rect
             direction = pg.Vector2(playerRect.center) - oldPos
             if direction.length() > 0:

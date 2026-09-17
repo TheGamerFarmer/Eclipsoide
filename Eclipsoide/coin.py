@@ -21,7 +21,7 @@ class Coin(pg.sprite.Sprite):
     images_set: bool = False
     images: list[pg.Surface]
 
-    def __init__(self, position: pg.Vector2, player: Player, *groups, datas: Datas = None):
+    def __init__(self, position: pg.Vector2, player: Player, *groups, datas: Datas = None, value_multiplier: float = 1.0):
         super().__init__(*groups)
 
         if not Coin.images_set:
@@ -31,6 +31,9 @@ class Coin(pg.sprite.Sprite):
 
         self.player = player
         self.datas = datas
+        # Permet aux pièces issues de sources secondaires (ex: fragments
+        # d'astéroïde scindé) de valoir moins qu'une pièce "pleine"
+        self.value_multiplier = value_multiplier
         self.position = pg.Vector2(position)
         self.speed = Coin.MIN_SPEED
         self.trail_timer = 0
@@ -66,7 +69,10 @@ class Coin(pg.sprite.Sprite):
         if not collected:
             return False
 
-        player.add_coins(len(collected) * player.get_coins_value())
+        total = 0
         for coin in collected:
-            CoinPopup(pg.Vector2(coin.rect.center), player.get_coins_value(), datas.popups_group)
+            value = round(player.get_coins_value() * coin.value_multiplier)
+            total += value
+            CoinPopup(pg.Vector2(coin.rect.center), value, datas.popups_group)
+        player.add_coins(total)
         return True
