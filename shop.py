@@ -97,7 +97,7 @@ class Shop:
                         mult_str = None
                     else:
                         lvl_str = f"Level {lvl}"
-                        mult_str = f"{10 * lvl}%"
+                        mult_str = f"{1 * lvl}%"
                 case 'multi_shot' :
                     lvl_str = f"Level {lvl}"
                     mult_str = f"x{1 * lvl}"
