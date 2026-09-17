@@ -32,16 +32,26 @@ class Boss(pg.sprite.Sprite):
     LIVES = 20
     LIFE = LIVES * LIFE_PER_SEGMENT  # 2800 pv, environ 70 tirs
 
-    # Barre de vie affichée en haut de l'écran
+    # Barre de vie affichée en haut de l'écran : le remplissage réel change de
+    # couleur (vert -> jaune -> rouge) selon le % de vie restant, et une bande
+    # claire ("drain") reste visible un instant derrière lui après un coup,
+    # le temps qu'elle rattrape la nouvelle valeur, façon jauge de RPG
     BAR_WIDTH_RATIO = 0.6  # proportion de la largeur de l'écran
     BAR_HEIGHT = 18
     BAR_MARGIN = 14
     BAR_BACK_COLOR = (60, 20, 30)
-    BAR_FILL_COLOR = (230, 70, 70)
     BAR_BORDER_COLOR = (255, 255, 255)
     BAR_MIN_SEGMENT = 6  # en dessous, on n'affiche plus les séparations
+    BAR_FILL_COLOR_LOW = (220, 60, 60)
+    BAR_FILL_COLOR_MID = (230, 200, 40)
+    BAR_FILL_COLOR_HIGH = (70, 210, 90)
+    BAR_DRAIN_COLOR = (255, 250, 220)
+    BAR_DRAIN_SPEED = 0.35  # points de vie/ms rattrapés par la bande claire
 
     HIT_FLASH_DURATION = 90  # ms de flash blanc quand touché
+    # Intensité du blanc ajouté (0-255) : moins que 255 pour laisser deviner la
+    # texture du boss sous le flash plutôt que le faire disparaître entièrement
+    HIT_FLASH_INTENSITY = 150
     DAMAGE_POPUP_COLOR = (255, 255, 255)
     # L'explosion de mort est mise à l'échelle du boss (pas le sprite d'origine,
     # 110px, qui serait ridicule à côté d'un boss de 620px) sans pour autant
@@ -62,7 +72,8 @@ class Boss(pg.sprite.Sprite):
     @staticmethod
     def _build_flash_image(image: pg.Surface) -> pg.Surface:
         flash = image.copy()
-        flash.fill((255, 255, 255, 0), special_flags=pg.BLEND_RGBA_ADD)
+        intensity = Boss.HIT_FLASH_INTENSITY
+        flash.fill((intensity, intensity, intensity, 0), special_flags=pg.BLEND_RGBA_ADD)
         return flash
 
     def _set_image(self, image: pg.Surface) -> None:
@@ -83,6 +94,7 @@ class Boss(pg.sprite.Sprite):
 
         self.max_life = int(Boss.LIFE * Boss.BOSS_LIFE_GROWTH ** (self.datas.stage - 1))
         self.life = self.max_life
+        self.bar_display_life = self.life
 
         self._base_image = pg.image.load('images/boss1.png').convert_alpha()
         self.hit_flash_timer = 0
@@ -110,6 +122,7 @@ class Boss(pg.sprite.Sprite):
         self.datas.stage += 1
         self.max_life = int(Boss.LIFE * Boss.BOSS_LIFE_GROWTH ** (self.datas.stage - 1))
         self.life = self.max_life
+        self.bar_display_life = self.life
         self.hit_flash_timer = 0
         self._set_image(self._base_image)
         self.rect = self.image.get_rect()
@@ -128,6 +141,9 @@ class Boss(pg.sprite.Sprite):
         if self.hit_flash_timer > 0:
             self.hit_flash_timer -= dt
             self.image = self.flash_image if self.hit_flash_timer > 0 else self.normal_image
+
+        if self.bar_display_life > self.life:
+            self.bar_display_life = max(self.life, self.bar_display_life - self.BAR_DRAIN_SPEED * dt)
 
         # Les bombes du boss explosent au contact du joueur et le tuent
         if  self.bombs_hitting(self.player):
@@ -151,6 +167,8 @@ class Boss(pg.sprite.Sprite):
             bossY = int((Hud.SUN_SIZE / 4) + (Hud.SUN_SIZE / 2) - Boss.BOSS_MAX_SIZE / 2)
             self.rect = self.image.get_rect(topleft=(bossX, bossY))
             self.mask = pg.mask.from_surface(self.normal_image)
+            self.hud.trigger_zoom_punch()
+            self.hud.trigger_shake(self.hud.BOSS_SPAWN_SHAKE_DURATION, self.hud.BOSS_SPAWN_SHAKE_MAGNITUDE)
 
         if self.is_spawn:
             self.bomb_timer += dt
@@ -204,6 +222,18 @@ class Boss(pg.sprite.Sprite):
             positions.append(touch.rect.center)
         return positions
 
+    @classmethod
+    def _bar_fill_color(cls, ratio: float) -> tuple[int, int, int]:
+        """ Dégradé vert -> jaune -> rouge selon la proportion de vie restante """
+        ratio = max(0.0, min(1.0, ratio))
+        if ratio >= 0.5:
+            t = (ratio - 0.5) / 0.5
+            low, high = cls.BAR_FILL_COLOR_MID, cls.BAR_FILL_COLOR_HIGH
+        else:
+            t = ratio / 0.5
+            low, high = cls.BAR_FILL_COLOR_LOW, cls.BAR_FILL_COLOR_MID
+        return tuple(int(low[i] + (high[i] - low[i]) * t) for i in range(3))
+
     def draw_life_bar(self, surface: pg.Surface) -> None:
         """
         Dessine la barre de vie du boss en haut de la surface (à appeler avec le HUD).
@@ -215,9 +245,17 @@ class Boss(pg.sprite.Sprite):
         contour = pg.Rect(x, y, width, self.BAR_HEIGHT)
 
         pg.draw.rect(surface, self.BAR_BACK_COLOR, contour)
+
+        # Bande claire qui rattrape la vraie vie après un coup, dessinée derrière
+        # le remplissage réel pour rester visible comme une traînée qui se résorbe
+        drain_width = int(width * self.bar_display_life / self.max_life)
+        if drain_width > 0:
+            pg.draw.rect(surface, self.BAR_DRAIN_COLOR, pg.Rect(x, y, drain_width, self.BAR_HEIGHT))
+
         remplissage = int(width * self.life / self.max_life)
         if remplissage > 0:
-            pg.draw.rect(surface, self.BAR_FILL_COLOR, pg.Rect(x, y, remplissage, self.BAR_HEIGHT))
+            fill_color = self._bar_fill_color(self.life / self.max_life)
+            pg.draw.rect(surface, fill_color, pg.Rect(x, y, remplissage, self.BAR_HEIGHT))
 
         # Séparations entre les vies, tant qu'elles restent lisibles
         pas = width / Boss.LIVES

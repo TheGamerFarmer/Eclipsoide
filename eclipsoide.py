@@ -217,24 +217,34 @@ class Eclipsoide:
             self.screen.blit(marker, (x - size, 4))
 
     def draw(self):
-        """ Dessine le nouvel état du jeu, avec un éventuel tremblement d'écran
-        (déclenché ex. par la mort du boss) : le rendu est redirigé vers une
-        surface intermédiaire, puis blitée sur l'écran réel avec un décalage
-        aléatoire qui décroît avec le temps restant du tremblement """
+        """ Dessine le nouvel état du jeu, avec un éventuel tremblement et/ou zoom
+        d'écran (déclenchés ex. par la mort ou l'arrivée du boss) : le rendu est
+        redirigé vers une surface intermédiaire, puis blité sur l'écran réel avec
+        un décalage et/ou un agrandissement qui décroissent avec le temps restant """
         shaking = self.hud.shake_timer > 0
-        if shaking:
+        zooming = self.hud.zoom_timer > 0
+        if shaking or zooming:
             real_screen, self.screen = self.screen, self._frame_buffer
             self.hud.screen = self._frame_buffer
             self.hud.shop.screen = self._frame_buffer
 
         self._draw_frame()
 
-        if shaking:
+        if shaking or zooming:
             self.screen = real_screen
             self.hud.screen = real_screen
             self.hud.shop.screen = real_screen
             self.screen.fill((0, 0, 0))
-            self.screen.blit(self._frame_buffer, self.hud.get_shake_offset())
+
+            offset = self.hud.get_shake_offset() if shaking else (0, 0)
+            scale = self.hud.get_zoom_scale() if zooming else 1.0
+            if scale != 1.0:
+                w, h = self._frame_buffer.get_size()
+                zoomed = pg.transform.smoothscale(self._frame_buffer, (int(w * scale), int(h * scale)))
+                center = (w // 2 + offset[0], h // 2 + offset[1])
+                self.screen.blit(zoomed, zoomed.get_rect(center=center))
+            else:
+                self.screen.blit(self._frame_buffer, offset)
 
     def _draw_frame(self):
         initPos = self.screen.get_width() + Boss.BOSS_SIZE
