@@ -110,7 +110,7 @@ class Enemy(pg.sprite.Sprite):
             self.initPosition = pg.Vector2(self.rect.topleft)
         else:
             screenWith = Enemy.ASTEROID_SIZE * self.SPAWN_EXTRA_PROPORTION
-            self.initPosition = pg.Vector2(random.randint(-screenWith, screen.get_width() + screenWith), -Enemy.ASTEROID_SIZE * Enemy.SPAWN_EXTRA_PROPORTION)
+            self.initPosition = pg.Vector2(random.randint(-screenWith, screen.get_width() + screenWith), -Enemy.ASTEROID_SIZE * Enemy.SPAWN_EXTRA_PROPORTION, -Enemy.ASTEROID_SIZE)
             self.rect.move_ip(self.initPosition)
 
         # Vecteur de mouvement
