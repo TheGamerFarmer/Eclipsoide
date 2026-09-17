@@ -1,6 +1,9 @@
 import os
 import math
 import pygame as pg
+from shop import Shop
+
+import settings
 
 class Hud:
     """ Regroupe l'affichage d'état du joueur et les effets d'écran qui en
@@ -48,6 +51,16 @@ class Hud:
     COIN_POP_DURATION = 220  # ms
     COIN_POP_AMPLITUDE = 0.45  # +45% de taille au pic
 
+    # Record affiché sous le compteur : gris tant qu'il n'est pas battu, vert ensuite
+    RECORD_COLOR = (200, 200, 210)
+    RECORD_BEATEN_COLOR = (80, 255, 140)
+    RECORD_Y = 40
+    HEARTS_Y = 64
+    # Fond arrondi derrière chaque coeur, pour que les emplacements vides
+    # (juste un contour fin) restent visibles sur un fond d'écran chargé
+    HEART_BG_COLOR = (255, 255, 255, 140)
+    HEART_BG_PADDING = 3
+    HEART_BG_RADIUS = 6
     # Animation du bouclier (images/shield/) autour du vaisseau tant qu'il est
     # actif, avec un pic de taille bref quand un coup est bloqué et un
     # clignotement d'avertissement juste avant qu'il ne s'éteigne
@@ -72,6 +85,9 @@ class Hud:
         self.time = 0.0
 
         self.coin_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 24)
+        self.record_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 14)
+        # Record figé au lancement de la partie : c'est lui que le joueur cherche à battre
+        self.record = settings.best_score()
         self.coin_icon = pg.transform.scale(pg.image.load('images/ui/Coins/coin_0.png'), (24, 24))
         self.heart_full_icon = pg.transform.scale(pg.image.load('images/ui/Hearts/heart_full.png'), (22, 22))
         self.heart_empty_icon = pg.transform.scale(pg.image.load('images/ui/Hearts/heart_empty.png'), (22, 22))
@@ -87,7 +103,9 @@ class Hud:
         self.coin_pop_timer = 0
         self.shield_pulse_timer = 0
 
-    # --- Déclenchement des effets, appelé par Eclipsoide au moment des événements ---
+        self.shop = Shop(self.screen, self.player)
+
+    # Déclenchement des effets, appelé par Eclipsoide au moment des événements
 
     def trigger_hit_flash(self):
         self.hit_flash_timer = self.HIT_FLASH_DURATION
@@ -101,7 +119,7 @@ class Hud:
     def trigger_shield_pulse(self):
         self.shield_pulse_timer = self.SHIELD_PULSE_DURATION
 
-    # --- Mise à jour ---
+    # Mise à jour
 
     def update_timers(self, dt):
         """ Décomptes des flashs/pop : toujours appelé, même pendant une pause de gameplay
@@ -167,7 +185,7 @@ class Hud:
         return pg.transform.smoothscale(small, (width, height))
 
     def _draw_low_health_vignette(self):
-        if self.player.lives > self.LOW_HEALTH_THRESHOLD:
+        if self.player.lives > self.LOW_HEALTH_THRESHOLD or self.player.max_lives <= 1:
             return
 
         pulse = (math.sin(self.time * (2 * math.pi / self.VIGNETTE_PULSE_PERIOD)) + 1) / 2
@@ -254,10 +272,30 @@ class Hud:
         self.screen.blit(icon_surface, icon_surface.get_rect(center=icon_rect.center))
         self.screen.blit(text_surface, text_surface.get_rect(center=text_rect.center))
 
+    def _draw_record(self):
+        beaten = self.player.score > self.record
+        color = self.RECORD_BEATEN_COLOR if beaten else self.RECORD_COLOR
+        record_text = self.record_font.render(f"RECORD : {self.record}", True, color)
+        self.screen.blit(record_text, (10, self.RECORD_Y))
+
     def _draw_hearts(self):
-        for i in range(self.player.MAX_LIVES):
+        icon_w, icon_h = self.heart_full_icon.get_size()
+
+        # Un seul fond qui s'étire pour couvrir tous les emplacements de coeurs,
+        # plutôt qu'un fond répété derrière chacun
+        span_w = (self.player.max_lives - 1) * 26 + icon_w
+        bg_size = (span_w + self.HEART_BG_PADDING * 2, icon_h + self.HEART_BG_PADDING * 2)
+        bg_surface = pg.Surface(bg_size, pg.SRCALPHA)
+        pg.draw.rect(bg_surface, self.HEART_BG_COLOR, bg_surface.get_rect(), border_radius=self.HEART_BG_RADIUS)
+        self.screen.blit(bg_surface, (10 - self.HEART_BG_PADDING, self.HEARTS_Y - self.HEART_BG_PADDING))
+
+        for i in range(self.player.max_lives):
+            x = 10 + i * 26
             icon = self.heart_full_icon if i < self.player.lives else self.heart_empty_icon
-            self.screen.blit(icon, (10 + i * 26, 44))
+            self.screen.blit(icon, (x, self.HEARTS_Y))
+
+            icon = self.heart_full_icon if i < self.player.lives else self.heart_empty_icon
+            self.screen.blit(icon, (x, self.HEARTS_Y))
 
     def draw_overlay(self):
         """ Dessine, par-dessus le jeu, les flashs, la vignette de vie basse puis le HUD (pièces/vies) """
@@ -266,4 +304,10 @@ class Hud:
         self._draw_low_health_vignette()
 
         self._draw_coin_counter()
+        self._draw_record()
         self._draw_hearts()
+
+        self.shop.draw()
+
+    def handle_event(self, event):
+        self.shop.handle_event(event)

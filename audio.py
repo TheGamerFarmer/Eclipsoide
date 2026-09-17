@@ -7,6 +7,8 @@ GAME_MUSIC = 'audios/track-1.ogg'
 
 # Morceau actuellement chargé dans le mixer (None si aucun)
 _current_track: str | None = None
+# Vrai pendant la pause du jeu : la musique reste coupée quel que soit le réglage
+_paused = False
 
 
 def play_music(track: str):
@@ -29,7 +31,20 @@ def apply_settings():
     if _current_track is None:
         return
     pg.mixer.music.set_volume(settings.OPTIONS["volume"] / 100)
-    if settings.OPTIONS["music"]:
+    if settings.OPTIONS["music"] and not _paused:
         pg.mixer.music.unpause()
     else:
         pg.mixer.music.pause()
+
+
+def set_paused(paused: bool):
+    """ Coupe (ou relance) la musique et les bruitages pendant la pause du jeu """
+    global _paused
+    if paused == _paused:
+        return
+    _paused = paused
+    if paused:
+        pg.mixer.pause()
+    else:
+        pg.mixer.unpause()
+    apply_settings()

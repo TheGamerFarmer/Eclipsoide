@@ -1,5 +1,7 @@
 import random
 import pygame as pg
+
+from datas import Datas
 from projectile import Projectile
 from particle import Particle
 import settings
@@ -9,7 +11,9 @@ class Player(pg.sprite.Sprite):
     hitbox_size = (10, 9)
     image_shoot_set: bool = False
     image_shoot: list[pg.Surface]
-    damage: int = 20
+    image: pg.Surface
+    rect: pg.Rect
+    damage: float = 20.0
     # Référence pour le halo des tirs : au-dessus de ce seuil de dégâts (ex.
     # améliorations), le halo grossit ; en dessous, il rétrécit
     BASE_DAMAGE = 20
@@ -33,7 +37,6 @@ class Player(pg.sprite.Sprite):
     TRAIL_COLOR_START = (255, 230, 140)
     TRAIL_COLOR_END = (255, 80, 20)
 
-    MAX_LIVES = 3
     INVINCIBILITY_DURATION = 1200  # ms d'invincibilité après un coup
     BLINK_INTERVAL = 100           # ms entre chaque clignotement pendant l'invincibilité
 
@@ -47,17 +50,15 @@ class Player(pg.sprite.Sprite):
     HIT_SHIELDED = 'shielded'
     HIT_TAKEN = 'hit'
 
-    def __init__(self, screen: pg.Surface, speed: float, projectilsGroup: pg.sprite.AbstractGroup,
-                 particlesGroup: pg.sprite.AbstractGroup, *groups):
+    def __init__(self, speed: float, datas: Datas, *groups):
         super().__init__(*groups)
 
         self.speed = speed
-        self.projectilsGroup = projectilsGroup
-        self.particlesGroup = particlesGroup
-        self.screen = screen
+        self.datas = datas
 
         self.is_alive = True
-        self.lives = Player.MAX_LIVES
+        self.max_lives = 1
+        self.lives = self.max_lives
         self.invincible_timer = 0
         self.shield_timer = 0
 
@@ -68,6 +69,8 @@ class Player(pg.sprite.Sprite):
         self.fire_timer = 0
 
         self.trail_timer = 0
+
+        self.double_shot = False
 
         if not Player.image_shoot_set:
             Player.image_shoot = [pg.image.load(f'images/laser/player/laser_player_{i}.png') for i in range(4)]
@@ -91,7 +94,7 @@ class Player(pg.sprite.Sprite):
 
         self.image = Player.damage_images[0]
         self.rect = self.image.get_rect()
-        self.rect.move_ip(screen.get_width() / 2 - self.size[0] / 2, screen.get_height() - 50)
+        self.rect.move_ip(datas.screen.get_width() / 2 - self.size[0] / 2, datas.screen.get_height() - 110)
 
         self.hitbox = pg.Rect(0, 0, self.hitbox_size[0], self.hitbox_size[1])
         self.hitbox.center = self.rect.center
@@ -120,7 +123,7 @@ class Player(pg.sprite.Sprite):
 
         self.position += movement * self.speed * dt
         self.rect.midbottom = self.position
-        self.rect.clamp_ip(self.screen.get_rect())
+        self.rect.clamp_ip(self.datas.screen.get_rect())
         self.position = pg.Vector2(self.rect.midbottom)
         self.hitbox.center = self.rect.center
 
@@ -128,7 +131,15 @@ class Player(pg.sprite.Sprite):
 
         if self.fire_timer <= 0:
             glow_scale = self.damage / Player.BASE_DAMAGE
-            Projectile(pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), Player.image_shoot, (0, 255, 0), self.projectilsGroup, glow_scale=glow_scale)
+            if self.double_shot:
+                Projectile(pg.Vector2(self.rect.centerx - 10, self.rect.centery), 0.4, pg.Vector2(0, -1),
+                           Player.image_shoot, (0, 255, 0), self.datas.projectiles_group, glow_scale=glow_scale)
+                Projectile(pg.Vector2(self.rect.centerx + 10, self.rect.centery), 0.4, pg.Vector2(0, -1),
+                           Player.image_shoot, (0, 255, 0), self.datas.projectiles_group, glow_scale=glow_scale)
+            else:
+                Projectile(pg.Vector2(self.rect.center), 0.4, pg.Vector2(0, -1), Player.image_shoot, (0, 255, 0),
+                           self.datas.projectiles_group, glow_scale=glow_scale)
+
             self.fire_timer = self.fire_delay
             self._play_shoot_sound()
 
@@ -157,10 +168,10 @@ class Player(pg.sprite.Sprite):
         velocity = pg.Vector2(random.uniform(-0.02, 0.02), random.uniform(0.09, 0.16))
         velocity -= movement * 0.05
 
-        Particle(spawn_pos, velocity, Player.TRAIL_COLOR_START, Player.TRAIL_COLOR_END, self.particlesGroup)
+        Particle(spawn_pos, velocity, Player.TRAIL_COLOR_START, Player.TRAIL_COLOR_END, self.datas.particles_group)
 
     def _update_damage_texture(self):
-        ratio = self.lives / Player.MAX_LIVES
+        ratio = self.lives / self.max_lives
         for index, (threshold, _) in enumerate(Player.DAMAGE_TEXTURES):
             if ratio >= threshold:
                 self.image = Player.damage_images[index]
@@ -216,6 +227,7 @@ class Player(pg.sprite.Sprite):
 
         # (on collisionne sur la hitbox du tir, pas sur son rect visuel qui
         # inclut le halo et la traînée)
+        # noinspection bad-argument-type
         if pg.sprite.spritecollide(self, enemy_projectiles_group, dokill=True, collided=collided):
             outcome = self.on_hit()
             if outcome != Player.HIT_IGNORED:
@@ -225,6 +237,11 @@ class Player(pg.sprite.Sprite):
             outcome = self.on_hit()
             if outcome != Player.HIT_IGNORED:
                 result = outcome
+        if boss is not None and boss.boss_hitting(self):
+            outcome = self.on_hit()
+            if outcome != Player.HIT_IGNORED:
+                result = outcome
+
 
         return result
 

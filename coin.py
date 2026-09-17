@@ -1,10 +1,11 @@
 import pygame as pg
 from coin_popup import CoinPopup
+from datas import Datas
+
 
 class Coin(pg.sprite.Sprite):
     SIZE = (16, 16)
     FRAME_SPEED = 0.006
-    VALUE = 20
 
     MIN_SPEED = 0.05       # pixels/ms au moment du drop
     MAX_SPEED = 0.9        # pixels/ms vitesse d'aspiration max
@@ -12,6 +13,7 @@ class Coin(pg.sprite.Sprite):
 
     images_set: bool = False
     images: list[pg.Surface]
+    value = 20
 
     def __init__(self, position: pg.Vector2, player, *groups):
         super().__init__(*groups)
@@ -42,14 +44,14 @@ class Coin(pg.sprite.Sprite):
         self.rect.center = self.position
 
     @classmethod
-    def collect(cls, player, coins_group: pg.sprite.AbstractGroup, popups_group: pg.sprite.AbstractGroup) -> bool:
+    def collect(cls, player, datas: Datas) -> bool:
         """ Ramasse les pièces au contact du joueur (aspirées automatiquement vers lui) et
         affiche leur popup de gain. Retourne True si au moins une pièce a été ramassée """
-        collected = pg.sprite.spritecollide(player, coins_group, dokill=True)
+        collected = pg.sprite.spritecollide(player, datas.coins_group, dokill=True)
         if not collected:
             return False
 
-        player.add_coins(len(collected) * cls.VALUE)
+        player.add_coins(len(collected) * cls.value)
         for coin in collected:
-            CoinPopup(pg.Vector2(coin.rect.center), cls.VALUE, popups_group)
+            CoinPopup(pg.Vector2(coin.rect.center), cls.value, datas.popups_group)
         return True

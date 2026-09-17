@@ -47,7 +47,7 @@ class MenuCredit:
             "DIGNOIRE Erwan",
             "MATHERET Raphael",
             "MISSOUM Romain",
-            "ONIONKITON Esdras",
+            "ONIONKITON Esdras Florian",
             "PLANQUETTE Romain"
         ]
 
