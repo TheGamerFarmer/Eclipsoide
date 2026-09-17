@@ -11,7 +11,7 @@ class GameOver:
         font_path = os.path.join(UI_BASE_PATH, "Font", "Kenney Future.ttf")
         self.titre_font = pg.font.Font(font_path, 60)
         self.font = pg.font.Font(font_path, 26)
-        self.score_font = pg.font.SysFont('ComicSans', 30)
+        self.score_font = pg.font.Font(font_path, 30)
 
         # Score de la partie et historique, renseignés par le jeu au game over
         self.score = 0

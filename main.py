@@ -44,6 +44,9 @@ def main():
     while True:
         # On s'assure de revenir au menu principal par défaut
         active_menu = menu
+        # Rejoue le fondu d'entrée à chaque retour sur le menu principal
+        # (lancement du jeu, ou retour depuis une partie)
+        menu.on_shown()
 
         if start_menu:
             audio.play_music(audio.MENU_MUSIC)
