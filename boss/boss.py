@@ -8,7 +8,7 @@ from explosion import Explosion
 from hud import Hud
 from player import Player
 import math
-from boss.multi_laser import MultiLaserTelegraph
+from boss.multi_laser import MultiLaser
 from boss.tracker import Tracker
 
 
@@ -160,19 +160,19 @@ class Boss(pg.sprite.Sprite):
 
             self.datas.bombs_group.update(dt)
 
-        # laser
-        self.multi_laser_timer += dt
-        # toutes les 5 secondes
-        if self.multi_laser_timer >= 5000:
-            self.multi_laser_timer -= 5000
-            self.fire_multi_laser()
+            # laser
+            self.multi_laser_timer += dt
+            # toutes les 5 secondes
+            if self.multi_laser_timer >= 5000:
+                self.multi_laser_timer -= 5000
+                self.fire_multi_laser()
 
-        # tracker
-        self.tracker_timer += dt
-        # toutes les 8 secondes
-        if self.tracker_timer >= 8000:
-            self.tracker_timer -= 8000
-            self.fire_tracker()
+            # tracker
+            self.tracker_timer += dt
+            # toutes les 8 secondes
+            if self.tracker_timer >= 8000:
+                self.tracker_timer -= 8000
+                self.fire_tracker()
 
     @property
     def is_alive(self) -> bool:
@@ -303,7 +303,7 @@ class Boss(pg.sprite.Sprite):
 
         start_angle = center_angle - (spread / 2)
 
-        telegraph = MultiLaserTelegraph(self._mouth(), self.datas, start_angle, spread, count, Boss.laser_images)
+        telegraph = MultiLaser(self._mouth(), self.datas, start_angle, spread, count, Boss.laser_images)
         self.datas.bombs_group.add(telegraph)
 
     def fire_tracker(self):
