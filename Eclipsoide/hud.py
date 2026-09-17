@@ -478,7 +478,8 @@ class Hud:
 
     def _draw_godmode(self):
         godmode_text = self.record_font.render('GODMODE : ACTIVE', True, (255, 220, 80))
-        self._blit_pop_text(godmode_text, (10, 120))
+        rect = godmode_text.get_rect(topleft=(10, 120))
+        self.screen.blit(godmode_text, godmode_text.get_rect(center=rect.center))
 
     def _draw_hearts(self):
         icon_w, icon_h = self.heart_full_icon.get_size()
