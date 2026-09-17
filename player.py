@@ -62,7 +62,7 @@ class Player(pg.sprite.Sprite):
         self.invincible_timer = 0
         self.shield_timer = 0
 
-        self.coins = 99999999999999999
+        self.coins = 0
         self.score = 0
 
         self.fire_delay = 300

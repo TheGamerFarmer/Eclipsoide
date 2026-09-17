@@ -1,5 +1,6 @@
 import os
 import math
+import random
 import pygame as pg
 from shop import Shop
 
@@ -73,6 +74,11 @@ class Hud:
     SHIELD_WARNING_THRESHOLD = 1200  # ms restantes à partir desquelles ça clignote
     SHIELD_WARNING_BLINK_INTERVAL = 120  # ms entre chaque clignotement
 
+    # Tremblement d'écran pour les gros moments (mort du boss) : amplitude qui
+    # décroît linéairement jusqu'à la fin de la durée
+    SHAKE_DURATION = 500     # ms
+    SHAKE_MAGNITUDE = 16     # px, amplitude max au tout début
+
     def __init__(self, screen: pg.Surface, player):
         self.screen = screen
         self.player = player
@@ -104,6 +110,9 @@ class Hud:
         self.heal_flash_timer = 0
         self.coin_pop_timer = 0
         self.shield_pulse_timer = 0
+        self.shake_timer = 0
+        self.shake_duration = self.SHAKE_DURATION
+        self.shake_magnitude = self.SHAKE_MAGNITUDE
 
         self.shop = Shop(self.screen, self.player)
 
@@ -121,6 +130,11 @@ class Hud:
     def trigger_shield_pulse(self):
         self.shield_pulse_timer = self.SHIELD_PULSE_DURATION
 
+    def trigger_shake(self, duration: float = None, magnitude: float = None):
+        self.shake_duration = duration if duration is not None else self.SHAKE_DURATION
+        self.shake_timer = self.shake_duration
+        self.shake_magnitude = magnitude if magnitude is not None else self.SHAKE_MAGNITUDE
+
     # Mise à jour
 
     def update_timers(self, dt):
@@ -130,6 +144,15 @@ class Hud:
         self.heal_flash_timer = max(0, self.heal_flash_timer - dt)
         self.coin_pop_timer = max(0, self.coin_pop_timer - dt)
         self.shield_pulse_timer = max(0, self.shield_pulse_timer - dt)
+        self.shake_timer = max(0, self.shake_timer - dt)
+
+    def get_shake_offset(self) -> tuple[int, int]:
+        """ Décalage aléatoire à appliquer au rendu, amplitude qui décroît
+        linéairement jusqu'à la fin du tremblement """
+        if self.shake_timer <= 0:
+            return 0, 0
+        magnitude = self.shake_magnitude * (self.shake_timer / self.shake_duration)
+        return int(random.uniform(-magnitude, magnitude)), int(random.uniform(-magnitude, magnitude))
 
     def advance(self, dt):
         """ Fait avancer l'horloge du soleil (rotation + pulsation) : à n'appeler
