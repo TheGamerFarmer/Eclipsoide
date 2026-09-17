@@ -33,7 +33,7 @@ class Enemy(pg.sprite.Sprite):
     # Scission : certains astéroïdes (jamais les fragments eux-mêmes) se
     # cassent en plusieurs morceaux plus petits à leur mort. Les fragments ne
     # tirent pas et rapportent moins de pièces (voir Coin.value_multiplier)
-    SPLIT_CHANCE = 0.4
+    SPLIT_CHANCE = 0.2
     SPLIT_COUNT = 2
     FRAGMENT_SIZE_RATIO = 0.55
     FRAGMENT_SPEED_BOOST = 1.4
