@@ -52,7 +52,7 @@ class Enemy(pg.sprite.Sprite):
     size = (ASTEROID_SIZE,ASTEROID_SIZE)
 
     def __init__(self, screen: pg.Surface, player: Player, datas: Datas, *groups,
-                 is_fragment: bool = False, spawn_position: pg.Vector2 = None, size_ratio: float = 1.0):
+                 is_fragment: bool = False, spawn_position: pg.Vector2 | None = None, size_ratio: float = 1.0):
         # Appel du constructeur la super classe
         pg.sprite.Sprite.__init__(self, *groups)
 
