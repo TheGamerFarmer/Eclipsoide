@@ -2,6 +2,7 @@ import math
 import pygame as pg
 from coin_popup import CoinPopup
 from datas import Datas
+from particle import Particle
 
 
 class HeartPickup(pg.sprite.Sprite):
@@ -15,10 +16,15 @@ class HeartPickup(pg.sprite.Sprite):
     PULSE_PERIOD = 500    # ms pour un cycle de pulsation
     PULSE_AMPLITUDE = 0.15  # variation de taille (+/- 15%), pour le distinguer des pièces
 
+    # Petite traînée lumineuse pendant l'aspiration vers le joueur
+    TRAIL_DELAY = 30  # ms entre deux particules de traînée
+    TRAIL_COLOR_START = (255, 150, 180)
+    TRAIL_COLOR_END = (255, 60, 100)
+
     image_set: bool = False
     base_image: pg.Surface
 
-    def __init__(self, position: pg.Vector2, player, *groups):
+    def __init__(self, position: pg.Vector2, player, *groups, datas: Datas = None):
         super().__init__(*groups)
 
         if not HeartPickup.image_set:
@@ -27,9 +33,11 @@ class HeartPickup(pg.sprite.Sprite):
             HeartPickup.image_set = True
 
         self.player = player
+        self.datas = datas
         self.position = pg.Vector2(position)
         self.speed = HeartPickup.MIN_SPEED
         self.time = 0.0
+        self.trail_timer = 0
 
         self.image = HeartPickup.base_image
         self.rect = self.image.get_rect(center=self.position)
@@ -61,3 +69,10 @@ class HeartPickup(pg.sprite.Sprite):
             self.position += direction.normalize() * self.speed * dt
 
         self.rect = self.image.get_rect(center=self.position)
+
+        if self.datas is not None:
+            self.trail_timer -= dt
+            if self.trail_timer <= 0:
+                self.trail_timer = HeartPickup.TRAIL_DELAY
+                velocity = -direction.normalize() * 0.03 if direction.length_squared() > 0 else pg.Vector2()
+                Particle(self.position, velocity, HeartPickup.TRAIL_COLOR_START, HeartPickup.TRAIL_COLOR_END, self.datas.particles_group)

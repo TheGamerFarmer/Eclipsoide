@@ -1,6 +1,7 @@
 import pygame as pg
 from coin_popup import CoinPopup
 from datas import Datas
+from particle import Particle
 
 
 class Coin(pg.sprite.Sprite):
@@ -11,11 +12,16 @@ class Coin(pg.sprite.Sprite):
     MAX_SPEED = 0.9        # pixels/ms vitesse d'aspiration max
     ACCELERATION = 0.0025  # pixels/ms^2
 
+    # Petite traînée lumineuse pendant l'aspiration vers le joueur
+    TRAIL_DELAY = 30  # ms entre deux particules de traînée
+    TRAIL_COLOR_START = (255, 230, 120)
+    TRAIL_COLOR_END = (255, 180, 40)
+
     images_set: bool = False
     images: list[pg.Surface]
     value = 20
 
-    def __init__(self, position: pg.Vector2, player, *groups):
+    def __init__(self, position: pg.Vector2, player, *groups, datas: Datas = None):
         super().__init__(*groups)
 
         if not Coin.images_set:
@@ -24,8 +30,10 @@ class Coin(pg.sprite.Sprite):
             Coin.images_set = True
 
         self.player = player
+        self.datas = datas
         self.position = pg.Vector2(position)
         self.speed = Coin.MIN_SPEED
+        self.trail_timer = 0
 
         self.frameIndex = 0.0
         self.image = Coin.images[0]
@@ -42,6 +50,13 @@ class Coin(pg.sprite.Sprite):
             self.position += direction.normalize() * self.speed * dt
 
         self.rect.center = self.position
+
+        if self.datas is not None:
+            self.trail_timer -= dt
+            if self.trail_timer <= 0:
+                self.trail_timer = Coin.TRAIL_DELAY
+                velocity = -direction.normalize() * 0.03 if direction.length_squared() > 0 else pg.Vector2()
+                Particle(self.position, velocity, Coin.TRAIL_COLOR_START, Coin.TRAIL_COLOR_END, self.datas.particles_group)
 
     @classmethod
     def collect(cls, player, datas: Datas) -> bool:

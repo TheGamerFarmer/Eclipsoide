@@ -57,6 +57,15 @@ class Hud:
     RECORD_BEATEN_COLOR = (80, 255, 140)
     SCORE_Y = 40
     RECORD_Y = 60
+
+    # Célébration jouée une seule fois, à l'instant précis où le score dépasse
+    # le record : gerbe de particules dorées depuis le vaisseau + texte bref
+    RECORD_CELEBRATION_DURATION = 900  # ms
+    RECORD_CELEBRATION_PARTICLE_COUNT = 14
+    RECORD_CELEBRATION_COLOR = (255, 215, 90)
+    RECORD_CELEBRATION_TEXT_COLOR = (255, 230, 120)
+    RECORD_CELEBRATION_SPEED_MIN = 0.05  # pixels/ms
+    RECORD_CELEBRATION_SPEED_MAX = 0.20
     HEARTS_Y = 84
     # Fond arrondi derrière chaque coeur, pour que les emplacements vides
     # (juste un contour fin) restent visibles sur un fond d'écran chargé
@@ -92,6 +101,13 @@ class Hud:
     COUNTER_CATCHUP_SPEED = 0.006  # fraction de l'écart comblée par ms
     COUNTER_MIN_STEP = 1            # points par frame au minimum tant que la cible n'est pas atteinte
 
+    # Bannière "NIVEAU X" affichée brièvement au centre de l'écran quand un
+    # palier de boss est vaincu et que le suivant démarre
+    LEVEL_BANNER_DURATION = 2200  # ms
+    LEVEL_BANNER_FADE_IN = 300    # ms
+    LEVEL_BANNER_FADE_OUT = 600   # ms, décomptées depuis la fin
+    LEVEL_BANNER_COLOR = (255, 220, 80)
+
     def __init__(self, screen: pg.Surface, player):
         self.screen = screen
         self.player = player
@@ -106,6 +122,8 @@ class Hud:
 
         self.coin_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 24)
         self.record_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 14)
+        self.level_banner_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 56)
+        self.record_celebration_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 30)
         # Record figé au lancement de la partie : c'est lui que le joueur cherche à battre
         self.record = settings.best_score()
         # Valeurs affichées, qui rattrapent progressivement les vraies valeurs du joueur
@@ -131,6 +149,11 @@ class Hud:
         self.zoom_timer = 0
         self.zoom_duration = self.ZOOM_PUNCH_DURATION
         self.zoom_magnitude = self.ZOOM_PUNCH_MAGNITUDE
+        self.level_banner_timer = 0
+        self.level_banner_stage = 1
+        self.record_beaten_announced = False
+        self.record_celebration_timer = 0
+        self.record_celebration_particles: list[tuple[float, float]] = []
 
         self.shop = Shop(self.screen, self.player)
 
@@ -158,6 +181,17 @@ class Hud:
         self.zoom_timer = self.zoom_duration
         self.zoom_magnitude = magnitude if magnitude is not None else self.ZOOM_PUNCH_MAGNITUDE
 
+    def trigger_level_banner(self, stage: int):
+        self.level_banner_timer = self.LEVEL_BANNER_DURATION
+        self.level_banner_stage = stage
+
+    def _trigger_record_celebration(self):
+        self.record_celebration_timer = self.RECORD_CELEBRATION_DURATION
+        self.record_celebration_particles = [
+            (random.uniform(0, 2 * math.pi), random.uniform(self.RECORD_CELEBRATION_SPEED_MIN, self.RECORD_CELEBRATION_SPEED_MAX))
+            for _ in range(self.RECORD_CELEBRATION_PARTICLE_COUNT)
+        ]
+
     # Mise à jour
 
     def update_timers(self, dt):
@@ -169,6 +203,15 @@ class Hud:
         self.shield_pulse_timer = max(0, self.shield_pulse_timer - dt)
         self.shake_timer = max(0, self.shake_timer - dt)
         self.zoom_timer = max(0, self.zoom_timer - dt)
+        self.level_banner_timer = max(0, self.level_banner_timer - dt)
+        self.record_celebration_timer = max(0, self.record_celebration_timer - dt)
+
+        # Déclenché une seule fois par partie, pile à l'instant où le score
+        # dépasse le record (figé au lancement de la partie)
+        if not self.record_beaten_announced and self.player.score > self.record:
+            self.record_beaten_announced = True
+            self._trigger_record_celebration()
+
         self._advance_counters(dt)
 
     def _advance_counter(self, current: int, target: int, dt: float) -> int:
@@ -389,8 +432,56 @@ class Hud:
         self._draw_record()
         self._draw_score()
         self._draw_hearts()
+        self._draw_level_banner()
+        self._draw_record_celebration()
 
         self.shop.draw()
+
+    def _draw_level_banner(self):
+        if self.level_banner_timer <= 0:
+            return
+
+        elapsed = self.LEVEL_BANNER_DURATION - self.level_banner_timer
+        if elapsed < self.LEVEL_BANNER_FADE_IN:
+            alpha = 255 * (elapsed / self.LEVEL_BANNER_FADE_IN)
+        elif self.level_banner_timer < self.LEVEL_BANNER_FADE_OUT:
+            alpha = 255 * (self.level_banner_timer / self.LEVEL_BANNER_FADE_OUT)
+        else:
+            alpha = 255
+        alpha = max(0, min(255, int(alpha)))
+
+        center = (self.screen.get_width() // 2, self.screen.get_height() // 2 - 40)
+        text = f"NIVEAU {self.level_banner_stage}"
+
+        shadow = self.level_banner_font.render(text, True, (0, 0, 0))
+        shadow.set_alpha(alpha)
+        self.screen.blit(shadow, shadow.get_rect(center=(center[0] + 3, center[1] + 3)))
+
+        banner = self.level_banner_font.render(text, True, self.LEVEL_BANNER_COLOR)
+        banner.set_alpha(alpha)
+        self.screen.blit(banner, banner.get_rect(center=center))
+
+    def _draw_record_celebration(self):
+        if self.record_celebration_timer <= 0:
+            return
+
+        elapsed = self.RECORD_CELEBRATION_DURATION - self.record_celebration_timer
+        progress = elapsed / self.RECORD_CELEBRATION_DURATION
+        alpha = max(0, min(255, int(255 * (1 - progress))))
+
+        center = pg.Vector2(self.player.rect.center)
+        for angle, speed in self.record_celebration_particles:
+            offset = pg.Vector2(math.cos(angle), math.sin(angle)) * speed * elapsed
+            pos = center + offset
+            radius = max(1, int(4 * (1 - progress)))
+            particle_surface = pg.Surface((radius * 2 + 2, radius * 2 + 2), pg.SRCALPHA)
+            pg.draw.circle(particle_surface, (*self.RECORD_CELEBRATION_COLOR, alpha), (radius + 1, radius + 1), radius)
+            self.screen.blit(particle_surface, particle_surface.get_rect(center=pos))
+
+        text = self.record_celebration_font.render("NOUVEAU RECORD !", True, self.RECORD_CELEBRATION_TEXT_COLOR)
+        text.set_alpha(alpha)
+        text_pos = (self.player.rect.centerx, self.player.rect.top - 40)
+        self.screen.blit(text, text.get_rect(center=text_pos))
 
     def handle_event(self, event):
         self.shop.handle_event(event)
