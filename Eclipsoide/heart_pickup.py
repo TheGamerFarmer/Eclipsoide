@@ -3,6 +3,7 @@ import pygame as pg
 from coin_popup import CoinPopup
 from datas import Datas
 from particle import Particle
+from spawn_pop import spawn_scale
 
 
 class HeartPickup(pg.sprite.Sprite):
@@ -15,6 +16,9 @@ class HeartPickup(pg.sprite.Sprite):
 
     PULSE_PERIOD = 500    # ms pour un cycle de pulsation
     PULSE_AMPLITUDE = 0.15  # variation de taille (+/- 15%), pour le distinguer des pièces
+
+    # Pop d'apparition (grossit depuis rien avec un léger rebond) à la naissance
+    SPAWN_ANIM_DURATION = 150  # ms
 
     # Petite traînée lumineuse pendant l'aspiration vers le joueur
     TRAIL_DELAY = 30  # ms entre deux particules de traînée
@@ -38,6 +42,7 @@ class HeartPickup(pg.sprite.Sprite):
         self.speed = HeartPickup.MIN_SPEED
         self.time = 0.0
         self.trail_timer = 0
+        self.spawn_anim_timer = HeartPickup.SPAWN_ANIM_DURATION
 
         self.image = HeartPickup.base_image
         self.rect = self.image.get_rect(center=self.position)
@@ -59,7 +64,14 @@ class HeartPickup(pg.sprite.Sprite):
         self.time += dt
 
         pulse = 1 + HeartPickup.PULSE_AMPLITUDE * math.sin(self.time * (2 * math.pi / HeartPickup.PULSE_PERIOD))
-        size = (max(1, int(HeartPickup.SIZE[0] * pulse)), max(1, int(HeartPickup.SIZE[1] * pulse)))
+
+        pop = 1.0
+        if self.spawn_anim_timer > 0:
+            self.spawn_anim_timer -= dt
+            pop = max(0.01, spawn_scale(self.spawn_anim_timer, HeartPickup.SPAWN_ANIM_DURATION))
+
+        combined_scale = pulse * pop
+        size = (max(1, int(HeartPickup.SIZE[0] * combined_scale)), max(1, int(HeartPickup.SIZE[1] * combined_scale)))
         self.image = pg.transform.scale(HeartPickup.base_image, size)
 
         # Aspiration : le coeur accélère en se dirigeant vers le joueur
