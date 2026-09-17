@@ -287,7 +287,7 @@ class Hud:
     def _draw_score(self):
         self.score = self.player.score
         color = self.RECORD_BEATEN_COLOR
-        score_text = self.record_font.render(f"RECORD : {self.score}", True, color)
+        score_text = self.record_font.render(f"SCORE : {self.score}", True, color)
         self.screen.blit(score_text, (10, self.SCORE_Y))
 
     def _draw_hearts(self):
