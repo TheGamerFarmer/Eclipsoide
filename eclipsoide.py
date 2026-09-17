@@ -148,8 +148,8 @@ class Eclipsoide:
         self.hud.advance(dt)
 
         if (self.datas.time + dt) % Datas.TIME_BETWEEN_WAVE < dt and self.datas.time < Datas.TIME_BEFORE_BOSS:
-            nbEnemies: int = int(self.datas.time / Datas.TIME_BETWEEN_WAVE / 5)
-            for i in range(-3, nbEnemies):
+            nbEnemies: int = int(self.datas.time / Datas.TIME_BETWEEN_WAVE / 6)
+            for i in range(-2, nbEnemies):
                 Enemy(self.screen, self.player, self.datas, self.datas.enemies_group)
 
         self.datas.time += dt
