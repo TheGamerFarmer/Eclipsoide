@@ -1,8 +1,12 @@
 import os
 import pygame as pg
 from . import ui_element
+from .menu_fx import MenuFx
 
 UI_BASE_PATH = "images/ui"
+
+# Même position relative du soleil que sur le menu principal, pour la cohérence
+SUN_CENTER_RATIO = (0.5, 0.28)
 
 
 class MenuCredit:
@@ -10,6 +14,9 @@ class MenuCredit:
         # Image de fond
         self.bg_image = pg.image.load('images/backgroundWellcom.png').convert()
         self.bg_image = pg.transform.scale(self.bg_image, (screen_width, screen_height))
+
+        self.fx = MenuFx()
+        self.sun_center = (screen_width * SUN_CENTER_RATIO[0], screen_height * SUN_CENTER_RATIO[1])
 
         # Polices
         font_path = os.path.join(UI_BASE_PATH, "Font", "Kenney Future.ttf")
@@ -53,10 +60,13 @@ class MenuCredit:
 
     def draw(self, surface):
         surface.blit(self.bg_image, (0, 0))
+        self.fx.draw_sun(surface, self.sun_center)
 
         # Titre
+        titre_center = (surface.get_width() // 2, 70)
+        self.fx.draw_title_glow(surface, self.titre_font, "CREDITS", titre_center)
         titre = self.titre_font.render("CREDITS", True, (255, 255, 255))
-        surface.blit(titre, titre.get_rect(center=(surface.get_width() // 2, 70)))
+        surface.blit(titre, titre.get_rect(center=titre_center))
         pg.draw.line(surface, (0, 120, 215), (surface.get_width() // 2 - 150, 110),
                      (surface.get_width() // 2 + 150, 110), 2)
 

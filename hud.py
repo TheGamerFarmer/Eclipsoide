@@ -79,6 +79,19 @@ class Hud:
     SHAKE_DURATION = 500     # ms
     SHAKE_MAGNITUDE = 16     # px, amplitude max au tout début
 
+    # Choc de caméra (zoom-in bref) à l'apparition du boss : décroît comme le
+    # tremblement, combiné à un petit tremblement plus court pour le "poids" de l'impact
+    ZOOM_PUNCH_DURATION = 450    # ms
+    ZOOM_PUNCH_MAGNITUDE = 0.10  # +10% de zoom au pic
+    BOSS_SPAWN_SHAKE_DURATION = 200
+    BOSS_SPAWN_SHAKE_MAGNITUDE = 5
+
+    # Compteurs (pièces/score) qui "roulent" jusqu'à la valeur cible au lieu de
+    # sauter instantanément : vitesse proportionnelle à l'écart restant, avec un
+    # minimum pour ne jamais traîner indéfiniment sur un petit delta
+    COUNTER_CATCHUP_SPEED = 0.006  # fraction de l'écart comblée par ms
+    COUNTER_MIN_STEP = 1            # points par frame au minimum tant que la cible n'est pas atteinte
+
     def __init__(self, screen: pg.Surface, player):
         self.screen = screen
         self.player = player
@@ -95,7 +108,9 @@ class Hud:
         self.record_font = pg.font.Font(os.path.join('images/ui', 'Font', 'Kenney Future.ttf'), 14)
         # Record figé au lancement de la partie : c'est lui que le joueur cherche à battre
         self.record = settings.best_score()
-        self.score = player.score
+        # Valeurs affichées, qui rattrapent progressivement les vraies valeurs du joueur
+        self.displayed_score = player.score
+        self.displayed_coins = player.coins
         self.coin_icon = pg.transform.scale(pg.image.load('images/ui/Coins/coin_0.png'), (24, 24))
         self.heart_full_icon = pg.transform.scale(pg.image.load('images/ui/Hearts/heart_full.png'), (22, 22))
         self.heart_empty_icon = pg.transform.scale(pg.image.load('images/ui/Hearts/heart_empty.png'), (22, 22))
@@ -113,6 +128,9 @@ class Hud:
         self.shake_timer = 0
         self.shake_duration = self.SHAKE_DURATION
         self.shake_magnitude = self.SHAKE_MAGNITUDE
+        self.zoom_timer = 0
+        self.zoom_duration = self.ZOOM_PUNCH_DURATION
+        self.zoom_magnitude = self.ZOOM_PUNCH_MAGNITUDE
 
         self.shop = Shop(self.screen, self.player)
 
@@ -135,6 +153,11 @@ class Hud:
         self.shake_timer = self.shake_duration
         self.shake_magnitude = magnitude if magnitude is not None else self.SHAKE_MAGNITUDE
 
+    def trigger_zoom_punch(self, duration: float = None, magnitude: float = None):
+        self.zoom_duration = duration if duration is not None else self.ZOOM_PUNCH_DURATION
+        self.zoom_timer = self.zoom_duration
+        self.zoom_magnitude = magnitude if magnitude is not None else self.ZOOM_PUNCH_MAGNITUDE
+
     # Mise à jour
 
     def update_timers(self, dt):
@@ -145,6 +168,25 @@ class Hud:
         self.coin_pop_timer = max(0, self.coin_pop_timer - dt)
         self.shield_pulse_timer = max(0, self.shield_pulse_timer - dt)
         self.shake_timer = max(0, self.shake_timer - dt)
+        self.zoom_timer = max(0, self.zoom_timer - dt)
+        self._advance_counters(dt)
+
+    def _advance_counter(self, current: int, target: int, dt: float) -> int:
+        """ Rapproche current de target : vitesse proportionnelle à l'écart
+        restant (ralentit en approchant), avec un minimum d'1 point/frame """
+        if current == target:
+            return target
+        diff = target - current
+        step = diff * self.COUNTER_CATCHUP_SPEED * dt
+        if abs(step) < self.COUNTER_MIN_STEP:
+            step = self.COUNTER_MIN_STEP if diff > 0 else -self.COUNTER_MIN_STEP
+        if abs(step) >= abs(diff):
+            return target
+        return current + int(step)
+
+    def _advance_counters(self, dt):
+        self.displayed_score = self._advance_counter(self.displayed_score, self.player.score, dt)
+        self.displayed_coins = self._advance_counter(self.displayed_coins, self.player.coins, dt)
 
     def get_shake_offset(self) -> tuple[int, int]:
         """ Décalage aléatoire à appliquer au rendu, amplitude qui décroît
@@ -153,6 +195,13 @@ class Hud:
             return 0, 0
         magnitude = self.shake_magnitude * (self.shake_timer / self.shake_duration)
         return int(random.uniform(-magnitude, magnitude)), int(random.uniform(-magnitude, magnitude))
+
+    def get_zoom_scale(self) -> float:
+        """ Échelle à appliquer au rendu, >1 juste après le déclenchement puis
+        qui redescend linéairement à 1 (zoom-in bref, façon "impact caméra") """
+        if self.zoom_timer <= 0:
+            return 1.0
+        return 1.0 + self.zoom_magnitude * (self.zoom_timer / self.zoom_duration)
 
     def advance(self, dt):
         """ Fait avancer l'horloge du soleil (rotation + pulsation) : à n'appeler
@@ -280,7 +329,7 @@ class Hud:
 
     def _draw_coin_counter(self):
         icon_rect = self.coin_icon.get_rect(topleft=(10, 10))
-        coin_text = self.coin_font.render(str(self.player.coins), True, (255, 220, 80))
+        coin_text = self.coin_font.render(str(self.displayed_coins), True, (255, 220, 80))
         text_rect = coin_text.get_rect(topleft=(40, 10))
 
         scale = 1.0
@@ -301,16 +350,14 @@ class Hud:
         beaten = self.player.score > self.record
         color = self.RECORD_BEATEN_COLOR if beaten else self.RECORD_COLOR
         if beaten:
-            self.score = self.player.score
-            record_text = self.record_font.render(f"RECORD : {self.score}", True, color)
+            record_text = self.record_font.render(f"RECORD : {self.displayed_score}", True, color)
         else:
             record_text = self.record_font.render(f"RECORD : {self.record}", True, color)
         self.screen.blit(record_text, (10, self.RECORD_Y))
 
     def _draw_score(self):
-        self.score = self.player.score
         color = self.RECORD_BEATEN_COLOR
-        score_text = self.record_font.render(f"SCORE : {self.score}", True, color)
+        score_text = self.record_font.render(f"SCORE : {self.displayed_score}", True, color)
         self.screen.blit(score_text, (10, self.SCORE_Y))
 
     def _draw_hearts(self):
