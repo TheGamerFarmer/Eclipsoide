@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 # Pour lancer directement l'exécution à partir du sell si le fichier a les droits d'exécution
-
-import sys
-
 # Utilisation de pygame avec un préfixe plus simple
 import pygame as pg
 import sys
