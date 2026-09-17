@@ -8,3 +8,10 @@ dependencies = [
 ]
 [tool.setuptools.packages.find]
 include = ["boss*"]
+authors = [
+    {name= "Raphaël MATHERET", email="raphael.matheret@etu.univ-grenoble-alpes.fr"},
+    {name= "Romain PLANQUETTE", email="romain.planquette@etu.univ-grenoble-alpes.fr"},
+    {name= "Erwan DIGNOIRE", email="erwan.dignoire@etu.univ-grenoble-alpes.fr"},
+    {name= "Romain MISSOUM", email="romain.missoum@etu.univ-grenoble-alpes.fr"},
+    {name= "Raphaël MATHERET", email="raphael.matheret@etu.univ-grenoble-alpes.fr"},
+]
