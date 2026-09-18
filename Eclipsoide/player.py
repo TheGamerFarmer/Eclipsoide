@@ -116,6 +116,8 @@ class Player(pg.sprite.Sprite):
         self.bob_time = 0
         self.bob_intensity = 0.0
 
+        self._godmode_key_was_pressed = False
+
     def update(self, dt):
         self._update_damage_texture()
         self._update_invincibility(dt)
@@ -135,8 +137,9 @@ class Player(pg.sprite.Sprite):
             movement.x -= 1
         if keystate[keybinds["right"]] or keystate[pg.K_RIGHT]:
             movement.x += 1
-        if keystate[pg.K_g]:
+        if keystate[pg.K_g] and not self._godmode_key_was_pressed:
             self.godmode = not self.godmode
+        self._godmode_key_was_pressed = keystate[pg.K_g]
 
         if movement.length_squared() != 0:
             movement = movement.normalize()
