@@ -5,7 +5,7 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] === Début de l'installation ==="
 
 # Vérification de Python 3.12
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Vérification de la version Python..."
-if ! command -v python3 &> /dev/null; then
+if ! command -v python3.12 &> /dev/null; then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERREUR : python3 introuvable. Installez Python 3.12."
     exit 1
 fi
