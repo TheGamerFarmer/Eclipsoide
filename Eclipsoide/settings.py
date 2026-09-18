@@ -30,7 +30,7 @@ OPTIONS = {
 }
 
 # Nombre de scores conservés dans l'historique
-MAX_SCORES = 20
+MAX_SCORES = 1964
 
 def load_settings():
     global OPTIONS
