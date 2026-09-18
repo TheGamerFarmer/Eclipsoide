@@ -5,12 +5,12 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] === Début de l'installation ==="
 
 # Vérification de Python 3.12
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Vérification de la version Python..."
-if ! command -v python3 &> /dev/null; then
+if ! command -v python3.12 &> /dev/null; then
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERREUR : python3 introuvable. Installez Python 3.12."
     exit 1
 fi
 
-PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}')
+PYTHON_VERSION=$(python3.12 --version 2>&1 | awk '{print $2}')
 PYTHON_MAJOR=$(echo "$PYTHON_VERSION" | cut -d. -f1)
 PYTHON_MINOR=$(echo "$PYTHON_VERSION" | cut -d. -f2)
 
@@ -30,7 +30,7 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')] pyproject.toml trouvé."
 
 # Création de l'environnement virtuel
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Création de l'environnement virtuel (.venv)..."
-python3 -m venv .venv
+python3.12 -m venv .venv
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Environnement virtuel créé."
 
 # Mise à jour de pip

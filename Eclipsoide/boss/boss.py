@@ -21,8 +21,8 @@ class Boss(pg.sprite.Sprite):
     BOSS_SIZE = 70
     GROW_DURATION = 2000
     BOSS_MAX_SIZE = 620
-    # Chaque boss vaincu rend le suivant 1,5 fois plus résistant
-    BOSS_LIFE_GROWTH = 1.5
+    # Chaque boss vaincu rend le suivant 2 fois plus résistant
+    BOSS_LIFE_GROWTH = 2
     BOMB_INTERVAL = 1500  # millisecondes entre deux bombes
     MAX_BOMBS = 5
     SPEED = 0.1  # pixels par milliseconde
