@@ -19,7 +19,7 @@ from heart_pickup import HeartPickup
 from shield_pickup import ShieldPickup
 from hud import Hud
 
-# Définition du jeu Pong
+# Définition du jeu Eclipsoide : gère le déroulement de la partie, les collisions, l'affichage et les effets d'écran
 class Eclipsoide:
     # Chance qu'un ennemi tué drop un coeur (uniquement si le joueur n'est pas déjà à vie max)
     HEART_POPUP_COLOR = (255, 90, 120)
@@ -46,7 +46,7 @@ class Eclipsoide:
     COULEUR_CIBLE = (0, 200, 255)
     COULEUR_CIBLE_TOUCHEE = (255, 255, 255)
 
-    # Passe à False avant de livrer : coupe les raccourcis de debug (B / N)
+    # Passe à False avant la livraison : coupe les raccourcis de debug (B / N)
     DEBUG = True
 
     # variable de classe pour mettre le jeu en pause pour débug

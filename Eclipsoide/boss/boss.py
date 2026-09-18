@@ -1,17 +1,17 @@
 import pygame as pg
 import os
 
-from boss.bomb import Bomb
-from coin_popup import CoinPopup
-from datas import Datas
-from explosion import Explosion
-from hud import Hud
-from player import Player
+from .bomb import Bomb
+from Eclipsoide.coin_popup import CoinPopup
+from Eclipsoide.datas import Datas
+from Eclipsoide.explosion import Explosion
+from Eclipsoide.hud import Hud
+from Eclipsoide.player import Player
 import math
-from boss.multi_laser import MultiLaser
-from boss.tracker import Tracker
-from spawn_ping import SpawnPing
-from shockwave import Shockwave
+from Eclipsoide.boss.multi_laser import MultiLaser
+from .tracker import Tracker
+from Eclipsoide.spawn_ping import SpawnPing
+from Eclipsoide.shockwave import Shockwave
 
 
 class Boss(pg.sprite.Sprite):
